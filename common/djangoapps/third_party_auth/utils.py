@@ -3,9 +3,9 @@ Utility functions for third_party_auth
 """
 
 import datetime
+from zoneinfo import ZoneInfo
 
 import dateutil.parser
-import pytz
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from django.utils.timezone import now
 from enterprise.models import EnterpriseCustomerIdentityProvider, EnterpriseCustomerUser
@@ -54,7 +54,7 @@ def parse_metadata_xml(xml, entity_id):
         expires_at = dateutil.parser.parse(xml.attrib["validUntil"])
     if "cacheDuration" in xml.attrib:
         cache_expires = OneLogin_Saml2_Utils.parse_duration(xml.attrib["cacheDuration"])
-        cache_expires = datetime.datetime.fromtimestamp(cache_expires, tz=pytz.utc)
+        cache_expires = datetime.datetime.fromtimestamp(cache_expires, tz=ZoneInfo("UTC"))
         if expires_at is None or cache_expires < expires_at:
             expires_at = cache_expires
 
