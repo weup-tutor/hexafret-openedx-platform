@@ -21,9 +21,11 @@ from social_django.models import UserSocialAuth
 from common.djangoapps import third_party_auth
 from common.djangoapps.student.helpers import get_next_url_for_login_page
 from lms.djangoapps.branding.api import get_privacy_url
+from openedx.core.djangoapps.geoinfo.api import country_code_from_ip
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.user_authn.cookies import standard_cookie_settings
 from openedx.core.djangolib.markup import HTML, Text
+from openedx.core.djangoapps.user_authn.views.utils import third_party_auth_context
 
 ENTERPRISE_HEADER_LINKS = WaffleFlag('enterprise.enterprise_header_links', __name__)  # lint-amnesty, pylint: disable=toggle-missing-annotation
 
@@ -490,12 +492,14 @@ def is_course_accessed(user, course_id):
     except UnavailableCompletionData:
         return False
 
+
 def get_enterprise_dashboard_url(request, enterprise_customer):
     """
     Generate the enterprise-specific dashboard URL.
     """
     base_url = settings.ENTERPRISE_LEARNER_PORTAL_BASE_URL
     return f"{base_url}/{enterprise_customer['slug']}"
+
 
 def get_mfe_context(request, redirect_to, tpa_hint=None):
     """
