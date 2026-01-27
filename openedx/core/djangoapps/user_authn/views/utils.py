@@ -117,7 +117,6 @@ def get_mfe_context(request, redirect_to, tpa_hint=None):
     ip_address = get_client_ip(request)[0]
     country_code = country_code_from_ip(ip_address)
     context = third_party_auth_context(request, redirect_to, tpa_hint)
-    
     # Add enterprise branding if enterprise customer is detected
     enterprise_customer = enterprise_customer_for_request(request)
     enterprise_branding = None
@@ -131,7 +130,6 @@ def get_mfe_context(request, redirect_to, tpa_hint=None):
                 'platformWelcomeString': str(sidebar_context.get('platform_welcome_string', '')),
                 'enterpriseSlug': sidebar_context.get('enterprise_slug') or enterprise_customer.get('slug'),
             }
-   
     context.update({
         'countryCode': country_code,
         'enterpriseBranding': enterprise_branding,  # Add enterprise branding to context
