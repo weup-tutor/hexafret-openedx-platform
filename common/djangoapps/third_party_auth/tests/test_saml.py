@@ -35,13 +35,7 @@ class TestEdXSAMLIdentityProvider(SAMLTestCase):
 
     def test_get_user_details(self):
         """ test get_attr and get_user_details of EdXSAMLIdentityProvider"""
-        # social-core changed SAMLIdentityProvider.__init__ signature; newer versions require
-        # (backend, name, **kwargs). Use the new signature.
-        edx_saml_identity_provider = EdXSAMLIdentityProvider(
-            mock.Mock(),  # pylint: disable=too-many-function-args
-            'demo',
-            **mock_conf
-        )
+        edx_saml_identity_provider = EdXSAMLIdentityProvider('demo', **mock_conf)
         assert edx_saml_identity_provider.get_user_details(mock_attributes) == expected_user_details
 
 

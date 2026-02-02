@@ -18,7 +18,7 @@ from social_core.backends.saml import OID_EDU_PERSON_ENTITLEMENT, SAMLAuth, SAML
 from social_core.exceptions import AuthForbidden, AuthMissingParameter
 
 from openedx.core.djangoapps.theming.helpers import get_current_request
-from common.djangoapps.student.helpers import is_safe_login_or_logout_redirect
+from openedx.core.djangoapps.user_authn.utils import is_safe_login_or_logout_redirect
 from common.djangoapps.third_party_auth.exceptions import IncorrectConfigurationException
 
 STANDARD_SAML_PROVIDER_KEY = 'standard_saml_provider'
@@ -148,6 +148,9 @@ class SAMLAuthBackend(SAMLAuth):  # pylint: disable=abstract-method
             require_https=request.is_secure(),
         ):
             request.session['next'] = next_decoded
+        else:
+            # RelayState included an unsafe destination; clear any stale 'next' value
+            request.session.pop('next', None)
 
         # Always rewrite RelayState to just the IdP slug so the SAML backend can locate the provider.
         post_copy = request.POST.copy()
@@ -291,24 +294,14 @@ class EdXSAMLIdentityProvider(SAMLIdentityProvider):
         unless self.conf[conf_key] overrides the default by specifying
         another attribute to use.
         """
-        # social-core versions differ in how they pass default attributes:
-        # - Older: a single attribute name string
-        # - Newer: a tuple of candidate attribute names
-        configured = self.conf.get(conf_key)
-
-        if configured is None:
-            candidates = default_attribute if isinstance(default_attribute, (tuple, list)) else (default_attribute,)
-            key = next((candidate for candidate in candidates if candidate in attributes), None)
-        else:
-            key = configured
-
+        key = self.conf.get(conf_key, default_attribute)
         if key in attributes:
-            value = attributes.get(key)
-            if isinstance(value, list):
-                return value[0] if value else None
-            return value
-
-        return self.conf.get('attr_defaults', {}).get(conf_key) or None
+            try:
+                return attributes[key][0]
+            except IndexError:
+                log.warning('[THIRD_PARTY_AUTH] SAML attribute value not found. '
+                            'SamlAttribute: {attribute}'.format(attribute=key))
+        return self.conf['attr_defaults'].get(conf_key) or None
 
     @property
     def saml_sp_configuration(self):
