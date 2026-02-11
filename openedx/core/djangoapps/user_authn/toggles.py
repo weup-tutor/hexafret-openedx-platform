@@ -23,10 +23,6 @@ def should_redirect_to_authn_microfrontend():
         return False
     return configuration_helpers.get_value(
         'ENABLE_AUTHN_MICROFRONTEND', settings.FEATURES.get('ENABLE_AUTHN_MICROFRONTEND')
-    ) and not (
-        configuration_helpers.get_value('ENABLE_ENTERPRISE_CUSTOMER', False) and
-        configuration_helpers.get_value('ENABLE_TPA_HINT_PROVIDER', False) and
-        configuration_helpers.get_value('ENABLE_SAML_PROVIDER', False)
     )
 
 

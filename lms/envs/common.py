@@ -579,7 +579,7 @@ ENABLE_ACCOUNT_DELETION = True
 # .. toggle_tickets: 'https://github.com/openedx/edx-platform/pull/24908'
 # .. toggle_warning: Also set settings.AUTHN_MICROFRONTEND_URL for rollout. This temporary feature
 #   toggle does not have a target removal date.
-ENABLE_AUTHN_MICROFRONTEND = os.getenv("EDXAPP_ENABLE_AUTHN_MFE", "false").lower() == "true"
+ENABLE_AUTHN_MICROFRONTEND = os.environ.get("EDXAPP_ENABLE_AUTHN_MFE", False)
 
 # .. toggle_name: settings.ENABLE_CATALOG_MICROFRONTEND
 # .. toggle_implementation: DjangoSetting
