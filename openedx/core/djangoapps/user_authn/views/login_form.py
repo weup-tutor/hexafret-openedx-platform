@@ -58,7 +58,7 @@ def _apply_third_party_auth_overrides(request, form_desc):
     if third_party_auth.is_enabled():
         running_pipeline = third_party_auth.pipeline.get(request)
         if running_pipeline:
-            current_provider = third_party_auth.provider.Registry.get_from_pipeline(running_pipeline, kwargs=running_pipeline.get('kwargs')
+            current_provider = third_party_auth.provider.Registry.get_from_pipeline(running_pipeline, kwargs=running_pipeline.get('kwargs'))
             if current_provider and enterprise_customer_for_request(request):
                 pipeline_kwargs = running_pipeline.get('kwargs')
 
