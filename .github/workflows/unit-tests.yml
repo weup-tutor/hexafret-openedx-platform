@@ -74,6 +74,12 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install libmysqlclient-dev libxmlsec1-dev lynx
 
+      - name: Upgrade Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install --only-upgrade docker-ce docker-ce-cli containerd.io
+          docker --version
+
       # We pull this image a lot, and Dockerhub will rate limit us if we pull too often.
       # This is an attempt to cache the image for better performance and to work around that.
       # It will cache all pulled images, so if we add new images to this we'll need to update the key.
@@ -158,12 +164,6 @@ jobs:
       - name: install system requirements
         run: |
           sudo apt-get update && sudo apt-get install libxmlsec1-dev
-          
-      - name: Upgrade Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install --only-upgrade docker-ce docker-ce-cli containerd.io
-          docker --version
 
       - name: install requirements
         run: |
