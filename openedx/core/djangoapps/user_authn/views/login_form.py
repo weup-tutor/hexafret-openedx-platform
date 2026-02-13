@@ -218,16 +218,29 @@ def _maybe_redirect_to_authn_mfe(request, initial_mode, redirect_to):
         HttpResponse redirect, or None if we should render the legacy page.
     """
     # External providers (SAML / TPA hint) must NEVER redirect to MFE.
+    # Check for any running pipeline first (this catches all third-party auth)
     running_pipeline = pipeline.get(request)
+    
+    # If there's ANY running pipeline, treat it as an external provider
+    # This handles SAML, OAuth, and any other third-party auth flows
+    has_running_pipeline = running_pipeline is not None
+    
+    # Also explicitly check for SAML if pipeline exists
     saml_provider = False
     if running_pipeline:
+        backend_name = running_pipeline.get("backend")
+        kwargs = running_pipeline.get("kwargs", {})
+        # is_saml_provider returns a tuple (bool, provider_name)
         saml_provider, __ = third_party_auth.utils.is_saml_provider(
-            backend=running_pipeline.get("backend"),
-            kwargs=running_pipeline.get("kwargs"),
+            backend=backend_name,
+            kwargs=kwargs,
         )
 
+    # Check for TPA hint in request or redirect URL
     has_tpa_hint = _has_tpa_hint(request, redirect_to)
-    has_external_provider = bool(saml_provider or has_tpa_hint)
+    
+    # Treat ANY of these as external provider (hard stop for MFE redirect)
+    has_external_provider = bool(has_running_pipeline or saml_provider or has_tpa_hint)
 
     enterprise_customer = enterprise_customer_for_request(request)
     if enterprise_customer:
