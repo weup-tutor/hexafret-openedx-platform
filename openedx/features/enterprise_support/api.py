@@ -502,7 +502,9 @@ def enterprise_customer_uuid_for_request(request):
     if running_pipeline:
         # Determine if the user is in the middle of a third-party auth pipeline,
         # and set the sso_provider_id parameter to match if so.
-        sso_provider_id = Registry.get_from_pipeline(running_pipeline).provider_id
+        pipeline_provider = Registry.get_from_pipeline(running_pipeline)
+        if pipeline_provider:
+            sso_provider_id = pipeline_provider.provider_id
 
     if sso_provider_id:
         # If we have a third-party auth provider, get the linked enterprise customer.
