@@ -1,6 +1,7 @@
 """Unit tests for settings.py."""
 
 from unittest.mock import patch
+from django.test import override_settings
 from common.djangoapps.third_party_auth import provider, settings
 from common.djangoapps.third_party_auth.tests import testutil
 from common.djangoapps.third_party_auth.tests.utils import skip_unless_thirdpartyauth
@@ -62,6 +63,6 @@ class SettingsUnitTest(testutil.TestCase):
         settings.apply_settings(self.settings)
         assert self.settings.SOCIAL_AUTH_CLEAN_USERNAMES
         # verify default behavior
-        with patch.dict('django.conf.settings.FEATURES', {'ENABLE_UNICODE_USERNAME': True}):
+        with override_settings(ENABLE_UNICODE_USERNAME=True):
             settings.apply_settings(self.settings)
             assert not self.settings.SOCIAL_AUTH_CLEAN_USERNAMES

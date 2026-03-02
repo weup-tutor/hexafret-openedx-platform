@@ -15,7 +15,7 @@ from django.contrib.auth import models as auth_models
 from django.contrib.messages.storage import fallback
 from django.contrib.sessions.backends import cache
 from django.urls import reverse
-from django.test import utils as django_utils
+from django.test import override_settings, utils as django_utils
 from django.conf import settings as django_settings  # lint-amnesty, pylint: disable=reimported
 from social_core import actions, exceptions
 from social_django import utils as social_utils
@@ -150,12 +150,12 @@ class HelperMixin:
         partial_unicode_username = unicode_username + ascii_substring
         pipeline_kwargs = pipeline.get(request)["kwargs"]
 
-        assert settings.FEATURES["ENABLE_UNICODE_USERNAME"] is False
+        assert settings.ENABLE_UNICODE_USERNAME is False
 
         self._check_registration_form_username(pipeline_kwargs, unicode_username, "")
         self._check_registration_form_username(pipeline_kwargs, partial_unicode_username, ascii_substring)
 
-        with mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_UNICODE_USERNAME": True}):
+        with override_settings(ENABLE_UNICODE_USERNAME=True):
             self._check_registration_form_username(pipeline_kwargs, unicode_username, unicode_username)
 
     def assert_exception_redirect_looks_correct(self, expected_uri, auth_entry=None):
@@ -577,7 +577,7 @@ class IntegrationTestMixin(testutil.TestCase, test.TestCase, HelperMixin):
 
 
 @unittest.skipUnless(
-    testutil.AUTH_FEATURES_KEY in django_settings.FEATURES, testutil.AUTH_FEATURES_KEY + " not in settings.FEATURES"
+    django_settings.ENABLE_THIRD_PARTY_AUTH, testutil.AUTH_FEATURES_KEY + " not in settings.FEATURES"
 )
 @django_utils.override_settings()  # For settings reversion on a method-by-method basis.
 class IntegrationTest(testutil.TestCase, test.TestCase, HelperMixin):
