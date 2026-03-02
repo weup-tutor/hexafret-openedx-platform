@@ -6,6 +6,7 @@ Tests for ProctoredExamTransformer.
 from unittest.mock import Mock, patch
 
 import ddt
+from django.test.utils import override_settings
 from milestones.tests.utils import MilestonesTestCaseMixin
 
 from common.djangoapps.student.tests.factories import CourseEnrollmentFactory
@@ -22,7 +23,7 @@ from ..milestones import MilestonesAndSpecialExamsTransformer
 
 
 @ddt.ddt
-@patch.dict('django.conf.settings.FEATURES', {'ENABLE_SPECIAL_EXAMS': True})
+@override_settings(ENABLE_SPECIAL_EXAMS=True)
 class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseMixin):
     """
     Test behavior of ProctoredExamTransformer
