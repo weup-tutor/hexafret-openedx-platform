@@ -290,17 +290,6 @@ SQUELCH_PII_IN_LOGS = True
 # defaults, so that we maintain current behavior
 ALLOW_WIKI_ROOT_ACCESS = True
 
-# .. toggle_name: settings.ENABLE_THIRD_PARTY_AUTH
-# .. toggle_implementation: DjangoSetting
-# .. toggle_default: False
-# .. toggle_description: Turn on third-party auth. Disabled for now because full implementations are not yet
-#   available. Remember to run migrations if you enable this; we don't create tables by default. This feature can
-#   be enabled on a per-site basis. When enabling this feature, remember to define the allowed authentication
-#   backends with the AUTHENTICATION_BACKENDS setting.
-# .. toggle_use_cases: open_edx
-# .. toggle_creation_date: 2014-09-15
-ENABLE_THIRD_PARTY_AUTH = False
-
 # Prevent concurrent logins per user
 PREVENT_CONCURRENT_LOGINS = True
 

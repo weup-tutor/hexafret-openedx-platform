@@ -1302,6 +1302,17 @@ ENABLE_ORA_ALL_FILE_URLS = False
 # .. toggle_warning: This temporary feature toggle does not have a target removal date.
 ENABLE_ORA_USER_STATE_UPLOAD_DATA = False
 
+# .. toggle_name: settings.ENABLE_THIRD_PARTY_AUTH
+# .. toggle_implementation: DjangoSetting
+# .. toggle_default: False
+# .. toggle_description: Turn on third-party auth. Disabled for now because full implementations are not yet
+#   available. Remember to run migrations if you enable this; we don't create tables by default. This feature can
+#   be enabled on a per-site basis. When enabling this feature, remember to define the allowed authentication
+#   backends with the AUTHENTICATION_BACKENDS setting.
+# .. toggle_use_cases: open_edx
+# .. toggle_creation_date: 2014-09-15
+ENABLE_THIRD_PARTY_AUTH = False
+
 # .. toggle_name: ENABLE_INTEGRITY_SIGNATURE
 # .. toggle_implementation: DjangoSetting
 # .. toggle_default: False
