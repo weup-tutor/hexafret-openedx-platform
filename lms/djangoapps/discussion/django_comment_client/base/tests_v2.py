@@ -12,6 +12,7 @@ import ddt
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test.client import RequestFactory
+from django.test.utils import override_settings
 from django.urls import reverse
 from eventtracking.processors.exceptions import EventEmissionExit
 from opaque_keys.edx.keys import CourseKey
@@ -431,7 +432,7 @@ class ViewsTestCase(
         # seed the forums permissions and roles
         call_command("seed_permissions_roles", str(cls.course_id))
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         # Patching the ENABLE_DISCUSSION_SERVICE value affects the contents of urls.py,
         # so we need to call super.setUp() which reloads urls.py (because
@@ -1061,7 +1062,7 @@ class ViewPermissionsTestCase(
             Role.objects.get(name="Moderator", course_id=cls.course.id)
         )
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         """Set up the test case."""
         super().setUp()
@@ -1355,9 +1356,7 @@ class TeamsPermissionsTestCase(
             users=[cls.group_moderator, cls.cohorted],
         )
 
-    @mock.patch.dict(
-        "django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True}
-    )
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
 
@@ -2493,7 +2492,7 @@ class ForumThreadViewedEventTransformerTestCase(UrlResetMixin, ModuleStoreTestCa
     DUMMY_CATEGORY_ID = 'i4x-edx-dummy-commentable-id'
     DUMMY_THREAD_ID = 'dummy_thread_id'
 
-    @mock.patch.dict("common.djangoapps.student.models.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
         self.course = CourseFactory.create(

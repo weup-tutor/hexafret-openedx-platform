@@ -1165,7 +1165,7 @@ class DiscussionTabTestCase(ModuleStoreTestCase):
         return any(tab.type == 'discussion' for tab in all_tabs)
 
     def test_tab_access(self):
-        with self.settings(FEATURES={'ENABLE_DISCUSSION_SERVICE': True}):
+        with self.settings(ENABLE_DISCUSSION_SERVICE=True):
             assert self.discussion_tab_present(self.staff_user)
             assert self.discussion_tab_present(self.enrolled_user)
             assert not self.discussion_tab_present(self.unenrolled_user)
@@ -1173,10 +1173,10 @@ class DiscussionTabTestCase(ModuleStoreTestCase):
     @mock.patch('lms.djangoapps.ccx.overrides.get_current_ccx')
     def test_tab_settings(self, mock_get_ccx):
         mock_get_ccx.return_value = True
-        with self.settings(FEATURES={'ENABLE_DISCUSSION_SERVICE': False}):
+        with self.settings(ENABLE_DISCUSSION_SERVICE=False):
             assert not self.discussion_tab_present(self.enrolled_user)
 
-        with self.settings(FEATURES={'CUSTOM_COURSES_EDX': True}):
+        with self.settings(CUSTOM_COURSES_EDX=True):
             assert not self.discussion_tab_present(self.enrolled_user)
 
 

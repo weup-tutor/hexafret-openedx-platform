@@ -27,7 +27,7 @@ from openedx.core.djangoapps.user_api.models import UserPreference
 class NotificationPrefViewTest(UrlResetMixin, TestCase):  # lint-amnesty, pylint: disable=missing-class-docstring
     INITIALIZATION_VECTOR = b"\x00" * 16
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     @patch.dict("django.conf.settings.FEATURES", {"ENABLE_FORUM_DAILY_DIGEST": True})
     def setUp(self):
         super().setUp()

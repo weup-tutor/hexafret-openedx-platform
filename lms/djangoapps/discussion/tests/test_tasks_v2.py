@@ -8,6 +8,7 @@ from unittest import mock
 
 import ddt
 from django.contrib.sites.models import Site
+from django.test.utils import override_settings
 from edx_ace.channel import ChannelType, get_channel_for_message
 from edx_ace.recipient import Recipient
 from edx_ace.renderers import EmailRenderer
@@ -78,9 +79,7 @@ class TaskTestCase(
 ):  # lint-amnesty, pylint: disable=missing-class-docstring
 
     @classmethod
-    @mock.patch.dict(
-        "django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True}
-    )
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUpClass(cls):
         super().setUpClass()
         super().setUpClassAndForumMock()

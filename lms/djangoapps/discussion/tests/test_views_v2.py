@@ -727,7 +727,7 @@ class SingleThreadGroupIdTestCase(CohortedTestCase, GroupIdAssertionMixinV2, For
 
 class SingleThreadContentGroupTestCase(UrlResetMixin, ContentGroupTestCase, ForumViewsUtilsMixin):  # lint-amnesty, pylint: disable=missing-class-docstring
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
 
@@ -941,7 +941,7 @@ class ForumFormDiscussionContentGroupTestCase(
     beta_block => beta_group_discussion => beta_cohort => beta_user
     """
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
         self.thread_list = [
@@ -1083,7 +1083,7 @@ class EnterpriseConsentTestCase(
 
     CREATE_USER = False
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         # Invoke UrlResetMixin setUp
         super().setUp()
@@ -1454,7 +1454,7 @@ class ForumDiscussionXSSTestCase(
         UrlResetMixin, ModuleStoreTestCase, ForumViewsUtilsMixin
 ):  # lint-amnesty, pylint: disable=missing-class-docstring
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
 
@@ -1745,7 +1745,7 @@ class UserProfileTestCase(
     TEST_THREAD_TEXT = "userprofile-test-text"
     TEST_THREAD_ID = "userprofile-test-thread-id"
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
 
@@ -1892,7 +1892,7 @@ class ThreadViewedEventTestCase(
     DUMMY_TITLE = 'Dummy title'
     DUMMY_URL = 'https://example.com/dummy/url/'
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):  # pylint: disable=arguments-differ
         super().setUp('lms.djangoapps.discussion.django_comment_client.base.views.tracker')
         self.course = CourseFactory.create(
@@ -1939,7 +1939,7 @@ class ThreadViewedEventTestCase(
         super().tearDownClass()
         super().disposeForumMocks()
 
-    @patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def test_thread_viewed_event(self):
         self._configure_mock_responses(
             course=self.course,

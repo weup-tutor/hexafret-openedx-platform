@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import ddt
 import httpretty
 from django.conf import settings
+from django.test.utils import override_settings
 from edx_toggles.toggles.testutils import override_waffle_flag
 from openedx_events.learning.signals import COURSE_NOTIFICATION_REQUESTED, USER_NOTIFICATION_REQUESTED
 
@@ -496,7 +497,7 @@ class TestSendCommentNotification(DiscussionAPIViewTestMixin, ModuleStoreTestCas
 
 @ddt.ddt
 @httpretty.activate
-@mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+@override_settings(ENABLE_DISCUSSION_SERVICE=True)
 @override_waffle_flag(ENABLE_NOTIFICATIONS, active=True)
 class TestNewThreadCreatedNotification(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
     """

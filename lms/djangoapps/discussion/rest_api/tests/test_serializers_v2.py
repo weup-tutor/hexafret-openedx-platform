@@ -9,6 +9,7 @@ from unittest import mock
 import ddt
 import httpretty
 from django.test.client import RequestFactory
+from django.test.utils import override_settings
 from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
@@ -392,7 +393,7 @@ class ThreadSerializerDeserializationTest(
 ):
     """Tests for ThreadSerializer deserialization."""
     @classmethod
-    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUpClass(cls):
         super().setUpClass()
         cls.course = CourseFactory.create()
@@ -404,7 +405,7 @@ class ThreadSerializerDeserializationTest(
         super().tearDownClass()
         super().disposeForumMocks()
 
-    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
         httpretty.reset()
@@ -538,7 +539,7 @@ class SerializerTestMixin(UrlResetMixin, ForumMockUtilsMixin):
     Test Mixin for Serializer tests
     """
     @classmethod
-    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUpClass(cls):
         super().setUpClass()
         cls.course = CourseFactory.create()
@@ -550,7 +551,7 @@ class SerializerTestMixin(UrlResetMixin, ForumMockUtilsMixin):
         super().tearDownClass()
         super().disposeForumMocks()
 
-    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+    @override_settings(ENABLE_DISCUSSION_SERVICE=True)
     def setUp(self):
         super().setUp()
         httpretty.reset()
