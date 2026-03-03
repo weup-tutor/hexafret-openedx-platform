@@ -57,6 +57,7 @@ beautifulsoup4==4.14.3
     # via
     #   openedx-forum
     #   pynliner
+    #   xblocks-contrib
 billiard==4.2.4
     # via celery
 bleach[css]==6.3.0
@@ -86,7 +87,7 @@ bridgekeeper==0.9
     # via -r requirements/edx/kernel.in
 cachecontrol==0.14.4
     # via firebase-admin
-cachetools==7.0.1
+cachetools==7.0.2
     # via edxval
 camel-converter[pydantic]==5.0.0
     # via meilisearch
@@ -121,7 +122,9 @@ charset-normalizer==3.4.4
     #   requests
     #   snowflake-connector-python
 chem==2.0.0
-    # via -r requirements/edx/kernel.in
+    # via
+    #   -r requirements/edx/kernel.in
+    #   xblocks-contrib
 click==8.3.1
     # via
     #   celery
@@ -137,7 +140,7 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
-code-annotations==2.3.0
+code-annotations==2.3.2
     # via
     #   edx-enterprise
     #   edx-toggles
@@ -160,6 +163,8 @@ cryptography==45.0.7
     #   snowflake-connector-python
 cssutils==2.11.1
     # via pynliner
+ddt==1.7.2
+    # via xblocks-contrib
 defusedxml==0.7.1
     # via
     #   -r requirements/edx/kernel.in
@@ -167,7 +172,8 @@ defusedxml==0.7.1
     #   ora2
     #   python3-openid
     #   social-auth-core
-django==5.2.11
+    #   xblocks-contrib
+django==5.2.12
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -429,7 +435,9 @@ edx-celeryutils==1.4.0
     #   -r requirements/edx/kernel.in
     #   super-csv
 edx-codejail==4.1.0
-    # via -r requirements/edx/kernel.in
+    # via
+    #   -r requirements/edx/kernel.in
+    #   xblocks-contrib
 edx-completion==4.9
     # via -r requirements/edx/kernel.in
 edx-django-release-util==1.5.0
@@ -529,6 +537,7 @@ edx-submissions==3.12.2
     # via
     #   -r requirements/edx/kernel.in
     #   ora2
+    #   xblocks-contrib
 edx-tincan-py35==2.0.0
     # via enterprise-integrated-channels
 edx-toggles==5.4.1
@@ -543,6 +552,7 @@ edx-toggles==5.4.1
     #   edxval
     #   event-tracking
     #   ora2
+    #   xblocks-contrib
 edx-when==3.1.0
     # via
     #   -r requirements/edx/kernel.in
@@ -641,13 +651,14 @@ html5lib==1.1
     # via
     #   -r requirements/edx/kernel.in
     #   ora2
+    #   xblocks-contrib
 httpcore==1.0.9
     # via httpx
 httpx[http2]==0.28.1
     # via firebase-admin
 hyperframe==6.1.0
     # via h2
-icalendar==7.0.2
+icalendar==7.0.3
     # via -r requirements/edx/kernel.in
 idna==3.11
     # via
@@ -788,6 +799,7 @@ numpy==1.26.4
     #   openedx-calc
     #   scipy
     #   shapely
+    #   xblocks-contrib
 oauthlib==3.3.1
     # via
     #   -r requirements/edx/kernel.in
@@ -808,7 +820,9 @@ openedx-atlas==0.7.0
 openedx-authz==0.22.0
     # via -r requirements/edx/kernel.in
 openedx-calc==4.0.3
-    # via -r requirements/edx/kernel.in
+    # via
+    #   -r requirements/edx/kernel.in
+    #   xblocks-contrib
 openedx-core==0.35.0
     # via
     #   -c requirements/constraints.txt
@@ -870,6 +884,7 @@ pillow==12.1.1
     #   edx-enterprise
     #   edx-organizations
     #   edxval
+    #   xblocks-contrib
 platformdirs==4.9.2
     # via snowflake-connector-python
 polib==1.2.0
@@ -991,7 +1006,7 @@ python3-openid==3.2.0 ; python_version >= "3"
     #   social-auth-core
 python3-saml==1.16.0
     # via -r requirements/edx/kernel.in
-pytz==2025.2
+pytz==2026.1.post1
     # via
     #   -r requirements/edx/kernel.in
     #   drf-yasg
@@ -1020,7 +1035,9 @@ pyyaml==6.0.3
     #   jsondiff
     #   xblock
 random2==1.0.2
-    # via -r requirements/edx/kernel.in
+    # via
+    #   -r requirements/edx/kernel.in
+    #   xblocks-contrib
 recommender-xblock==3.1.0
     # via -r requirements/edx/bundled.in
 redis==7.2.1
@@ -1083,7 +1100,9 @@ scipy==1.17.1
 semantic-version==2.10.0
     # via edx-drf-extensions
 shapely==2.1.2
-    # via -r requirements/edx/kernel.in
+    # via
+    #   -r requirements/edx/kernel.in
+    #   xblocks-contrib
 simpleeval==1.0.3
     # via pycasbin
 simplejson==3.20.2
@@ -1271,7 +1290,7 @@ xblock-utils==4.0.0
     # via
     #   edx-sga
     #   xblock-poll
-xblocks-contrib==0.11.1
+xblocks-contrib==0.12.1
     # via -r requirements/edx/bundled.in
 xmlsec==1.3.14
     # via

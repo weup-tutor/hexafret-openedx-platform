@@ -91,6 +91,7 @@ beautifulsoup4==4.14.3
     #   openedx-forum
     #   pydata-sphinx-theme
     #   pynliner
+    #   xblocks-contrib
 billiard==4.2.4
     # via
     #   -r requirements/edx/base.txt
@@ -127,7 +128,7 @@ cachecontrol==0.14.4
     # via
     #   -r requirements/edx/base.txt
     #   firebase-admin
-cachetools==7.0.1
+cachetools==7.0.2
     # via
     #   -r requirements/edx/base.txt
     #   edxval
@@ -173,7 +174,9 @@ charset-normalizer==3.4.4
     #   requests
     #   snowflake-connector-python
 chem==2.0.0
-    # via -r requirements/edx/base.txt
+    # via
+    #   -r requirements/edx/base.txt
+    #   xblocks-contrib
 click==8.3.1
     # via
     #   -r requirements/edx/base.txt
@@ -196,7 +199,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/edx/base.txt
     #   celery
-code-annotations==2.3.0
+code-annotations==2.3.2
     # via
     #   -r requirements/edx/base.txt
     #   -r requirements/edx/doc.in
@@ -223,6 +226,10 @@ cssutils==2.11.1
     # via
     #   -r requirements/edx/base.txt
     #   pynliner
+ddt==1.7.2
+    # via
+    #   -r requirements/edx/base.txt
+    #   xblocks-contrib
 deepmerge==2.0
     # via sphinxcontrib-openapi
 defusedxml==0.7.1
@@ -232,7 +239,8 @@ defusedxml==0.7.1
     #   ora2
     #   python3-openid
     #   social-auth-core
-django==5.2.11
+    #   xblocks-contrib
+django==5.2.12
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -520,7 +528,9 @@ edx-celeryutils==1.4.0
     #   -r requirements/edx/base.txt
     #   super-csv
 edx-codejail==4.1.0
-    # via -r requirements/edx/base.txt
+    # via
+    #   -r requirements/edx/base.txt
+    #   xblocks-contrib
 edx-completion==4.9
     # via -r requirements/edx/base.txt
 edx-django-release-util==1.5.0
@@ -621,6 +631,7 @@ edx-submissions==3.12.2
     # via
     #   -r requirements/edx/base.txt
     #   ora2
+    #   xblocks-contrib
 edx-tincan-py35==2.0.0
     # via
     #   -r requirements/edx/base.txt
@@ -637,6 +648,7 @@ edx-toggles==5.4.1
     #   edxval
     #   event-tracking
     #   ora2
+    #   xblocks-contrib
 edx-when==3.1.0
     # via
     #   -r requirements/edx/base.txt
@@ -769,6 +781,7 @@ html5lib==1.1
     # via
     #   -r requirements/edx/base.txt
     #   ora2
+    #   xblocks-contrib
 httpcore==1.0.9
     # via
     #   -r requirements/edx/base.txt
@@ -781,7 +794,7 @@ hyperframe==6.1.0
     # via
     #   -r requirements/edx/base.txt
     #   h2
-icalendar==7.0.2
+icalendar==7.0.3
     # via -r requirements/edx/base.txt
 idna==3.11
     # via
@@ -792,7 +805,7 @@ idna==3.11
     #   requests
     #   snowflake-connector-python
     #   yarl
-imagesize==1.4.1
+imagesize==2.0.0
     # via sphinx
 importlib-metadata==8.7.1
     # via -r requirements/edx/base.txt
@@ -966,6 +979,7 @@ numpy==1.26.4
     #   openedx-calc
     #   scipy
     #   shapely
+    #   xblocks-contrib
 oauthlib==3.3.1
     # via
     #   -r requirements/edx/base.txt
@@ -986,7 +1000,9 @@ openedx-atlas==0.7.0
 openedx-authz==0.22.0
     # via -r requirements/edx/base.txt
 openedx-calc==4.0.3
-    # via -r requirements/edx/base.txt
+    # via
+    #   -r requirements/edx/base.txt
+    #   xblocks-contrib
 openedx-core==0.35.0
     # via
     #   -c requirements/constraints.txt
@@ -1059,6 +1075,7 @@ pillow==12.1.1
     #   edx-enterprise
     #   edx-organizations
     #   edxval
+    #   xblocks-contrib
 platformdirs==4.9.2
     # via
     #   -r requirements/edx/base.txt
@@ -1221,7 +1238,7 @@ python3-openid==3.2.0 ; python_version >= "3"
     #   social-auth-core
 python3-saml==1.16.0
     # via -r requirements/edx/base.txt
-pytz==2025.2
+pytz==2026.1.post1
     # via
     #   -r requirements/edx/base.txt
     #   drf-yasg
@@ -1252,7 +1269,9 @@ pyyaml==6.0.3
     #   sphinxcontrib-openapi
     #   xblock
 random2==1.0.2
-    # via -r requirements/edx/base.txt
+    # via
+    #   -r requirements/edx/base.txt
+    #   xblocks-contrib
 recommender-xblock==3.1.0
     # via -r requirements/edx/base.txt
 redis==7.2.1
@@ -1333,7 +1352,9 @@ semantic-version==2.10.0
     #   -r requirements/edx/base.txt
     #   edx-drf-extensions
 shapely==2.1.2
-    # via -r requirements/edx/base.txt
+    # via
+    #   -r requirements/edx/base.txt
+    #   xblocks-contrib
 simpleeval==1.0.3
     # via
     #   -r requirements/edx/base.txt
@@ -1611,7 +1632,7 @@ xblock-utils==4.0.0
     #   -r requirements/edx/base.txt
     #   edx-sga
     #   xblock-poll
-xblocks-contrib==0.11.1
+xblocks-contrib==0.12.1
     # via -r requirements/edx/base.txt
 xmlsec==1.3.14
     # via
