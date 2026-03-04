@@ -8,17 +8,17 @@ import logging
 
 from django.core.exceptions import (  # lint-amnesty, pylint: disable=wrong-import-order
     ObjectDoesNotExist,
-    ValidationError,
+    ValidationError
 )
 from django.db import IntegrityError  # lint-amnesty, pylint: disable=wrong-import-order
 from django.db.models import Q  # lint-amnesty, pylint: disable=wrong-import-order
 from django.utils.decorators import method_decorator  # lint-amnesty, pylint: disable=wrong-import-order
-from edx_rest_framework_extensions.auth.jwt.authentication import (
-    JwtAuthentication,
-)  # lint-amnesty, pylint: disable=wrong-import-order
-from edx_rest_framework_extensions.auth.session.authentication import (
-    SessionAuthenticationAllowInactiveUser,
-)  # lint-amnesty, pylint: disable=wrong-import-order
+from edx_rest_framework_extensions.auth.jwt.authentication import (  # lint-amnesty, pylint: disable=wrong-import-order
+    JwtAuthentication
+)
+from edx_rest_framework_extensions.auth.session.authentication import (  # lint-amnesty, pylint: disable=wrong-import-order
+    SessionAuthenticationAllowInactiveUser
+)
 from opaque_keys import InvalidKeyError  # lint-amnesty, pylint: disable=wrong-import-order
 from opaque_keys.edx.keys import CourseKey  # lint-amnesty, pylint: disable=wrong-import-order
 from rest_framework import permissions, status  # lint-amnesty, pylint: disable=wrong-import-order
@@ -41,13 +41,13 @@ from openedx.core.djangoapps.enrollments.errors import (
     CourseEnrollmentError,
     CourseEnrollmentExistsError,
     CourseModeNotFoundError,
-    InvalidEnrollmentAttribute,
+    InvalidEnrollmentAttribute
 )
 from openedx.core.djangoapps.enrollments.forms import CourseEnrollmentsApiListForm
 from openedx.core.djangoapps.enrollments.paginators import CourseEnrollmentsApiListPagination
 from openedx.core.djangoapps.enrollments.serializers import (
     CourseEnrollmentAllowedSerializer,
-    CourseEnrollmentsApiListSerializer,
+    CourseEnrollmentsApiListSerializer
 )
 from openedx.core.djangoapps.user_api.accounts.permissions import CanRetireUser
 from openedx.core.djangoapps.user_api.models import UserRetirementStatus
@@ -57,12 +57,6 @@ from openedx.core.lib.api.permissions import ApiKeyHeaderPermission, ApiKeyHeade
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin
 from openedx.core.lib.exceptions import CourseNotFoundError
 from openedx.core.lib.log_utils import audit_log
-from openedx.features.enterprise_support.api import (
-    ConsentApiServiceClient,
-    EnterpriseApiException,
-    EnterpriseApiServiceClient,
-    enterprise_enabled,
-)
 
 log = logging.getLogger(__name__)
 REQUIRED_ATTRIBUTES = {
@@ -773,27 +767,6 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"message": ("'{value}' is an invalid enrollment activation status.").format(value=is_active)},
                 )
-
-            explicit_linked_enterprise = request.data.get("linked_enterprise_customer")
-            if explicit_linked_enterprise and has_api_key_permissions and enterprise_enabled():
-                enterprise_api_client = EnterpriseApiServiceClient()
-                consent_client = ConsentApiServiceClient()
-                try:
-                    enterprise_api_client.post_enterprise_course_enrollment(username, str(course_id))
-                except EnterpriseApiException as error:
-                    log.exception(
-                        "An unexpected error occurred while creating the new EnterpriseCourseEnrollment "
-                        "for user [%s] in course run [%s]",
-                        username,
-                        course_id,
-                    )
-                    raise CourseEnrollmentError(str(error))  # lint-amnesty, pylint: disable=raise-missing-from
-                kwargs = {
-                    "username": username,
-                    "course_id": str(course_id),
-                    "enterprise_customer_uuid": explicit_linked_enterprise,
-                }
-                consent_client.provide_consent(**kwargs)
 
             enrollment_attributes = request.data.get("enrollment_attributes")
             force_enrollment = request.data.get("force_enrollment")
