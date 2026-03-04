@@ -184,7 +184,7 @@ class CourseModeViewTest(CatalogIntegrationMixin, UrlResetMixin, ModuleStoreTest
         # that the right template rendered
 
     @httpretty.activate
-    @patch('common.djangoapps.course_modes.views.enterprise_customer_for_request')
+    @patch('common.djangoapps.course_modes.views.CourseModeCheckoutStarted.run_filter')
     @patch('common.djangoapps.course_modes.views.get_course_final_price')
     @ddt.data(
         (1.0, True),
@@ -198,7 +198,7 @@ class CourseModeViewTest(CatalogIntegrationMixin, UrlResetMixin, ModuleStoreTest
         discounted_price,
         is_enterprise_enabled,
         mock_get_course_final_price,
-        mock_enterprise_customer_for_request
+        mock_run_filter
     ):
         verified_mode = CourseModeFactory.create(mode_slug='verified', course_id=self.course.id, sku='dummy')
         CourseEnrollmentFactory(
@@ -207,7 +207,8 @@ class CourseModeViewTest(CatalogIntegrationMixin, UrlResetMixin, ModuleStoreTest
             user=self.user
         )
 
-        mock_enterprise_customer_for_request.return_value = {'name': 'dummy'} if is_enterprise_enabled else {}
+        enterprise_customer = {'name': 'dummy', 'uuid': 'test-uuid'} if is_enterprise_enabled else None
+        mock_run_filter.return_value = {'enterprise_customer': enterprise_customer}
         mock_get_course_final_price.return_value = discounted_price
         url = reverse('course_modes_choose', args=[self.course.id])
         response = self.client.get(url)
