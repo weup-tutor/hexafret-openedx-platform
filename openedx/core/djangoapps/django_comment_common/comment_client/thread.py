@@ -4,10 +4,14 @@
 import logging
 import time
 
+from django.core.exceptions import ObjectDoesNotExist
 from eventtracking import tracker
+from rest_framework.serializers import ValidationError
 
 from forum import api as forum_api
+from forum.backend import get_backend
 from forum.backends.mongodb.threads import CommentThread as ForumThread
+from forum.utils import ForumV2RequestError
 
 from . import models, settings, utils
 
@@ -310,7 +314,7 @@ class Thread(models.Model):
 
         try:
             start_time = time.perf_counter()
-            serialized_data = prepare_thread_api_response(thread, backend)
+            serialized_data = forum_api.threads.prepare_thread_api_response(thread, backend)
             log.info(
                 f"{prefix} Prepare response {time.perf_counter() - start_time} sec"
             )

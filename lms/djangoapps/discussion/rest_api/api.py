@@ -143,10 +143,10 @@ from .utils import (
     get_captcha_site_key_by_platform,
     get_usernames_for_course,
     get_usernames_from_search_string,
+    is_captcha_enabled,
     send_signal_after_commit,
     set_attribute,
     is_posting_allowed,
-    set_attribute,
 )
 
 log = logging.getLogger(__name__)

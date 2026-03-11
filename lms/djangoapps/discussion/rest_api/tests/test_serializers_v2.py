@@ -742,6 +742,13 @@ class CommentSerializerTest(SerializerTestMixin, SharedModuleStoreTestCase):
             "can_delete": False,
             "last_edit": None,
             "edit_by_label": None,
+            "learner_status": "new",
+            "is_deleted": None,
+            "deleted_at": None,
+            "deleted_by": None,
+            "deleted_by_label": None,
+            "is_author_banned": False,
+            "author_ban_scope": None,
             "profile_image": {
                 "has_image": False,
                 "image_url_full": "http://testserver/static/default_500.png",
@@ -894,6 +901,7 @@ class ThreadSerializerSerializationTest(SerializerTestMixin, SharedModuleStoreTe
             "abuse_flagged_count": None,
             "edit_by_label": None,
             "closed_by_label": None,
+            "is_deleted": None,
         })
         assert self.serialize(thread) == expected
 
@@ -1000,6 +1008,7 @@ class ThreadSerializerSerializationTest(SerializerTestMixin, SharedModuleStoreTe
             "edit_by_label": None,
             "closed_by_label": closed_by_label,
             "closed_by": closed_by,
+            "is_deleted": False if role in (FORUM_ROLE_MODERATOR, "author") else None,
         })
         assert self.serialize(thread) == expected
 
@@ -1060,6 +1069,7 @@ class ThreadSerializerSerializationTest(SerializerTestMixin, SharedModuleStoreTe
             "edit_by_label": edit_by_label,
             "closed_by_label": None,
             "closed_by": None,
+            "is_deleted": False if role in (FORUM_ROLE_MODERATOR, "author") else None,
         })
         assert self.serialize(thread) == expected
 

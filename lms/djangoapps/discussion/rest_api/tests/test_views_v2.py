@@ -920,6 +920,9 @@ class BulkDeleteUserPostsTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
                 "replies": random.randint(0, 30),
                 "responses": random.randint(0, 100),
                 "threads": random.randint(0, 10),
+                "deleted_threads": 0,
+                "deleted_replies": 0,
+                "deleted_responses": 0,
                 "username": f"user-{idx}"
             }
             for idx in range(10)
@@ -1111,6 +1114,8 @@ class CourseViewTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
                 'is_email_verified': True,
                 'only_verified_users_can_post': False,
                 'content_creation_rate_limited': False,
+                'is_user_banned': False,
+                'enable_discussion_ban': False,
             }
         )
 
@@ -1586,7 +1591,13 @@ class LearnerThreadViewAPITest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             }},
             {"key": "vote_count", "value": 4},
             {"key": "voted", "value": False},
-
+            {"key": "learner_status", "value": "new"},
+            {"key": "is_deleted", "value": False},
+            {"key": "deleted_at", "value": None},
+            {"key": "deleted_by", "value": None},
+            {"key": "deleted_by_label", "value": None},
+            {"key": "is_author_banned", "value": False},
+            {"key": "author_ban_scope", "value": None},
         ]
         self.url = reverse("discussion_learner_threads", kwargs={'course_id': str(self.course.id)})
 
@@ -1710,7 +1721,8 @@ class LearnerThreadViewAPITest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             "per_page": 10,
             "thread_type": thread_type,
             "sort_key": 'activity',
-            "count_flagged": False
+            "count_flagged": False,
+            "show_deleted": False,
         }
 
         self.check_mock_called_with("get_user_active_threads", -1, **params)
@@ -1765,7 +1777,8 @@ class LearnerThreadViewAPITest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             "page": 1,
             "per_page": 10,
             "sort_key": cc_query,
-            "count_flagged": False
+            "count_flagged": False,
+            "show_deleted": False,
         }
         self.check_mock_called_with("get_user_active_threads", -1, **params)
 
@@ -1818,7 +1831,8 @@ class LearnerThreadViewAPITest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
                 "per_page": 10,
                 post_status: True,
                 "sort_key": 'activity',
-                "count_flagged": False
+                "count_flagged": False,
+                "show_deleted": False,
             }
             self.check_mock_called_with("get_user_active_threads", -1, **params)
 
@@ -1849,6 +1863,9 @@ class CourseActivityStatsTest(UrlResetMixin, ForumMockUtilsMixin, APITestCase,
                 "replies": random.randint(0, 30),
                 "responses": random.randint(0, 100),
                 "threads": random.randint(0, 10),
+                "deleted_threads": 0,
+                "deleted_replies": 0,
+                "deleted_responses": 0,
                 "username": f"user-{idx}"
             }
             for idx in range(10)

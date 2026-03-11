@@ -6,6 +6,8 @@ from unittest import mock
 
 import ddt
 import pytest
+from django.core.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.test.client import RequestFactory
 from opaque_keys.edx.keys import CourseKey
@@ -16,12 +18,20 @@ from xmodule.modulestore.tests.factories import CourseFactory
 from common.djangoapps.student.tests.factories import (
     UserFactory
 )
-from lms.djangoapps.discussion.rest_api.api import get_user_comments
+from lms.djangoapps.discussion.rest_api.api import (
+    create_comment,
+    create_thread,
+    get_user_comments,
+)
 from lms.djangoapps.discussion.rest_api.tests.utils import (
     ForumMockUtilsMixin,
     make_minimal_cs_comment,
 )
 from openedx.core.lib.exceptions import CourseNotFoundError, PageNotFoundError
+from openedx.core.djangoapps.django_comment_common.comment_client.utils import (
+    CommentClient500Error,
+    CommentClientRequestError,
+)
 
 User = get_user_model()
 
