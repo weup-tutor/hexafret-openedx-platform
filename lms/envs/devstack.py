@@ -474,6 +474,12 @@ if ENABLE_ENTERPRISE_INTEGRATION:
 #####################################################################
 
 # django-session-cookie middleware
+# Devstack uses Lax rather than the production 'None' (which requires Secure/HTTPS).
+# Note: SP-initiated SAML flows POST the SAMLResponse cross-site back to
+# /auth/complete/tpa-saml/, and SameSite=Lax blocks that POST. Testing
+# SP-initiated SAML locally therefore requires either running devstack over HTTPS
+# (so SameSite=None;Secure can be used) or enabling the browser flag that lifts
+# the SameSite-without-Secure restriction (e.g. chrome://flags/#cookies-without-same-site-must-be-secure).
 DCS_SESSION_COOKIE_SAMESITE = 'Lax'
 DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
