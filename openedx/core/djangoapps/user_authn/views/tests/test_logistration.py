@@ -440,6 +440,30 @@ class LoginAndRegistrationTest(ThirdPartyAuthTestMixin, UrlResetMixin, ModuleSto
         # The form should be rendered (200), not a redirect to the provider's auth URL.
         self.assertEqual(response.status_code, 200)
 
+    @ddt.data(
+        ('signin_user', 'login'),
+        ('register_user', 'register'),
+    )
+    @ddt.unpack
+    def test_hinted_login_dialog_disabled_with_session_token_only(self, url_name, auth_entry):  # pylint: disable=unused-argument
+        """
+        Test that skip_hinted_login_dialog does NOT redirect when a partial pipeline token
+        exists in the session even if pipeline.get() returns None (e.g. due to DB read-replica
+        replication lag where the partial object hasn't propagated yet).
+        """
+        self.google_provider.skip_hinted_login_dialog = True
+        self.google_provider.save()
+        params = [("next", "/courses/something/?tpa_hint=oa2-google-oauth2")]
+        pipeline_target = "openedx.core.djangoapps.user_authn.views.login_form.third_party_auth.pipeline"
+        # pipeline.get() returns None (replica lag), but session has the partial token
+        with mock.patch(f"{pipeline_target}.get", return_value=None):
+            session = self.client.session
+            session['partial_pipeline_token'] = 'some-token-value'
+            session.save()
+            response = self.client.get(reverse(url_name), params, HTTP_ACCEPT="text/html")
+        # The form should be rendered (200), not a redirect to the provider's auth URL.
+        self.assertEqual(response.status_code, 200)
+
     @override_settings(FEATURES=dict(settings.FEATURES, THIRD_PARTY_AUTH_HINT='oa2-google-oauth2'))
     @ddt.data(
         'signin_user',
