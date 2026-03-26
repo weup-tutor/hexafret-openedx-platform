@@ -10,7 +10,9 @@ from web_fragments.fragment import Fragment
 
 from common.djangoapps.course_modes.models import CourseMode
 from common.djangoapps.student.models import CourseEnrollment
+from common.djangoapps.student.models import CourseEnrollmentAttribute
 from common.djangoapps.util.date_utils import strftime_localized, strftime_localized_html
+from lms.djangoapps.experiments.flags import AUDIT_EXPIRY_URGENCY_V1_ENABLED
 from lms.djangoapps.courseware.access_response import AccessError
 from lms.djangoapps.courseware.access_utils import ACCESS_GRANTED
 from lms.djangoapps.courseware.utils import verified_upgrade_deadline_link
@@ -84,6 +86,29 @@ def get_user_course_expiration_date(user, course, enrollment=None):
     enrollment = enrollment or CourseEnrollment.get_enrollment(user, course.id)
     if enrollment is None or enrollment.mode != CourseMode.AUDIT:
         return None
+
+    # Audit Expiry Urgency (v1) experiment: if an explicit persisted expiry exists,
+    # it is the single source of truth for UI/API reads.
+    # Kill switch behavior: when disabled, ignore any persisted experiment values
+    # and fall back to the default computed CDL logic.
+    if AUDIT_EXPIRY_URGENCY_V1_ENABLED.is_enabled():
+        persisted_expiry_attr = (
+            CourseEnrollmentAttribute.objects.filter(
+                enrollment=enrollment,
+                namespace='audit_expiry_experiment',
+                name='audit_expiry_at',
+            ).order_by('id').last()
+        )
+        if persisted_expiry_attr:
+            try:
+                persisted_expiry = timezone.datetime.fromisoformat(persisted_expiry_attr.value)
+            except ValueError:
+                # If a malformed value was stored, fall back to the normal computation.
+                persisted_expiry = None
+            if persisted_expiry:
+                if timezone.is_naive(persisted_expiry):
+                    persisted_expiry = timezone.make_aware(persisted_expiry, timezone=timezone.utc)
+                return persisted_expiry
 
     # We reset schedule.start in order to change a user's computed deadlines.
     # But their expiration date shouldn't change when we adjust their schedule (they don't

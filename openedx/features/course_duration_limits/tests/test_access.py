@@ -26,6 +26,9 @@ from openedx.features.course_duration_limits.access import (
     get_user_course_expiration_date
 )
 from openedx.features.course_duration_limits.models import CourseDurationLimitConfig
+from common.djangoapps.student.models import CourseEnrollmentAttribute
+from edx_toggles.toggles.testutils import override_waffle_flag
+from lms.djangoapps.experiments.flags import AUDIT_EXPIRY_URGENCY_V1_ENABLED
 
 
 @ddt.ddt
@@ -157,3 +160,59 @@ class TestAccess(ModuleStoreTestCase):
         duration_limit_upgrade_deadline = get_user_course_expiration_date(enrollment.user, enrollment.course)
         assert duration_limit_upgrade_deadline is not None
         assert duration_limit_upgrade_deadline == expected_course_expiration_date
+
+
+    def test_get_user_course_expiration_date_uses_persisted_audit_expiry_at_when_present(self):
+        enrollment = CourseEnrollmentFactory.create(course=self.course)
+        overview = enrollment.course
+        user = enrollment.user
+
+        CourseModeFactory(
+            course_id=enrollment.course.id,
+            mode_slug=CourseMode.VERIFIED,
+        )
+        CourseModeFactory(
+            course_id=enrollment.course.id,
+            mode_slug=CourseMode.AUDIT,
+        )
+
+        persisted = (timezone.now() + timedelta(days=42)).replace(microsecond=0)
+        CourseEnrollmentAttribute.objects.create(
+            enrollment=enrollment,
+            namespace='audit_expiry_experiment',
+            name='audit_expiry_at',
+            value=persisted.isoformat(),
+        )
+
+        with override_waffle_flag(AUDIT_EXPIRY_URGENCY_V1_ENABLED, active=True):
+            assert get_user_course_expiration_date(user, overview) == persisted
+
+    def test_get_user_course_expiration_date_ignores_persisted_audit_expiry_at_when_flag_off(self):
+        enrollment = CourseEnrollmentFactory.create(course=self.course)
+        overview = enrollment.course
+        user = enrollment.user
+
+        CourseModeFactory(
+            course_id=enrollment.course.id,
+            mode_slug=CourseMode.VERIFIED,
+        )
+        CourseModeFactory(
+            course_id=enrollment.course.id,
+            mode_slug=CourseMode.AUDIT,
+        )
+
+        persisted = (timezone.now() + timedelta(days=42)).replace(microsecond=0)
+        CourseEnrollmentAttribute.objects.create(
+            enrollment=enrollment,
+            namespace='audit_expiry_experiment',
+            name='audit_expiry_at',
+            value=persisted.isoformat(),
+        )
+
+        # With the waffle flag off, the persisted value should be ignored
+        # and the normal computed CDL logic should be used.
+        with override_waffle_flag(AUDIT_EXPIRY_URGENCY_V1_ENABLED, active=False):
+            computed = get_user_course_expiration_date(user, overview)
+
+        assert computed is not None
+        assert computed != persisted
