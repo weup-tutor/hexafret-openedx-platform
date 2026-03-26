@@ -25,12 +25,6 @@ def persist_audit_expiry_urgency_attributes(sender, instance, **kwargs):  # pyli
         return
 
     try:
-        # Keep this log at debug level to avoid production noise.
-        log.debug(
-            'Audit expiry urgency: post_save received for enrollment_id=%s course_id=%s',
-            getattr(instance, 'id', None),
-            getattr(instance, 'course_id', None),
-        )
         maybe_persist_audit_expiry_urgency_attributes(instance)
     except Exception:  # pylint: disable=broad-except
         log.exception(

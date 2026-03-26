@@ -57,13 +57,6 @@ def _get_configured_target_course_id_strings():
     site_config_enabled = configuration_helpers.is_site_configuration_enabled()
     configured = configuration_helpers.get_value(SITE_CONFIG_KEY_TARGET_COURSES, default=default_from_settings)
 
-    # Minimal debug logging for rollout validation.
-    if log.isEnabledFor(logging.DEBUG):
-        if site_config_enabled:
-            log.debug('Audit expiry urgency: target courses loaded from SiteConfiguration')
-        else:
-            log.debug('Audit expiry urgency: target courses loaded from Django settings fallback')
-
     if configured is None:
         configured = []
     if isinstance(configured, str):
@@ -170,9 +163,7 @@ def _activate_optimizely_variant(user):
     if optimizely_client is None:
         return None
     try:
-        log.debug('Audit expiry urgency: calling Optimizely activate (experiment=%s)', EXPERIMENT_KEY)
         variation_key = optimizely_client.activate(EXPERIMENT_KEY, str(user.id))
-        log.debug('Audit expiry urgency: Optimizely returned variation=%s (experiment=%s)', variation_key, EXPERIMENT_KEY)
         return variation_key
     except Exception:  # pylint: disable=broad-except
         # Never break enrollment due to Optimizely issues.
@@ -188,12 +179,10 @@ def choose_variant(user, target_course_id_strings):
     """Choose (or reuse) a learner-level variant."""
     forced_variant = _forced_variant_from_settings()
     if forced_variant:
-        log.info('Audit expiry urgency: using forced variant=%s (setting=%s)', forced_variant, FORCE_VARIANT_SETTING)
         return forced_variant
 
     existing_variant = _find_existing_variant_for_user(user, target_course_id_strings)
     if existing_variant:
-        log.debug('Audit expiry urgency: reusing existing variant=%s', existing_variant)
         return existing_variant
 
     variation_key = _activate_optimizely_variant(user)
@@ -205,7 +194,6 @@ def choose_variant(user, target_course_id_strings):
     # to allow local UI validation without Optimizely.
     if settings.DEBUG and OptimizelyClient.get_optimizely_client() is None:
         chosen = random.choice([VARIANT_CONTROL, VARIANT_EXPIRY_7_DAYS])
-        log.info('Audit expiry urgency: DEBUG local fallback randomly chose variant=%s', chosen)
         return chosen
 
     if variation_key is not None:
@@ -233,27 +221,23 @@ def compute_audit_expiry_at(enrollment, variant, access_duration):
 def should_process_enrollment(enrollment):
     """Return True if enrollment is eligible for this experiment."""
     if not AUDIT_EXPIRY_URGENCY_V1_ENABLED.is_enabled():
-        log.debug('Audit expiry urgency: skipped (waffle disabled)')
         return False
     if not enrollment or not enrollment.user_id:
         log.warning('Audit expiry urgency: skipped (missing enrollment or user)')
         return False
     if not enrollment.is_active:
-        log.debug('Audit expiry urgency: skipped (inactive enrollment)')
         return False
     if enrollment.mode != CourseMode.AUDIT:
-        log.debug('Audit expiry urgency: skipped (not audit mode)')
         return False
     if not enrollment.course_overview:
         log.warning('Audit expiry urgency: skipped (missing course_overview)')
         return False
     if not is_target_course(enrollment.course_id):
-        log.debug('Audit expiry urgency: skipped (course not in allowlist)')
         return False
     # Only apply if Course Duration Limits would normally apply.
     access_duration = get_user_course_duration(enrollment.user, enrollment.course_overview)
     if access_duration is None:
-        log.debug('Audit expiry urgency: skipped (CDL not applicable)')
+        return False
     return access_duration is not None
 
 
@@ -267,7 +251,6 @@ def maybe_persist_audit_expiry_urgency_attributes(enrollment):
 
     # Idempotency: do not overwrite once set.
     if get_persisted_audit_expiry_at(enrollment):
-        log.debug('Audit expiry urgency: idempotency skip (audit_expiry_at already persisted)')
         return
 
     target_course_ids = _get_configured_target_course_id_strings()
@@ -282,9 +265,5 @@ def maybe_persist_audit_expiry_urgency_attributes(enrollment):
     if timezone.is_naive(audit_expiry_at):
         audit_expiry_at = timezone.make_aware(audit_expiry_at, timezone=timezone.utc)
 
-    log.debug('Audit expiry urgency: computed audit_expiry_at=%s variant=%s', audit_expiry_at.isoformat(), variant)
-
     _set_attribute(enrollment, ATTRIBUTE_NAME_VARIANT, variant)
     _set_attribute(enrollment, ATTRIBUTE_NAME_AUDIT_EXPIRY_AT, audit_expiry_at.isoformat())
-
-    log.debug('Audit expiry urgency: persisted attributes for enrollment_id=%s', enrollment.id)
