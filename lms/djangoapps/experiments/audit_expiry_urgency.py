@@ -189,13 +189,6 @@ def choose_variant(user, target_course_id_strings):
     if variation_key in VALID_VARIANTS:
         return variation_key
 
-    # TEMP: Local testing fallback.
-    # If we're in DEBUG and Optimizely is unavailable, assign randomly (50/50)
-    # to allow local UI validation without Optimizely.
-    if settings.DEBUG and OptimizelyClient.get_optimizely_client() is None:
-        chosen = random.choice([VARIANT_CONTROL, VARIANT_EXPIRY_7_DAYS])
-        return chosen
-
     if variation_key is not None:
         log.warning('Audit expiry urgency: unexpected variation=%s; falling back to control', variation_key)
     else:
