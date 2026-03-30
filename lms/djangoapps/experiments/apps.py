@@ -11,32 +11,3 @@ class ExperimentsConfig(AppConfig):
     def ready(self):
         # Import signal handlers.
         from . import signals  # pylint: disable=unused-import, import-outside-toplevel
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
