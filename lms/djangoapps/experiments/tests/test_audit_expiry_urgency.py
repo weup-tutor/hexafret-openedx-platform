@@ -53,7 +53,8 @@ class TestAuditExpiryUrgencyExperiment(SharedModuleStoreTestCase):
         with override_waffle_flag(AUDIT_EXPIRY_URGENCY_V1_ENABLED, active=True):
             with override_settings(AUDIT_EXPIRY_EXPERIMENT_COURSES=[str(self.course_1.id)]):
                 with mock.patch(
-                    'lms.djangoapps.experiments.audit_expiry_urgency.OptimizelyClient.get_optimizely_client',
+                    'lms.djangoapps.experiments.audit_expiry_urgency.'
+                    'OptimizelyClient.get_optimizely_client',
                     return_value=None,
                 ):
                     enrollment.save()

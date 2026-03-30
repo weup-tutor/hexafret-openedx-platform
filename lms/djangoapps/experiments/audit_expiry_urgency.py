@@ -12,7 +12,6 @@ Design constraints (from ticket):
 """
 
 import logging
-import random
 from datetime import timedelta
 
 from django.conf import settings
