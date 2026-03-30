@@ -68,15 +68,12 @@ class TestAuditExpiryUrgencyExperiment(SharedModuleStoreTestCase):
 
     def test_reuses_variant_across_allowlisted_courses(self):
         user = None
-    
         enrollment_1 = CourseEnrollmentFactory.create(
             course=self.course_1,
             mode=CourseMode.AUDIT,
             is_active=True,
         )
-    
         user = enrollment_1.user
-    
         enrollment_2 = CourseEnrollmentFactory.create(
             user=user,
             course=self.course_2,
