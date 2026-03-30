@@ -1451,9 +1451,9 @@ class TestUserEnrollmentsStatus(MobileAPITestCase, MobileAuthUserTestMixin):
         response = self.api_response(api_version=API_V1)
 
         expected_response = [
-            {'course_id': str(courses[0].course_id), 'course_name': courses[0].display_name, 'recently_active': True},
-            {'course_id': str(courses[1].course_id), 'course_name': courses[1].display_name, 'recently_active': True},
-            {'course_id': str(courses[2].course_id), 'course_name': courses[2].display_name, 'recently_active': True},
+            {'course_id': str(courses[0].id), 'course_name': courses[0].display_name, 'recently_active': True},
+            {'course_id': str(courses[1].id), 'course_name': courses[1].display_name, 'recently_active': True},
+            {'course_id': str(courses[2].id), 'course_name': courses[2].display_name, 'recently_active': True},
         ]
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1466,17 +1466,17 @@ class TestUserEnrollmentsStatus(MobileAPITestCase, MobileAuthUserTestMixin):
             self.enroll(course.id)
         old_course = CourseFactory.create(org="edx", mobile_available=True)
         self.enroll(old_course.id)
-        old_enrollment = CourseEnrollment.objects.filter(user=self.user, course=old_course.course_id).first()
+        old_enrollment = CourseEnrollment.objects.filter(user=self.user, course=old_course.id).first()
         old_enrollment.created = datetime.datetime.now(pytz.UTC) - datetime.timedelta(days=31)
         old_enrollment.save()
 
         response = self.api_response(api_version=API_V1)
 
         expected_response = [
-            {'course_id': str(courses[0].course_id), 'course_name': courses[0].display_name, 'recently_active': True},
-            {'course_id': str(courses[1].course_id), 'course_name': courses[1].display_name, 'recently_active': True},
-            {'course_id': str(courses[2].course_id), 'course_name': courses[2].display_name, 'recently_active': True},
-            {'course_id': str(old_course.course_id), 'course_name': old_course.display_name, 'recently_active': False}
+            {'course_id': str(courses[0].id), 'course_name': courses[0].display_name, 'recently_active': True},
+            {'course_id': str(courses[1].id), 'course_name': courses[1].display_name, 'recently_active': True},
+            {'course_id': str(courses[2].id), 'course_name': courses[2].display_name, 'recently_active': True},
+            {'course_id': str(old_course.id), 'course_name': old_course.display_name, 'recently_active': False}
         ]
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1494,7 +1494,7 @@ class TestUserEnrollmentsStatus(MobileAPITestCase, MobileAuthUserTestMixin):
         self.login()
         course = CourseFactory.create(org="edx", mobile_available=True, run='1001')
         self.enroll(course.id)
-        enrollment = CourseEnrollment.objects.filter(user=self.user, course=course.course_id).first()
+        enrollment = CourseEnrollment.objects.filter(user=self.user, course=course.id).first()
         enrollment.created = datetime.datetime.now(pytz.UTC) - datetime.timedelta(days=enrolled_days_ago)
         enrollment.save()
 
@@ -1502,7 +1502,7 @@ class TestUserEnrollmentsStatus(MobileAPITestCase, MobileAuthUserTestMixin):
 
         expected_response = [
             {
-                'course_id': str(course.course_id),
+                'course_id': str(course.id),
                 'course_name': course.display_name,
                 'recently_active': recently_active_status
             }
@@ -1527,7 +1527,7 @@ class TestUserEnrollmentsStatus(MobileAPITestCase, MobileAuthUserTestMixin):
             category='chapter',
         )
         self.enroll(course.id)
-        enrollment = CourseEnrollment.objects.filter(user=self.user, course=course.course_id).first()
+        enrollment = CourseEnrollment.objects.filter(user=self.user, course=course.id).first()
         # make enrollment older 30 days ago
         enrollment.created = datetime.datetime.now(pytz.UTC) - datetime.timedelta(days=50)
         enrollment.save()
@@ -1545,7 +1545,7 @@ class TestUserEnrollmentsStatus(MobileAPITestCase, MobileAuthUserTestMixin):
 
         expected_response = [
             {
-                'course_id': str(course.course_id),
+                'course_id': str(course.id),
                 'course_name': course.display_name,
                 'recently_active': recently_active_status
             }

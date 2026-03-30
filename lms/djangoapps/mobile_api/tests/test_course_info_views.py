@@ -388,7 +388,7 @@ class TestBlocksInfoInCourseView(TestBlocksInCourseView, MilestonesTestCaseMixin
     def test_course_about_url(self):
         response = self.verify_response(url=self.url)
 
-        course_overview = CourseOverview.objects.get(id=self.course.course_id)
+        course_overview = CourseOverview.objects.get(id=self.course.id)
         expected_course_about_link = get_link_for_about_page(course_overview)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -495,7 +495,7 @@ class TestCourseEnrollmentDetailsView(MobileAPITestCase, MilestonesTestCaseMixin
         expected_course_modes = [{'slug': 'audit', 'sku': None, 'android_sku': None, 'ios_sku': None, 'min_price': 0}]
         self.assertListEqual(course_info['course_modes'], expected_course_modes)
 
-        course_overview = CourseOverview.objects.get(id=self.course.course_id)
+        course_overview = CourseOverview.objects.get(id=self.course.id)
         expected_course_about_link = get_link_for_about_page(course_overview)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(course_info['course_about'], expected_course_about_link)
