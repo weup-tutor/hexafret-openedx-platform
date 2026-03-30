@@ -80,7 +80,7 @@ class TestScoreRender(ModuleStoreTestCase):
 
             # Call the function
             result = load_xblock_for_external_grader(
-                self.anonymous_user_id, str(self.course.id), str(self.problem.location), self.course
+                self.anonymous_user_id, str(self.course.id), str(self.problem.usage_key), self.course
             )
 
             # Assertions
@@ -103,7 +103,7 @@ class TestScoreRender(ModuleStoreTestCase):
         # Test that Http404 is raised
         with self.assertRaises(Http404):
             load_xblock_for_external_grader(
-                self.anonymous_user_id, str(self.course.id), str(self.problem.location), self.course
+                self.anonymous_user_id, str(self.course.id), str(self.problem.usage_key), self.course
             )
 
     @patch("lms.djangoapps.grades.score_render.prepare_runtime_for_user")
@@ -142,7 +142,7 @@ class TestScoreRender(ModuleStoreTestCase):
             score_msg='{"score": 10, "feedback": "Great job!"}',
             course_id=str(self.course.id),
             user_id=self.anonymous_user_id,
-            module_id=str(self.problem.location),
+            module_id=str(self.problem.usage_key),
             submission_id="sub_123",
             queue_key="key_456",
             queue_name="test_queue",
@@ -188,7 +188,7 @@ class TestScoreRender(ModuleStoreTestCase):
             score_msg=plain_text,
             course_id=str(self.course.id),
             user_id=self.anonymous_user_id,
-            module_id=str(self.problem.location),
+            module_id=str(self.problem.usage_key),
             submission_id="sub_123",
             queue_key="key_456",
             queue_name="test_queue",
@@ -220,7 +220,7 @@ class TestScoreRender(ModuleStoreTestCase):
             score_msg='{"score": 10}',
             course_id=str(self.course.id),
             user_id=self.anonymous_user_id,
-            module_id=str(self.problem.location),
+            module_id=str(self.problem.usage_key),
             submission_id="sub_123",
             queue_key="key_456",
             queue_name="test_queue",
@@ -250,9 +250,9 @@ class TestScoreRender(ModuleStoreTestCase):
 
         # Test that Http404 is raised
         with self.assertRaises(Http404) as context:
-            load_xblock_for_external_grader(self.anonymous_user_id, str(self.course.id), str(self.problem.location))
+            load_xblock_for_external_grader(self.anonymous_user_id, str(self.course.id), str(self.problem.usage_key))
 
-        expected_msg = f"Could not bind XBlock instance for usage key: {str(self.problem.location)}"
+        expected_msg = f"Could not bind XBlock instance for usage key: {str(self.problem.usage_key)}"
         self.assertEqual(str(context.exception), expected_msg)
 
         # Verify that all mocks were called
@@ -297,7 +297,7 @@ class TestScoreRenderIntegration(ModuleStoreTestCase):
                 score_msg='{"score": 1, "max_score": 1, "correct": true}',
                 course_id=str(self.course.id),
                 user_id=self.anonymous_user_id,
-                module_id=str(self.problem.location),
+                module_id=str(self.problem.usage_key),
                 submission_id="sub_123",
                 queue_key="key_456",
                 queue_name="test_queue",

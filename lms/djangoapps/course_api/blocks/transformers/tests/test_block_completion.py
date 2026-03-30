@@ -70,20 +70,20 @@ class BlockCompletionTransformerTestCase(TransformerRegistryTestMixin, Completio
         block = BlockFactory.create(category='comp', parent=filled_aggregator)
         BlockCompletion.objects.submit_completion(
             user=self.user,
-            block_key=block.location,
+            block_key=block.usage_key,
             completion=self.COMPLETION_TEST_VALUE,
         )
         empty_aggregator = BlockFactory.create(category='aggregator', parent=course)
-        block_structure = get_course_blocks(self.user, course.location, self.transformers)
+        block_structure = get_course_blocks(self.user, course.usage_key, self.transformers)
 
         self._assert_block_has_proper_completion_values(
-            block_structure, block.location, self.COMPLETION_TEST_VALUE, True
+            block_structure, block.usage_key, self.COMPLETION_TEST_VALUE, True
         )
         self._assert_block_has_proper_completion_values(
-            block_structure, filled_aggregator.location, None, True
+            block_structure, filled_aggregator.usage_key, None, True
         )
         self._assert_block_has_proper_completion_values(
-            block_structure, empty_aggregator.location, None, True
+            block_structure, empty_aggregator.usage_key, None, True
         )
 
     @XBlock.register_temp_plugin(StubExcludedXBlock, identifier='excluded')
@@ -93,9 +93,9 @@ class BlockCompletionTransformerTestCase(TransformerRegistryTestMixin, Completio
         """
         course = CourseFactory.create()
         block = BlockFactory.create(category='excluded', parent=course)
-        block_structure = get_course_blocks(self.user, course.location, self.transformers)
+        block_structure = get_course_blocks(self.user, course.usage_key, self.transformers)
 
-        self._assert_block_has_proper_completion_values(block_structure, block.location, None, False)
+        self._assert_block_has_proper_completion_values(block_structure, block.usage_key, None, False)
 
     @XBlock.register_temp_plugin(StubCompletableXBlock, identifier='comp')
     def test_transform_gives_value_for_completable(self):
@@ -107,13 +107,13 @@ class BlockCompletionTransformerTestCase(TransformerRegistryTestMixin, Completio
         block = BlockFactory.create(category='comp', parent=course)
         BlockCompletion.objects.submit_completion(
             user=self.user,
-            block_key=block.location,
+            block_key=block.usage_key,
             completion=self.COMPLETION_TEST_VALUE,
         )
-        block_structure = get_course_blocks(self.user, course.location, self.transformers)
+        block_structure = get_course_blocks(self.user, course.usage_key, self.transformers)
 
         self._assert_block_has_proper_completion_values(
-            block_structure, block.location, self.COMPLETION_TEST_VALUE, True
+            block_structure, block.usage_key, self.COMPLETION_TEST_VALUE, True
         )
 
     def test_transform_gives_zero_for_ordinary_block(self):
@@ -123,9 +123,9 @@ class BlockCompletionTransformerTestCase(TransformerRegistryTestMixin, Completio
         """
         course = CourseFactory.create()
         block = BlockFactory.create(category='html', parent=course)
-        block_structure = get_course_blocks(self.user, course.location, self.transformers)
+        block_structure = get_course_blocks(self.user, course.usage_key, self.transformers)
 
-        self._assert_block_has_proper_completion_values(block_structure, block.location, 0.0, False)
+        self._assert_block_has_proper_completion_values(block_structure, block.usage_key, 0.0, False)
 
     def _assert_block_has_proper_completion_values(
             self, block_structure, block_key, expected_completion, expected_complete

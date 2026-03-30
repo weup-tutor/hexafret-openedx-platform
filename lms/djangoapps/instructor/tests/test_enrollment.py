@@ -379,7 +379,7 @@ class TestInstructorEnrollmentStudentModule(SharedModuleStoreTestCase):
             org='course',
             run='id',
         )
-        cls.course_key = cls.course.location.course_key  # lint-amnesty, pylint: disable=no-member
+        cls.course_key = cls.course.usage_key.course_key  # lint-amnesty, pylint: disable=no-member
         with cls.store.bulk_operations(cls.course.id, emit_signals=False):  # lint-amnesty, pylint: disable=no-member
             cls.chapter = BlockFactory.create(
                 category='chapter',
@@ -419,19 +419,19 @@ class TestInstructorEnrollmentStudentModule(SharedModuleStoreTestCase):
         StudentModule.objects.create(
             student=self.user,
             course_id=self.course_key,
-            module_state_key=self.parent.location,
+            module_state_key=self.parent.usage_key,
             state=parent_state,
         )
         StudentModule.objects.create(
             student=self.user,
             course_id=self.course_key,
-            module_state_key=self.child.location,
+            module_state_key=self.child.usage_key,
             state=child_state,
         )
         StudentModule.objects.create(
             student=self.user,
             course_id=self.course_key,
-            module_state_key=self.unrelated.location,
+            module_state_key=self.unrelated.usage_key,
             state=unrelated_state,
         )
 
@@ -554,25 +554,25 @@ class TestInstructorEnrollmentStudentModule(SharedModuleStoreTestCase):
         StudentModule.objects.create(
             student=self.user,
             course_id=self.course_key,
-            module_state_key=self.team_enabled_ora.location,
+            module_state_key=self.team_enabled_ora.usage_key,
             state=team_state,
         )
         StudentModule.objects.create(
             student=self.teammate_a,
             course_id=self.course_key,
-            module_state_key=self.team_enabled_ora.location,
+            module_state_key=self.team_enabled_ora.usage_key,
             state=team_state,
         )
         StudentModule.objects.create(
             student=self.teammate_b,
             course_id=self.course_key,
-            module_state_key=self.team_enabled_ora.location,
+            module_state_key=self.team_enabled_ora.usage_key,
             state=team_state,
         )
 
     def test_reset_team_attempts(self):
         self.setup_team()
-        team_ora_location = self.team_enabled_ora.location
+        team_ora_location = self.team_enabled_ora.usage_key
         # All teammates should have a student module (except lazy_teammate)
         assert self.get_student_module(self.user, team_ora_location) is not None
         assert self.get_student_module(self.teammate_a, team_ora_location) is not None
@@ -600,7 +600,7 @@ class TestInstructorEnrollmentStudentModule(SharedModuleStoreTestCase):
     @patch('lms.djangoapps.grades.signals.handlers.PROBLEM_WEIGHTED_SCORE_CHANGED.send')
     def test_delete_team_attempts(self, _mock_signal):
         self.setup_team()
-        team_ora_location = self.team_enabled_ora.location
+        team_ora_location = self.team_enabled_ora.usage_key
         # All teammates should have a student module (except lazy_teammate)
         assert self.get_student_module(self.user, team_ora_location) is not None
         assert self.get_student_module(self.teammate_a, team_ora_location) is not None
@@ -620,7 +620,7 @@ class TestInstructorEnrollmentStudentModule(SharedModuleStoreTestCase):
     @patch('lms.djangoapps.grades.signals.handlers.PROBLEM_WEIGHTED_SCORE_CHANGED.send')
     def test_delete_team_attempts_no_team_fallthrough(self, _mock_signal):
         self.setup_team()
-        team_ora_location = self.team_enabled_ora.location
+        team_ora_location = self.team_enabled_ora.usage_key
 
         # Remove self.user from the team
         CourseTeamMembership.objects.get(user=self.user, team=self.team).delete()
@@ -657,57 +657,57 @@ class TestInstructorEnrollmentStudentModule(SharedModuleStoreTestCase):
         return self.get_student_module(self.user, location).state
 
     def test_reset_student_attempts_children(self):
-        parent_state = json.loads(self.get_state(self.parent.location))
+        parent_state = json.loads(self.get_state(self.parent.usage_key))
         assert parent_state['attempts'] == 32
         assert parent_state['otherstuff'] == 'alsorobots'
 
-        child_state = json.loads(self.get_state(self.child.location))
+        child_state = json.loads(self.get_state(self.child.usage_key))
         assert child_state['attempts'] == 10
         assert child_state['whatever'] == 'things'
 
-        unrelated_state = json.loads(self.get_state(self.unrelated.location))
+        unrelated_state = json.loads(self.get_state(self.unrelated.usage_key))
         assert unrelated_state['attempts'] == 12
         assert unrelated_state['brains'] == 'zombie'
 
-        reset_student_attempts(self.course_key, self.user, self.parent.location, requesting_user=self.user)
+        reset_student_attempts(self.course_key, self.user, self.parent.usage_key, requesting_user=self.user)
 
-        parent_state = json.loads(self.get_state(self.parent.location))
-        assert json.loads(self.get_state(self.parent.location))['attempts'] == 0
+        parent_state = json.loads(self.get_state(self.parent.usage_key))
+        assert json.loads(self.get_state(self.parent.usage_key))['attempts'] == 0
         assert parent_state['otherstuff'] == 'alsorobots'
 
-        child_state = json.loads(self.get_state(self.child.location))
+        child_state = json.loads(self.get_state(self.child.usage_key))
         assert child_state['attempts'] == 0
         assert child_state['whatever'] == 'things'
 
-        unrelated_state = json.loads(self.get_state(self.unrelated.location))
+        unrelated_state = json.loads(self.get_state(self.unrelated.usage_key))
         assert unrelated_state['attempts'] == 12
         assert unrelated_state['brains'] == 'zombie'
 
     def test_delete_submission_scores_attempts_children(self):
-        parent_state = json.loads(self.get_state(self.parent.location))
+        parent_state = json.loads(self.get_state(self.parent.usage_key))
         assert parent_state['attempts'] == 32
         assert parent_state['otherstuff'] == 'alsorobots'
 
-        child_state = json.loads(self.get_state(self.child.location))
+        child_state = json.loads(self.get_state(self.child.usage_key))
         assert child_state['attempts'] == 10
         assert child_state['whatever'] == 'things'
 
-        unrelated_state = json.loads(self.get_state(self.unrelated.location))
+        unrelated_state = json.loads(self.get_state(self.unrelated.usage_key))
         assert unrelated_state['attempts'] == 12
         assert unrelated_state['brains'] == 'zombie'
 
         reset_student_attempts(
             self.course_key,
             self.user,
-            self.parent.location,
+            self.parent.usage_key,
             requesting_user=self.user,
             delete_module=True,
         )
 
-        self.assertRaises(StudentModule.DoesNotExist, self.get_state, self.parent.location)
-        self.assertRaises(StudentModule.DoesNotExist, self.get_state, self.child.location)
+        self.assertRaises(StudentModule.DoesNotExist, self.get_state, self.parent.usage_key)
+        self.assertRaises(StudentModule.DoesNotExist, self.get_state, self.child.usage_key)
 
-        unrelated_state = json.loads(self.get_state(self.unrelated.location))
+        unrelated_state = json.loads(self.get_state(self.unrelated.usage_key))
         assert unrelated_state['attempts'] == 12
         assert unrelated_state['brains'] == 'zombie'
 
@@ -765,7 +765,7 @@ class TestStudentModuleGrading(SharedModuleStoreTestCase):
         subsection_grade_factory = SubsectionGradeFactory(
             self.user,
             self.course,
-            get_course_blocks(self.user, self.course.location)
+            get_course_blocks(self.user, self.course.usage_key)
         )
         grade = subsection_grade_factory.create(self.sequence)
         assert grade.all_total.earned == all_earned
@@ -775,7 +775,7 @@ class TestStudentModuleGrading(SharedModuleStoreTestCase):
 
     @patch('crum.get_current_request')
     def test_delete_student_state(self, _crum_mock):
-        problem_location = self.problem.location
+        problem_location = self.problem.usage_key
         self._get_subsection_grade_and_verify(0, 1, 0, 1)
         answer_problem(course=self.course, request=self.request, problem=self.problem, score=1, max_value=1)
         self._get_subsection_grade_and_verify(1, 1, 1, 1)

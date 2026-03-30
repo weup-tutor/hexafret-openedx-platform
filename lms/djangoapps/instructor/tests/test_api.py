@@ -402,7 +402,7 @@ class TestInstructorAPIDenyLevels(SharedModuleStoreTestCase, LoginEnrollmentTest
             publish_item=True,
         )
 
-        cls.problem_urlname = str(cls.problem.location)
+        cls.problem_urlname = str(cls.problem.usage_key)
         BulkEmailFlag.objects.create(enabled=True, require_course_email_auth=False)
 
     @classmethod
@@ -418,7 +418,7 @@ class TestInstructorAPIDenyLevels(SharedModuleStoreTestCase, LoginEnrollmentTest
         _module = StudentModule.objects.create(
             student=self.user,
             course_id=self.course.id,
-            module_state_key=self.problem.location,
+            module_state_key=self.problem.usage_key,
             state=json.dumps({'attempts': 10}),
         )
 
@@ -442,7 +442,7 @@ class TestInstructorAPIDenyLevels(SharedModuleStoreTestCase, LoginEnrollmentTest
             ('get_students_who_may_enroll', {}),
             ('get_proctored_exam_results', {}),
             ('get_problem_responses', {}),
-            ('instructor_api_v1:generate_problem_responses', {"problem_locations": [str(self.problem.location)]}),
+            ('instructor_api_v1:generate_problem_responses', {"problem_locations": [str(self.problem.usage_key)]}),
             ('export_ora2_data', {}),
             ('export_ora2_submission_files', {}),
             ('export_ora2_summary', {}),
@@ -3450,13 +3450,13 @@ class TestEntranceExamInstructorAPIRegradeTask(SharedModuleStoreTestCase, LoginE
         ee_module_to_reset1 = StudentModule.objects.create(
             student=self.student,
             course_id=self.course.id,
-            module_state_key=self.ee_problem_1.location,
+            module_state_key=self.ee_problem_1.usage_key,
             state=json.dumps({'attempts': 10, 'done': True}),
         )
         ee_module_to_reset2 = StudentModule.objects.create(
             student=self.student,
             course_id=self.course.id,
-            module_state_key=self.ee_problem_2.location,
+            module_state_key=self.ee_problem_2.usage_key,
             state=json.dumps({'attempts': 10, 'done': True}),
         )
         self.ee_modules = [ee_module_to_reset1.module_state_key, ee_module_to_reset2.module_state_key]
@@ -4244,7 +4244,7 @@ def get_extended_due(course, unit, user):
     Gets the overridden due date for the given user on the given unit.  Returns
     `None` if there is no override set.
     """
-    location = str(unit.location)
+    location = str(unit.usage_key)
     dates = get_overrides_for_user(course.id, user)
     for override in dates:
         if str(override['location']) == location:
@@ -4258,7 +4258,7 @@ def get_date_for_block(course, unit, user, use_cached=False):
     Returns `None` if there is no date set.
     Differs from edx-when's get_date_for_block only in that we skip the cache when `use_cached` is `False` (default).
     """
-    return get_dates_for_course(course.id, user=user, use_cached=use_cached).get((unit.location, 'due'), None)
+    return get_dates_for_course(course.id, user=user, use_cached=use_cached).get((unit.usage_key, 'due'), None)
 
 
 class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
@@ -4278,15 +4278,15 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
             cls.week2 = BlockFactory.create(due=cls.due)
             cls.week3 = BlockFactory.create()  # No due date
             cls.course.children = [
-                str(cls.week1.location),
-                str(cls.week2.location),
-                str(cls.week3.location)
+                str(cls.week1.usage_key),
+                str(cls.week2.usage_key),
+                str(cls.week3.usage_key)
             ]
             cls.homework = BlockFactory.create(
-                parent_location=cls.week1.location,
+                parent_location=cls.week1.usage_key,
                 due=cls.due
             )
-            cls.week1.children = [str(cls.homework.location)]
+            cls.week1.children = [str(cls.homework.usage_key)]
 
     def setUp(self):
         """
@@ -4299,46 +4299,46 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.week2.location).save()
+            module_state_key=self.week2.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.week3.location).save()
+            module_state_key=self.week3.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
 
         user2 = UserFactory.create()
         StudentModule(
             state='{}',
             student_id=user2.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user2.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
 
         user3 = UserFactory.create()
         StudentModule(
             state='{}',
             student_id=user3.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user3.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
 
         self.user1 = user1
         self.user2 = user2
@@ -4353,7 +4353,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         due_date = datetime.datetime(2013, 12, 30, tzinfo=UTC)
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
             'due_datetime': '12/30/2013 00:00'
         })
         assert response.status_code == 200, response.content
@@ -4366,7 +4366,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         due_date = datetime.datetime(2013, 12, 30, tzinfo=UTC)
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
             'due_datetime': '12/30/2013 00:00',
             'reason': 'Testing reason.'  # this is optional field.
         })
@@ -4380,7 +4380,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         url = reverse('reset_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
             'reason': 'Testing reason.'  # this is optional field.
         })
         assert response.status_code == 200
@@ -4390,7 +4390,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         url = reverse('change_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
             'due_datetime': '01/01/2009 00:00'
         })
         assert response.status_code == 400, response.content
@@ -4400,7 +4400,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         url = reverse('change_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week3.location),
+            'url': str(self.week3.usage_key),
             'due_datetime': '12/30/2013 00:00'
         })
         assert response.status_code == 400, response.content
@@ -4410,7 +4410,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         url = reverse('change_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': 'invalid_username',
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
             'due_datetime': '12/30/2026 02:00'
         })
         assert response.status_code == 404, response.content
@@ -4420,7 +4420,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         url = reverse('change_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
             'due_datetime': '12/30/2kkk 00:00:00'
         })
         assert response.status_code == 400, response.content
@@ -4442,7 +4442,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         url = reverse('reset_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
         })
         assert response.status_code == 200, response.content
         assert self.due == get_extended_due(self.course, self.week1, self.user1)
@@ -4452,19 +4452,19 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         # Start with a unit that only has a date in edx-when
         assert get_date_for_block(self.course, self.week3, self.user1) is None
         original_due = datetime.datetime(2010, 4, 1, tzinfo=UTC)
-        set_date_for_block(self.course.id, self.week3.location, 'due', original_due)
+        set_date_for_block(self.course.id, self.week3.usage_key, 'due', original_due)
         assert get_date_for_block(self.course, self.week3, self.user1) == original_due
 
         # set override, confirm it took
         override = datetime.datetime(2010, 7, 1, tzinfo=UTC)
-        set_date_for_block(self.course.id, self.week3.location, 'due', override, user=self.user1)
+        set_date_for_block(self.course.id, self.week3.usage_key, 'due', override, user=self.user1)
         assert get_date_for_block(self.course, self.week3, self.user1) == override
 
         # Now test that we noticed the edx-when date
         url = reverse('reset_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week3.location),
+            'url': str(self.week3.usage_key),
         })
         self.assertContains(response, 'Successfully reset due date for student')
         # This operation regenerates the cache, so we can use cached results from edx-when.
@@ -4474,7 +4474,7 @@ class TestDueDateExtensions(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         self.test_change_due_date()
         url = reverse('show_unit_extensions',
                       kwargs={'course_id': str(self.course.id)})
-        response = self.client.post(url, {'url': str(self.week1.location)})
+        response = self.client.post(url, {'url': str(self.week1.usage_key)})
         assert response.status_code == 200, response.content
         assert json.loads(response.content.decode('utf-8')) ==\
                {'data': [{'Extended Due Date': '2013-12-30 00:00',
@@ -4512,15 +4512,15 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
             cls.week2 = BlockFactory.create(due=cls.due)
             cls.week3 = BlockFactory.create()  # No due date
             cls.course.children = [
-                str(cls.week1.location),
-                str(cls.week2.location),
-                str(cls.week3.location)
+                str(cls.week1.usage_key),
+                str(cls.week2.usage_key),
+                str(cls.week3.usage_key)
             ]
             cls.homework = BlockFactory.create(
-                parent_location=cls.week1.location,
+                parent_location=cls.week1.usage_key,
                 due=cls.due
             )
-            cls.week1.children = [str(cls.homework.location)]
+            cls.week1.children = [str(cls.homework.usage_key)]
 
     def setUp(self):
         """
@@ -4536,22 +4536,22 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
             state='{}',
             student_id=self.user1.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=self.user1.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
         StudentModule(
             state='{}',
             student_id=self.user2.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=self.user2.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
 
         CourseEnrollmentFactory.create(user=self.user1, course_id=self.course.id)
         CourseEnrollmentFactory.create(user=self.user2, course_id=self.course.id)
@@ -4565,7 +4565,7 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         due_date = datetime.datetime(2013, 12, 30, tzinfo=UTC)
         response = self.client.post(url, json.dumps({
             'email_or_username': self.user1.username,
-            'block_id': str(self.homework.location),
+            'block_id': str(self.homework.usage_key),
             'due_datetime': '12/30/2013 00:00',
             'reason': 'Testing V2 API.'
         }), content_type='application/json')
@@ -4582,7 +4582,7 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         due_date = datetime.datetime(2013, 12, 30, tzinfo=UTC)
         response = self.client.post(url, json.dumps({
             'email_or_username': self.user1.email,
-            'block_id': str(self.homework.location),
+            'block_id': str(self.homework.usage_key),
             'due_datetime': '12/30/2013 00:00',
             'reason': 'Testing V2 API with email.'
         }), content_type='application/json')
@@ -4598,7 +4598,7 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         url = reverse('instructor_api_v2:change_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, json.dumps({
             'email_or_username': 'nonexistent@example.com',
-            'block_id': str(self.homework.location),
+            'block_id': str(self.homework.usage_key),
             'due_datetime': '12/30/2013 00:00'
         }), content_type='application/json')
 
@@ -4623,7 +4623,7 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         # V2 API accepts form data as well
         response = self.client.post(url, {
             'email_or_username': self.user1.username,
-            'block_id': self.homework.location,
+            'block_id': self.homework.usage_key,
             'due_datetime': 'invalid-date-format'
         })
 
@@ -4647,7 +4647,7 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         # V2 API accepts form data
         response = self.client.post(url, {
             'email_or_username': unenrolled_user.username,
-            'block_id': self.homework.location,
+            'block_id': self.homework.usage_key,
             'due_datetime': '12/30/2013 00:00'
         })
 
@@ -4659,7 +4659,7 @@ class TestChangeDueDateV2(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
         # Send as form data instead of JSON
         response = self.client.post(url, {
             'email_or_username': self.user1.username,
-            'block_id': self.homework.location,
+            'block_id': self.homework.usage_key,
             'due_datetime': '12/30/2013 00:00'
         })
 
@@ -4689,61 +4689,61 @@ class TestDueDateExtensionsDeletedDate(ModuleStoreTestCase, LoginEnrollmentTestC
             self.week2 = BlockFactory.create(due=self.due)
             self.week3 = BlockFactory.create()  # No due date
             self.course.children = [
-                self.week1.location,
-                self.week2.location,
-                self.week3.location
+                self.week1.usage_key,
+                self.week2.usage_key,
+                self.week3.usage_key
             ]
             self.homework = BlockFactory.create(
-                parent_location=self.week1.location,
+                parent_location=self.week1.usage_key,
                 due=self.due
             )
-            self.week1.children = [self.homework.location]
+            self.week1.children = [self.homework.usage_key]
 
         user1 = UserFactory.create()
         StudentModule(
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.week2.location).save()
+            module_state_key=self.week2.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.week3.location).save()
+            module_state_key=self.week3.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user1.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
 
         user2 = UserFactory.create()
         StudentModule(
             state='{}',
             student_id=user2.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user2.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
 
         user3 = UserFactory.create()
         StudentModule(
             state='{}',
             student_id=user3.id,
             course_id=self.course.id,
-            module_state_key=self.week1.location).save()
+            module_state_key=self.week1.usage_key).save()
         StudentModule(
             state='{}',
             student_id=user3.id,
             course_id=self.course.id,
-            module_state_key=self.homework.location).save()
+            module_state_key=self.homework.usage_key).save()
 
         self.user1 = user1
         self.user2 = user2
@@ -4763,7 +4763,7 @@ class TestDueDateExtensionsDeletedDate(ModuleStoreTestCase, LoginEnrollmentTestC
         url = reverse('change_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
             'due_datetime': '12/30/2013 00:00'
         })
         assert response.status_code == 200, response.content
@@ -4777,7 +4777,7 @@ class TestDueDateExtensionsDeletedDate(ModuleStoreTestCase, LoginEnrollmentTestC
         url = reverse('reset_due_date', kwargs={'course_id': str(self.course.id)})
         response = self.client.post(url, {
             'student': self.user1.username,
-            'url': str(self.week1.location),
+            'url': str(self.week1.usage_key),
         })
         assert response.status_code == 200, response.content
         assert self.due == get_extended_due(self.course, self.week1, self.user1)

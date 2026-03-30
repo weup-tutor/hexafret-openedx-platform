@@ -387,11 +387,11 @@ class GenerateReportViewTest(SharedModuleStoreTestCase):
         """
         # Mock a problem block instead of creating real ones
         mock_problem = Mock()
-        mock_problem.location = Mock()
+        mock_problem.usage_key = Mock()
 
         mock_store = Mock()
         mock_store.get_item.return_value = mock_problem
-        mock_store.make_course_usage_key.return_value = self.course.location
+        mock_store.make_course_usage_key.return_value = self.course.usage_key
         mock_modulestore.return_value = mock_store
         mock_submit.return_value = None
 

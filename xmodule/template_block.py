@@ -90,7 +90,7 @@ class CustomTagBlock(CustomTagTemplateBlock):  # pylint: disable=abstract-method
         params = dict(list(xmltree.items()))
 
         # cdodge: look up the template as a module
-        template_loc = self.location.replace(category='custom_tag_template', name=template_name)
+        template_loc = self.usage_key.replace(category='custom_tag_template', name=template_name)
         try:
             template_block = system.get_block(template_loc)
             template_block_data = template_block.data

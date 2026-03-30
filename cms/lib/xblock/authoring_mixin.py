@@ -41,7 +41,7 @@ class AuthoringMixin(XBlockMixin):
         from cms.djangoapps.contentstore.utils import reverse_course_url
         fragment.add_content(self.runtime.service(self, 'mako').render_cms_template('visibility_editor.html', {
             'xblock': self,
-            'manage_groups_url': reverse_course_url('group_configurations_list_handler', self.location.course_key),
+            'manage_groups_url': reverse_course_url('group_configurations_list_handler', self.usage_key.course_key),
         }))
         fragment.add_javascript_url(self._get_studio_resource_url('js/xblock/authoring.js'))
         fragment.initialize_js('VisibilityEditorInit')

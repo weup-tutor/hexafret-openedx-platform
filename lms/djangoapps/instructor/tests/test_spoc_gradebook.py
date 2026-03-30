@@ -34,17 +34,17 @@ class TestGradebook(SharedModuleStoreTestCase):
         # Now give it some content
         with cls.store.bulk_operations(cls.course.id, emit_signals=False):
             chapter = BlockFactory.create(
-                parent_location=cls.course.location,
+                parent_location=cls.course.usage_key,
                 category="sequential",
             )
             section = BlockFactory.create(
-                parent_location=chapter.location,
+                parent_location=chapter.usage_key,
                 category="sequential",
                 metadata={'graded': True, 'format': 'Homework'}
             )
             cls.items = [
                 BlockFactory.create(
-                    parent_location=section.location,
+                    parent_location=section.usage_key,
                     category="problem",
                     data=StringResponseXMLFactory().build_xml(answer='foo'),
                     metadata={'rerandomize': 'always'}
@@ -68,7 +68,7 @@ class TestGradebook(SharedModuleStoreTestCase):
                     max_grade=1,
                     student=user,
                     course_id=self.course.id,
-                    module_state_key=item.location
+                    module_state_key=item.usage_key
                 )
         task_compute_all_grades_for_course.apply_async(kwargs={'course_key': str(self.course.id)})
 

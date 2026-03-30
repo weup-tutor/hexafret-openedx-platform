@@ -35,8 +35,8 @@ def wrap_draft(item):
     Sets `item.is_draft` to `True` if the item is DRAFT, and `False` otherwise.
     Sets the item's location to the non-draft location in either case.
     """
-    item.is_draft = (item.location.branch == MongoRevisionKey.draft)
-    item.location = item.location.replace(revision=MongoRevisionKey.published)
+    item.is_draft = (item.usage_key.branch == MongoRevisionKey.draft)
+    item.usage_key = item.usage_key.replace(revision=MongoRevisionKey.published)
     return item
 
 
@@ -256,7 +256,7 @@ class DraftModuleStore(MongoModuleStore):
         new_block = super().create_xblock(  # lint-amnesty, pylint: disable=super-with-arguments
             runtime, course_key, block_type, block_id, fields, **kwargs
         )
-        new_block.location = self.for_branch_setting(new_block.location)
+        new_block.usage_key = self.for_branch_setting(new_block.usage_key)
         return wrap_draft(new_block)
 
     def get_items(self, course_key, revision=None, **kwargs):  # lint-amnesty, pylint: disable=arguments-differ
@@ -288,11 +288,11 @@ class DraftModuleStore(MongoModuleStore):
 
         def published_items(draft_items):
             # filters out items that are not already in draft_items
-            draft_items_locations = {item.location for item in draft_items}
+            draft_items_locations = {item.usage_key for item in draft_items}
             return [
                 item for item in
                 base_get_items(MongoRevisionKey.published)
-                if item.location not in draft_items_locations
+                if item.usage_key not in draft_items_locations
             ]
 
         if revision == ModuleStoreEnum.RevisionOption.draft_only:
@@ -355,7 +355,7 @@ class DraftModuleStore(MongoModuleStore):
         published version is up to date.
         """
         if getattr(xblock, 'is_draft', False):
-            published_xblock_location = as_published(xblock.location)
+            published_xblock_location = as_published(xblock.usage_key)
             try:
                 xblock.runtime.lookup_item(published_xblock_location)
             except ItemNotFoundError:

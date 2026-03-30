@@ -158,7 +158,7 @@ def get_child_locations(section_desc, request, course_id):
     for child in section_desc.get_children():
         if not is_child_appendable(child):
             continue
-        child_locs.append(child.location)
+        child_locs.append(child.usage_key)
     return child_locs
 
 

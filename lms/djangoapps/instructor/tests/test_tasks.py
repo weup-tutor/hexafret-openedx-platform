@@ -48,7 +48,7 @@ class UpdateCompletionTests(SharedModuleStoreTestCase):
         self.module_to_reset = StudentModule.objects.create(
             student=self.student,
             course_id=self.course.id,
-            module_state_key=self.problem.location,
+            module_state_key=self.problem.usage_key,
             state=json.dumps({'attempts': 2}),
         )
 
@@ -72,12 +72,12 @@ class UpdateCompletionTests(SharedModuleStoreTestCase):
         BlockFactory.create(parent=unit, category='discussion')
 
         with override_waffle_switch(ENABLE_COMPLETION_TRACKING_SWITCH, True):
-            update_exam_completion_task(self.student.username, str(subsection.location), 1.0)
+            update_exam_completion_task(self.student.username, str(subsection.usage_key), 1.0)
 
         # Only Completable leaf blocks should have completion published
         assert mock_submit.call_count == 2
-        mock_submit.assert_any_call(user=self.student, block_key=video.location, completion=1.0)
-        mock_submit.assert_any_call(user=self.student, block_key=problem.location, completion=1.0)
+        mock_submit.assert_any_call(user=self.student, block_key=video.usage_key, completion=1.0)
+        mock_submit.assert_any_call(user=self.student, block_key=problem.usage_key, completion=1.0)
 
     @mock.patch('completion.handlers.BlockCompletion.objects.submit_completion')
     def test_update_completion_delete(self, mock_submit):
@@ -85,12 +85,12 @@ class UpdateCompletionTests(SharedModuleStoreTestCase):
         Test update completion with a value of 0.0
         """
         with override_waffle_switch(ENABLE_COMPLETION_TRACKING_SWITCH, True):
-            update_exam_completion_task(self.student.username, str(self.subsection.location), 0.0)
+            update_exam_completion_task(self.student.username, str(self.subsection.usage_key), 0.0)
 
         # Assert we send completion == 0.0 for both problems
         assert mock_submit.call_count == 2
-        mock_submit.assert_any_call(user=self.student, block_key=self.problem.location, completion=0.0)
-        mock_submit.assert_any_call(user=self.student, block_key=self.problem_2.location, completion=0.0)
+        mock_submit.assert_any_call(user=self.student, block_key=self.problem.usage_key, completion=0.0)
+        mock_submit.assert_any_call(user=self.student, block_key=self.problem_2.usage_key, completion=0.0)
 
     @mock.patch('completion.handlers.BlockCompletion.objects.submit_completion')
     def test_update_completion_split_test(self, mock_submit):
@@ -133,7 +133,7 @@ class UpdateCompletionTests(SharedModuleStoreTestCase):
         BlockFactory.create(parent=cond1vert, category='html')
 
         with override_waffle_switch(ENABLE_COMPLETION_TRACKING_SWITCH, True):
-            update_exam_completion_task(self.student.username, str(subsection.location), 1.0)
+            update_exam_completion_task(self.student.username, str(subsection.usage_key), 1.0)
 
         # Only the group the user was assigned to should have completion published.
         # Either cond0vert's children or cond1vert's children
@@ -145,7 +145,7 @@ class UpdateCompletionTests(SharedModuleStoreTestCase):
         Assert a bad user raises error and returns None
         """
         username = 'bad_user'
-        block_id = str(self.problem.location)
+        block_id = str(self.problem.usage_key)
         update_exam_completion_task(username, block_id, 1.0)
         mock_logger.assert_called_once_with(
             self.complete_error_prefix.format(user=username, content_id=block_id) + 'User does not exist!'
@@ -182,8 +182,8 @@ class UpdateCompletionTests(SharedModuleStoreTestCase):
         """
         username = self.student.username
         with mock.patch('lms.djangoapps.instructor.tasks.get_block_for_descriptor', return_value=None):
-            update_exam_completion_task(username, str(self.course.location), 1.0)
+            update_exam_completion_task(username, str(self.course.usage_key), 1.0)
         mock_logger.assert_called_once_with(
-            self.complete_error_prefix.format(user=username, content_id=self.course.location) +
+            self.complete_error_prefix.format(user=username, content_id=self.course.usage_key) +
             'Block unable to be created from descriptor!'
         )

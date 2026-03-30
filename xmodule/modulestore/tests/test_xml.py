@@ -68,7 +68,7 @@ class TestXMLModuleStore(TestCase):
         for course in store.get_courses():
             course_locations = store.get_courses_for_wiki(course.wiki_slug)
             assert len(course_locations) == 1
-            assert course.location.course_key in course_locations
+            assert course.usage_key.course_key in course_locations
 
         course_locations = store.get_courses_for_wiki('no_such_wiki')
         assert len(course_locations) == 0
@@ -104,7 +104,7 @@ class TestXMLModuleStore(TestCase):
 
         # XML store allows published_only branch setting
         with store.branch_setting(ModuleStoreEnum.Branch.published_only, course.id):
-            store.get_item(course.location)
+            store.get_item(course.usage_key)
 
         # XML store does NOT allow draft_preferred branch setting
         with pytest.raises(ValueError):
@@ -133,8 +133,8 @@ class TestXMLModuleStore(TestCase):
         parent = shared_item.get_parent()
         assert parent is not None, 'get_parent failed to return a value'
         parent_loc = course_key.make_usage_key('vertical', 'vertical_test')
-        assert parent.location == parent_loc
-        assert shared_item.location in [x.location for x in parent.get_children()]
+        assert parent.usage_key == parent_loc
+        assert shared_item.usage_key in [x.usage_key for x in parent.get_children()]
         # ensure it's still a child of the other parent even tho it doesn't claim the other parent as its parent
         other_parent_loc = course_key.make_usage_key('vertical', 'zeta')
         other_parent = store.get_item(other_parent_loc)

@@ -48,7 +48,7 @@ class CourseData:
             if structure:
                 self._location = structure.root_block_usage_key
             elif self._course:
-                self._location = self._course.location
+                self._location = self._course.usage_key
             else:
                 self._location = modulestore().make_course_usage_key(self.course_key)
         return self._location
@@ -58,7 +58,7 @@ class CourseData:
         if self._structure is None:
             self._structure = get_course_blocks(
                 self.user,
-                self.location,
+                self.usage_key,
                 collected_block_structure=self._collected_block_structure,
             )
         return self._structure
@@ -90,7 +90,7 @@ class CourseData:
     @property
     def version(self):
         structure = self.effective_structure
-        course_block = structure[self.location] if structure else self.course
+        course_block = structure[self.usage_key] if structure else self.course
         return getattr(course_block, 'course_version', None)
 
     @property
@@ -98,7 +98,7 @@ class CourseData:
         # get course block from structure only; subtree_edited_on field on modulestore's course block isn't optimized.
         structure = self.effective_structure
         if structure:
-            course_block = structure[self.location]
+            course_block = structure[self.usage_key]
             return getattr(course_block, 'subtree_edited_on', None)
 
     def __str__(self):

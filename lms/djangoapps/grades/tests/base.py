@@ -74,7 +74,7 @@ class GradeTestBase(SharedModuleStoreTestCase):
                 category='chapter',
                 display_name='Test Chapter 2'
             )
-            cls.chapter_2.children.append(cls.sequence.location)
+            cls.chapter_2.children.append(cls.sequence.usage_key)
             cls.store.update_item(cls.chapter_2, UserFactory().id)
 
     def setUp(self):
@@ -83,7 +83,7 @@ class GradeTestBase(SharedModuleStoreTestCase):
         self.request = get_mock_request(UserFactory())
         self.client.login(username=self.request.user.username, password="test")
         self._set_grading_policy()
-        self.course_structure = get_course_blocks(self.request.user, self.course.location)
+        self.course_structure = get_course_blocks(self.request.user, self.course.usage_key)
         self.course_data = CourseData(self.request.user, structure=self.course_structure)
         self.subsection_grade_factory = SubsectionGradeFactory(self.request.user, self.course, self.course_structure)
         CourseEnrollment.enroll(self.request.user, self.course.id)

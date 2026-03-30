@@ -379,7 +379,7 @@ def check_transcripts(request):  # lint-amnesty, pylint: disable=too-many-statem
 
         if not isinstance(item.usage_key, UsageKeyV2):
             filename = f'subs_{item.sub}.srt.sjson'
-            content_location = StaticContent.compute_location(item.location.course_key, filename)
+            content_location = StaticContent.compute_location(item.usage_key.course_key, filename)
             try:
                 contentstore().find(content_location).data.decode('utf-8')
                 transcripts_presence['current_item_subs'] = item.sub
@@ -390,7 +390,7 @@ def check_transcripts(request):  # lint-amnesty, pylint: disable=too-many-statem
             html5_subs = []
             for html5_id in videos['html5']:
                 filename = f'subs_{html5_id}.srt.sjson'
-                content_location = StaticContent.compute_location(item.location.course_key, filename)
+                content_location = StaticContent.compute_location(item.usage_key.course_key, filename)
                 try:
                     html5_subs.append(contentstore().find(content_location).data)
                     transcripts_presence['html5_local'].append(html5_id)
@@ -419,7 +419,7 @@ def _check_youtube_transcripts(transcripts_presence, youtube_id, item):
     if not isinstance(item.usage_key, UsageKeyV2):
         # youtube local
         filename = f'subs_{youtube_id}.srt.sjson'
-        content_location = StaticContent.compute_location(item.location.course_key, filename)
+        content_location = StaticContent.compute_location(item.usage_key.course_key, filename)
         try:
             local_transcripts = contentstore().find(content_location).data.decode('utf-8')
             transcripts_presence['youtube_local'] = True
@@ -601,7 +601,7 @@ def choose_transcripts(request):
             video = validated_data['video']
             chosen_html5_id = validated_data['chosen_html5_id']
             input_format, __, transcript_content = get_transcript_for_video(
-                video.location,
+                video.usage_key,
                 subs_id=chosen_html5_id,
                 file_name=chosen_html5_id,
                 language='en'
@@ -655,7 +655,7 @@ def rename_transcripts(request):
         try:
             video = validated_data['video']
             input_format, __, transcript_content = get_transcript_for_video(
-                video.location,
+                video.usage_key,
                 subs_id=video.sub,
                 file_name=video.sub,
                 language='en'
@@ -777,7 +777,7 @@ def _get_item(request, data):
     item = modulestore().get_item(usage_key)
 
     # use the item's course_key, because the usage_key might not have the run
-    if not has_course_author_access(request.user, item.location.course_key):
+    if not has_course_author_access(request.user, item.usage_key.course_key):
         raise PermissionDenied()
 
     return item

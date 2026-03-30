@@ -312,7 +312,7 @@ class XBlockShim:
         Accessor for the usage ID
         """
         warnings.warn(
-            "Use of block.location should be replaced with block.scope_ids.usage_id",
+            "Use of block.usage_key should be replaced with block.scope_ids.usage_id",
             DeprecationWarning, stacklevel=2,
         )
         return self.scope_ids.usage_id

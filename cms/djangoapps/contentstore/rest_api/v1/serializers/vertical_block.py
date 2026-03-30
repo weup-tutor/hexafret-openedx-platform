@@ -87,8 +87,8 @@ class ContainerHandlerSerializer(serializers.Serializer):
     user_clipboard = serializers.DictField()
     is_fullwidth_content = serializers.BooleanField()
     assets_url = serializers.SerializerMethodField()
-    unit_block_id = serializers.CharField(source="unit.location.block_id")
-    subsection_location = serializers.CharField(source="subsection.location")
+    unit_block_id = serializers.CharField(source="unit.usage_key.block_id")
+    subsection_location = serializers.CharField(source="subsection.usage_key")
     course_sequence_ids = serializers.ListField(child=serializers.CharField())
     library_content_picker_url = serializers.CharField()
 

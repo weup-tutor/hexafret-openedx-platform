@@ -28,7 +28,7 @@ class TabsPageTests(CourseTestCase):
 
         # add a static tab to the course, for code coverage
         self.test_tab = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="static_tab",
             display_name="Static_1"
         )
@@ -164,7 +164,7 @@ class TabsPageTests(CourseTestCase):
         """
         Verify that the static tab renders itself with the correct HTML
         """
-        preview_url = f'/xblock/{self.test_tab.location}/{STUDENT_VIEW}'
+        preview_url = f'/xblock/{self.test_tab.usage_key}/{STUDENT_VIEW}'
 
         resp = self.client.get(preview_url, HTTP_ACCEPT='application/json')
         assert resp.status_code == 200

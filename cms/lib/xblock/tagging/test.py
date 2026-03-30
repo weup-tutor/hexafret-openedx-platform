@@ -46,26 +46,26 @@ class StructuredTagsAsideTestCase(ModuleStoreTestCase):
 
         course = CourseFactory.create(default_store=ModuleStoreEnum.Type.split)
         self.course = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="course",
             display_name="Test course",
         )
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name="Week 1",
             publish_item=True,
             start=datetime(2015, 3, 1, tzinfo=timezone.utc),
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name="Lesson 1",
             publish_item=True,
             start=datetime(2015, 3, 1, tzinfo=timezone.utc),
         )
         self.vertical = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category='vertical',
             display_name='Subsection 1',
             publish_item=True,
@@ -73,14 +73,14 @@ class StructuredTagsAsideTestCase(ModuleStoreTestCase):
         )
         self.problem = BlockFactory.create(
             category="problem",
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             display_name="A Problem Block",
             weight=1,
             user_id=self.user.id,
             publish_item=False,
         )
         self.video = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category='video',
             display_name='My Video',
             user_id=self.user.id
@@ -195,7 +195,7 @@ class StructuredTagsAsideTestCase(ModuleStoreTestCase):
         """
         handler_url = reverse_usage_url(
             'component_handler',
-            str(aside_key_class(self.problem.location, self.aside_name)),
+            str(aside_key_class(self.problem.usage_key, self.aside_name)),
             kwargs={'handler': 'save_tags'}
         )
 
@@ -230,7 +230,7 @@ class StructuredTagsAsideTestCase(ModuleStoreTestCase):
                                content_type="application/json")
         self.assertEqual(response.status_code, 200)
 
-        tag_aside = _test_helper_func(self.problem.location)
+        tag_aside = _test_helper_func(self.problem.usage_key)
         self.assertIsNotNone(tag_aside, "Necessary StructuredTagsAside object isn't found")
         self.assertEqual(tag_aside.saved_tags[self.aside_tag_dif], [self.aside_tag_dif_value])
 
@@ -239,7 +239,7 @@ class StructuredTagsAsideTestCase(ModuleStoreTestCase):
                                content_type="application/json")
         self.assertEqual(response.status_code, 200)
 
-        tag_aside = _test_helper_func(self.problem.location)
+        tag_aside = _test_helper_func(self.problem.usage_key)
         self.assertIsNotNone(tag_aside, "Necessary StructuredTagsAside object isn't found")
         self.assertEqual(tag_aside.saved_tags[self.aside_tag_dif], [self.aside_tag_dif_value,
                                                                     self.aside_tag_dif_value2])

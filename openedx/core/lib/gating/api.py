@@ -160,10 +160,10 @@ def get_prerequisites(course_key):
 
     result = []
     for block in modulestore().get_items(course_key, qualifiers={'name': block_ids}):
-        milestone = milestones_by_block_id.get(block.location.block_id)
+        milestone = milestones_by_block_id.get(block.usage_key.block_id)
         if milestone:
             milestone['block_display_name'] = block.display_name
-            milestone['block_usage_key'] = str(block.location)
+            milestone['block_usage_key'] = str(block.usage_key)
             result.append(milestone)
 
     return result

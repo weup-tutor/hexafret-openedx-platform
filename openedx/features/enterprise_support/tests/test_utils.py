@@ -620,16 +620,16 @@ class TestCourseAccessed(SharedModuleStoreTestCase, CompletionWaffleTestMixin):
         """
         course = CourseFactory.create()
         with cls.store.bulk_operations(course.id):
-            chapter = BlockFactory.create(category='chapter', parent_location=course.location)
-            chapter2 = BlockFactory.create(category='chapter', parent_location=course.location)
-            sequential = BlockFactory.create(category='sequential', parent_location=chapter.location)
-            sequential2 = BlockFactory.create(category='sequential', parent_location=chapter.location)
-            sequential3 = BlockFactory.create(category='sequential', parent_location=chapter2.location)
-            sequential4 = BlockFactory.create(category='sequential', parent_location=chapter2.location)
-            vertical = BlockFactory.create(category='vertical', parent_location=sequential.location)
-            vertical2 = BlockFactory.create(category='vertical', parent_location=sequential2.location)
-            vertical3 = BlockFactory.create(category='vertical', parent_location=sequential3.location)
-            vertical4 = BlockFactory.create(category='vertical', parent_location=sequential4.location)
+            chapter = BlockFactory.create(category='chapter', parent_location=course.usage_key)
+            chapter2 = BlockFactory.create(category='chapter', parent_location=course.usage_key)
+            sequential = BlockFactory.create(category='sequential', parent_location=chapter.usage_key)
+            sequential2 = BlockFactory.create(category='sequential', parent_location=chapter.usage_key)
+            sequential3 = BlockFactory.create(category='sequential', parent_location=chapter2.usage_key)
+            sequential4 = BlockFactory.create(category='sequential', parent_location=chapter2.usage_key)
+            vertical = BlockFactory.create(category='vertical', parent_location=sequential.usage_key)
+            vertical2 = BlockFactory.create(category='vertical', parent_location=sequential2.usage_key)
+            vertical3 = BlockFactory.create(category='vertical', parent_location=sequential3.usage_key)
+            vertical4 = BlockFactory.create(category='vertical', parent_location=sequential4.usage_key)
         course.children = [chapter, chapter2]
         chapter.children = [sequential, sequential2]
         chapter2.children = [sequential3, sequential4]
@@ -655,7 +655,7 @@ class TestCourseAccessed(SharedModuleStoreTestCase, CompletionWaffleTestMixin):
         """
         course_key = CourseKey.from_string(str(course.id))
         # Fake a visit to sequence2/vertical2
-        block_key = UsageKey.from_string(str(sequential.location))
+        block_key = UsageKey.from_string(str(sequential.usage_key))
         if block_key.course_key.run is None:
             # Old mongo keys must be annotated with course run info before calling submit_completion:
             block_key = block_key.replace(course_key=course_key)

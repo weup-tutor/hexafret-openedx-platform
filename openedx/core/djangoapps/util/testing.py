@@ -100,26 +100,26 @@ class ContentGroupTestCase(ModuleStoreTestCase):
             group_id=self.course.user_partitions[0].groups[1].id
         )
         self.alpha_block = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='alpha_group_discussion',
             discussion_target='Visible to Alpha',
             group_access={self.course.user_partitions[0].id: [self.course.user_partitions[0].groups[0].id]}
         )
         self.beta_block = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='beta_group_discussion',
             discussion_target='Visible to Beta',
             group_access={self.course.user_partitions[0].id: [self.course.user_partitions[0].groups[1].id]}
         )
         self.global_block = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='global_group_discussion',
             discussion_target='Visible to Everyone'
         )
-        self.course = self.store.get_item(self.course.location)
+        self.course = self.store.get_item(self.course.usage_key)
 
 
 class TestConditionalContent(ModuleStoreTestCase):
@@ -172,11 +172,11 @@ class TestConditionalContent(ModuleStoreTestCase):
                 }]
             }
         )
-        chapter = BlockFactory.create(parent_location=self.course.location,
+        chapter = BlockFactory.create(parent_location=self.course.usage_key,
                                       display_name='Chapter')
 
         # add a sequence to the course to which the problems can be added
-        self.problem_section = BlockFactory.create(parent_location=chapter.location,
+        self.problem_section = BlockFactory.create(parent_location=chapter.usage_key,
                                                    category='sequential',
                                                    metadata={'graded': True, 'format': 'Homework'},
                                                    display_name=self.TEST_SECTION_NAME)
@@ -202,7 +202,7 @@ class TestConditionalContent(ModuleStoreTestCase):
 
         # Create a vertical to contain our split test
         problem_vertical = BlockFactory.create(
-            parent_location=self.problem_section.location,
+            parent_location=self.problem_section.usage_key,
             category='vertical',
             display_name='Problem Unit'
         )
@@ -211,20 +211,20 @@ class TestConditionalContent(ModuleStoreTestCase):
         vertical_a_url = self.course.id.make_usage_key('vertical', 'split_test_vertical_a')
         vertical_b_url = self.course.id.make_usage_key('vertical', 'split_test_vertical_b')
         self.split_test = BlockFactory.create(
-            parent_location=problem_vertical.location,
+            parent_location=problem_vertical.usage_key,
             category='split_test',
             display_name='Split Test',
             user_partition_id=self.partition.id,
             group_id_to_child={str(index): url for index, url in enumerate([vertical_a_url, vertical_b_url])}
         )
         self.vertical_a = BlockFactory.create(
-            parent_location=self.split_test.location,
+            parent_location=self.split_test.usage_key,
             category='vertical',
             display_name='Group A problem container',
             location=vertical_a_url
         )
         self.vertical_b = BlockFactory.create(
-            parent_location=self.split_test.location,
+            parent_location=self.split_test.usage_key,
             category='vertical',
             display_name='Group B problem container',
             location=vertical_b_url

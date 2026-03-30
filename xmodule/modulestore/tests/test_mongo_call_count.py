@@ -175,5 +175,5 @@ class CountMongoCallsCourseTraversal(TestCase):
                     course = modulestore.get_course(course_key, depth=0, lazy=True)
 
                     # and then subsequently retrieved with the lazy and depth=None values
-                    course = modulestore.get_item(course.location, depth=None, lazy=False)
+                    course = modulestore.get_item(course.usage_key, depth=None, lazy=False)
                     self._traverse_blocks_in_course(course, access_all_block_fields=True)

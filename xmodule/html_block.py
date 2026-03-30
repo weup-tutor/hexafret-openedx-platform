@@ -214,7 +214,7 @@ class _BuiltinHtmlBlockMixin(  # lint-amnesty, pylint: disable=abstract-method
         # Add some specific HTML rendering context when editing HTML blocks where we pass
         # the root /c4x/ url for assets. This allows client-side substitutions to occur.
         _context.update({
-            'base_asset_url': StaticContent.get_base_url_path_for_course_assets(self.location.course_key),
+            'base_asset_url': StaticContent.get_base_url_path_for_course_assets(self.usage_key.course_key),
             'enable_latex_compiler': self.use_latex_compiler,
             'editor': self.editor
         })

@@ -163,10 +163,10 @@ def container_handler(request, usage_key_string):  # pylint: disable=too-many-st
 
             if use_new_unit_page(course.id):
                 if is_unit(xblock) or is_library_content(xblock):
-                    return redirect(get_unit_url(course.id, xblock.location))
+                    return redirect(get_unit_url(course.id, xblock.usage_key))
 
                 if split_xblock := get_parent_if_split_test(xblock):
-                    return redirect(get_unit_url(course.id, split_xblock.location))
+                    return redirect(get_unit_url(course.id, split_xblock.usage_key))
 
             container_handler_context = get_container_handler_context(request, usage_key, course, xblock)
             container_handler_context.update({
@@ -310,7 +310,7 @@ def get_component_templates(courselike, library=False):  # lint-amnesty, pylint:
     component_types = _filter_disabled_blocks(component_types)
 
     # Filter out discussion component from component_types if non-legacy discussion provider is configured for course
-    component_types = _filter_discussion_for_non_legacy_provider(component_types, courselike.location.course_key)
+    component_types = _filter_discussion_for_non_legacy_provider(component_types, courselike.usage_key.course_key)
 
     # Content Libraries currently don't allow opting in to unsupported xblocks/problem types.
     allow_unsupported = getattr(courselike, "allow_unsupported_xblocks", False)
@@ -549,8 +549,8 @@ def _get_item_in_course(request, usage_key):
 
     course = modulestore().get_course(course_key)
     item = modulestore().get_item(usage_key, depth=1)
-    lms_link = get_lms_link_for_item(item.location)
-    preview_lms_link = get_lms_link_for_item(item.location, preview=True)
+    lms_link = get_lms_link_for_item(item.usage_key)
+    preview_lms_link = get_lms_link_for_item(item.usage_key, preview=True)
 
     return course, item, lms_link, preview_lms_link
 

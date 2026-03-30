@@ -22,80 +22,80 @@ class XBlockCacheTaskTests(BookmarksTestsBase):
         super().setUp()
 
         self.course_expected_cache_data = {
-            self.course.location: [
+            self.course.usage_key: [
                 [],
-            ], self.chapter_1.location: [
+            ], self.chapter_1.usage_key: [
                 [
-                    self.course.location,
+                    self.course.usage_key,
                 ],
-            ], self.chapter_2.location: [
+            ], self.chapter_2.usage_key: [
                 [
-                    self.course.location,
+                    self.course.usage_key,
                 ],
-            ], self.sequential_1.location: [
+            ], self.sequential_1.usage_key: [
                 [
-                    self.course.location,
-                    self.chapter_1.location,
+                    self.course.usage_key,
+                    self.chapter_1.usage_key,
                 ],
-            ], self.sequential_2.location: [
+            ], self.sequential_2.usage_key: [
                 [
-                    self.course.location,
-                    self.chapter_1.location,
+                    self.course.usage_key,
+                    self.chapter_1.usage_key,
                 ],
-            ], self.vertical_1.location: [
+            ], self.vertical_1.usage_key: [
                 [
-                    self.course.location,
-                    self.chapter_1.location,
-                    self.sequential_1.location,
+                    self.course.usage_key,
+                    self.chapter_1.usage_key,
+                    self.sequential_1.usage_key,
                 ],
-            ], self.vertical_2.location: [
+            ], self.vertical_2.usage_key: [
                 [
-                    self.course.location,
-                    self.chapter_1.location,
-                    self.sequential_2.location,
+                    self.course.usage_key,
+                    self.chapter_1.usage_key,
+                    self.sequential_2.usage_key,
                 ],
-            ], self.vertical_3.location: [
+            ], self.vertical_3.usage_key: [
                 [
-                    self.course.location,
-                    self.chapter_1.location,
-                    self.sequential_2.location,
+                    self.course.usage_key,
+                    self.chapter_1.usage_key,
+                    self.sequential_2.usage_key,
                 ],
             ],
         }
 
         self.other_course_expected_cache_data = {
-            self.other_course.location: [
+            self.other_course.usage_key: [
                 [],
-            ], self.other_chapter_1.location: [
+            ], self.other_chapter_1.usage_key: [
                 [
-                    self.other_course.location,
+                    self.other_course.usage_key,
                 ],
-            ], self.other_sequential_1.location: [
+            ], self.other_sequential_1.usage_key: [
                 [
-                    self.other_course.location,
-                    self.other_chapter_1.location,
+                    self.other_course.usage_key,
+                    self.other_chapter_1.usage_key,
                 ],
-            ], self.other_sequential_2.location: [
+            ], self.other_sequential_2.usage_key: [
                 [
-                    self.other_course.location,
-                    self.other_chapter_1.location,
+                    self.other_course.usage_key,
+                    self.other_chapter_1.usage_key,
                 ],
-            ], self.other_vertical_1.location: [
+            ], self.other_vertical_1.usage_key: [
                 [
-                    self.other_course.location,
-                    self.other_chapter_1.location,
-                    self.other_sequential_1.location,
+                    self.other_course.usage_key,
+                    self.other_chapter_1.usage_key,
+                    self.other_sequential_1.usage_key,
                 ],
                 [
-                    self.other_course.location,
-                    self.other_chapter_1.location,
-                    self.other_sequential_2.location,
+                    self.other_course.usage_key,
+                    self.other_chapter_1.usage_key,
+                    self.other_sequential_2.usage_key,
                 ]
-            ], self.other_vertical_2.location: [
+            ], self.other_vertical_2.usage_key: [
                 [
-                    self.other_course.location,
-                    self.other_chapter_1.location,
-                    self.other_sequential_1.location,
+                    self.other_course.usage_key,
+                    self.other_chapter_1.usage_key,
+                    self.other_sequential_1.usage_key,
                 ],
             ],
         }
@@ -173,11 +173,11 @@ class XBlockCacheTaskTests(BookmarksTestsBase):
 
         self.course_expected_cache_data.update(
             {
-                block_with_display_name_none.location: [
+                block_with_display_name_none.usage_key: [
                     [
-                        self.course.location,
-                        self.chapter_1.location,
-                        self.sequential_2.location,
+                        self.course.usage_key,
+                        self.chapter_1.usage_key,
+                        self.sequential_2.usage_key,
                     ]
                 ]
             }

@@ -105,7 +105,7 @@ class PureXBlockImportTest(BaseCourseTestCase):
         "<genericxblock field1='abc' field2='23' />",
         "<genericxblock field1='abc' field2='23'><genericxblock/></genericxblock>",
     )
-    @patch('xmodule.x_module.XModuleMixin.location')
+    @patch('xmodule.x_module.XModuleMixin.usage_key')
     def test_parsing_pure_xblock(self, xml, mock_location):
         system = self.get_system(load_error_blocks=False)
         block = system.process_xml(xml)
@@ -137,7 +137,7 @@ class ImportTestCase(BaseCourseTestCase):  # lint-amnesty, pylint: disable=missi
         block1 = system.process_xml(bad_xml)
         block2 = system.process_xml(bad_xml2)
 
-        assert block1.location != block2.location
+        assert block1.usage_key != block2.usage_key
 
         # Check that each vertical gets its very own url_name
         bad_xml = '''<vertical display_name="abc"><problem url_name="exam1:2013_Spring:abc"/></vertical>'''
@@ -146,7 +146,7 @@ class ImportTestCase(BaseCourseTestCase):  # lint-amnesty, pylint: disable=missi
         block1 = system.process_xml(bad_xml)
         block2 = system.process_xml(bad_xml2)
 
-        assert block1.location != block2.location
+        assert block1.usage_key != block2.usage_key
 
     def test_reimport(self):
         '''Make sure an already-exported error xml tag loads properly'''
@@ -428,7 +428,7 @@ class ImportTestCase(BaseCourseTestCase):  # lint-amnesty, pylint: disable=missi
 
         def check_for_key(key, node, value):
             "recursive check for presence of key"
-            print(f"Checking {str(node.location)}")
+            print(f"Checking {str(node.usage_key)}")
             assert getattr(node, key) == value
             for c in node.get_children():
                 check_for_key(key, c, value)
@@ -515,9 +515,9 @@ class ImportTestCase(BaseCourseTestCase):  # lint-amnesty, pylint: disable=missi
         ch2 = chapters[1]
         assert ch2.url_name == 'secret:magic'
 
-        print("Ch2 location: ", ch2.location)
+        print("Ch2 location: ", ch2.usage_key)
 
-        also_ch2 = modulestore.get_item(ch2.location)
+        also_ch2 = modulestore.get_item(ch2.usage_key)
         assert ch2 == also_ch2
 
         print("making sure html loaded")

@@ -92,7 +92,7 @@ def _get_content_from_lms_index(store, block, user_id, _course, _request_factory
     client.login(username=User.objects.get(id=user_id).username, password=TEST_PASSWORD)
 
     # Re-load the block from the store to ensure that its `parent` field is filled out correctly
-    block = store.get_item(block.location)
+    block = store.get_item(block.usage_key)
 
     page_content = client.get(
         reverse('render_xblock', args=[str(block.parent)]) + '?recheck_access=1',
@@ -128,9 +128,9 @@ def _assert_block_is_gated(store, block, is_gated, user, course, request_factory
 
     fake_request = request_factory.get('')
     requested_fields = ['block_id', 'contains_gated_content', 'display_name', 'student_view_data', 'student_view_url']
-    blocks = get_blocks(fake_request, course.location, user=user, requested_fields=requested_fields,
+    blocks = get_blocks(fake_request, course.usage_key, user=user, requested_fields=requested_fields,
                         student_view_data=['html'])
-    course_api_block = blocks['blocks'][str(block.location)]
+    course_api_block = blocks['blocks'][str(block.usage_key)]
 
     assert course_api_block.get('contains_gated_content', False) == is_gated
 
@@ -946,7 +946,7 @@ class TestMessageDeduplication(ModuleStoreTestCase):
             mode='audit'
         )
         blocks_dict['graded_1'] = BlockFactory.create(
-            parent_location=blocks_dict['vertical'].location,
+            parent_location=blocks_dict['vertical'].usage_key,
             category='problem',
             graded=True,
             metadata=METADATA,
@@ -1152,7 +1152,7 @@ class TestContentTypeGatingService(ModuleStoreTestCase):
                 display_name='Lesson 1 Vertical - Unit 1'
             )
         # get updated course
-        course = self.store.get_item(course.location)
+        course = self.store.get_item(course.usage_key)
         return {
             'course': course,
             'blocks': blocks_dict,
@@ -1208,8 +1208,8 @@ class TestContentTypeGatingService(ModuleStoreTestCase):
             metadata=METADATA,
         )
         # get updated course
-        course['course'] = self.store.get_item(course['course'].location)
-        blocks_dict['vertical'] = self.store.get_item(blocks_dict['vertical'].location)
+        course['course'] = self.store.get_item(course['course'].usage_key)
+        blocks_dict['vertical'] = self.store.get_item(blocks_dict['vertical'].usage_key)
 
         # The method returns a content type gate for blocks that should be gated
         assert ContentTypeGatingService().check_children_for_content_type_gating_paywall(
@@ -1223,8 +1223,8 @@ class TestContentTypeGatingService(ModuleStoreTestCase):
             metadata=METADATA,
         )
         # get updated course
-        course['course'] = self.store.get_item(course['course'].location)
-        blocks_dict['vertical'] = self.store.get_item(blocks_dict['vertical'].location)
+        course['course'] = self.store.get_item(course['course'].usage_key)
+        blocks_dict['vertical'] = self.store.get_item(blocks_dict['vertical'].usage_key)
 
         # The method returns None for blocks that should not be gated
         assert 'content-paywall' in ContentTypeGatingService().check_children_for_content_type_gating_paywall(

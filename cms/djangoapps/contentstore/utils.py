@@ -582,7 +582,7 @@ def is_currently_visible_to_students(xblock):
     """
 
     try:
-        published = modulestore().get_item(xblock.location, revision=ModuleStoreEnum.RevisionOption.published_only)
+        published = modulestore().get_item(xblock.usage_key, revision=ModuleStoreEnum.RevisionOption.published_only)
     # If there's no published version then the xblock is clearly not visible
     except ItemNotFoundError:
         return False
@@ -637,7 +637,7 @@ def find_release_date_source(xblock):
     if xblock.category == 'chapter':
         return xblock
 
-    parent_location = modulestore().get_parent_location(xblock.location,
+    parent_location = modulestore().get_parent_location(xblock.usage_key,
                                                         revision=ModuleStoreEnum.RevisionOption.draft_preferred)
     # Orphaned xblocks set their own release date
     if not parent_location:
@@ -664,7 +664,7 @@ def find_staff_lock_source(xblock):
     if xblock.category == 'chapter':
         return None
 
-    parent_location = modulestore().get_parent_location(xblock.location,
+    parent_location = modulestore().get_parent_location(xblock.usage_key,
                                                         revision=ModuleStoreEnum.RevisionOption.draft_preferred)
     # Orphaned xblocks set their own staff lock
     if not parent_location:
@@ -680,7 +680,7 @@ def ancestor_has_staff_lock(xblock, parent_xblock=None):
     Can avoid mongo query by passing in parent_xblock.
     """
     if parent_xblock is None:
-        parent_location = modulestore().get_parent_location(xblock.location,
+        parent_location = modulestore().get_parent_location(xblock.usage_key,
                                                             revision=ModuleStoreEnum.RevisionOption.draft_preferred)
         if not parent_location:
             return False
@@ -692,7 +692,7 @@ def get_sequence_usage_keys(course):
     """
     Extracts a list of 'subsections' usage_keys
     """
-    return [str(subsection.location)
+    return [str(subsection.usage_key)
             for section in course.get_children()
             for subsection in section.get_children()]
 
@@ -813,12 +813,12 @@ def get_user_partition_info(xblock, schemes=None, course=None):
     ]
 
     """
-    course = course or modulestore().get_course(xblock.location.course_key)
+    course = course or modulestore().get_course(xblock.usage_key.course_key)
 
     if course is None:
         log.warning(
             "Could not find course %s to retrieve user partition information",
-            xblock.location.course_key
+            xblock.usage_key.course_key
         )
         return []
 
@@ -990,8 +990,8 @@ def get_sibling_urls(subsection, unit_location):    # pylint: disable=too-many-s
             return section_subsections
         except AttributeError:
             log.error("URL Retrieval Error: subsection {subsection} included in section {section}".format(
-                section=section.location,
-                subsection=subsection.location
+                section=section.usage_key,
+                subsection=subsection.usage_key
             ))
             return None
 
@@ -1004,7 +1004,7 @@ def get_sibling_urls(subsection, unit_location):    # pylint: disable=too-many-s
             return section_subsections
         except AttributeError:
             log.error("URL Retrieval Error: In section {section} in course".format(
-                section=section.location,
+                section=section.usage_key,
             ))
             return None
 
@@ -1013,16 +1013,16 @@ def get_sibling_urls(subsection, unit_location):    # pylint: disable=too-many-s
         Returns the desired location of the adjacent subsections in a section.
         """
         location = None
-        subsection_index = section_subsections.index(next(s for s in subsections if s.location ==
-                                                          current_subsection.location))
+        subsection_index = section_subsections.index(next(s for s in subsections if s.usage_key ==
+                                                          current_subsection.usage_key))
         try:
             if direction == 'previous':
                 if subsection_index > 0:
                     prev_subsection = subsections[subsection_index - 1]
-                    location = prev_subsection.get_children()[-1].location
+                    location = prev_subsection.get_children()[-1].usage_key
             else:
                 next_subsection = subsections[subsection_index + 1]
-                location = next_subsection.get_children()[0].location
+                location = next_subsection.get_children()[0].usage_key
             return location
         except IndexError:
             return None
@@ -1032,15 +1032,15 @@ def get_sibling_urls(subsection, unit_location):    # pylint: disable=too-many-s
         Returns the desired location of the adjacent sections in a course.
         """
         location = None
-        section_index = course_sections.index(next(s for s in sections if s.location == current_section.location))
+        section_index = course_sections.index(next(s for s in sections if s.usage_key == current_section.usage_key))
         try:
             if direction == 'previous':
                 if section_index > 0:
                     prev_section = sections[section_index - 1]
-                    location = prev_section.get_children()[-1].get_children()[-1].location
+                    location = prev_section.get_children()[-1].get_children()[-1].usage_key
             else:
                 next_section = sections[section_index + 1]
-                location = next_section.get_children()[0].get_children()[0].location
+                location = next_section.get_children()[0].get_children()[0].usage_key
             return location
         except IndexError:
             return None
@@ -1161,7 +1161,7 @@ def duplicate_block(
         source_item = store.get_item(duplicate_source_usage_key)
         if not dest_usage_key:
             # Change the blockID to be unique.
-            dest_usage_key = source_item.location.replace(name=uuid4().hex)
+            dest_usage_key = source_item.usage_key.replace(name=uuid4().hex)
 
         category = dest_usage_key.block_type
 
@@ -1194,7 +1194,7 @@ def duplicate_block(
         if source_item.has_children and not shallow and not children_handled:
             dest_block.children = dest_block.children or []
             for child in source_item.children:
-                dupe = duplicate_block(dest_block.location, child, user=user, is_child=True)
+                dupe = duplicate_block(dest_block.usage_key, child, user=user, is_child=True)
                 if dupe not in dest_block.children:  # _duplicate_block may add the child for us.
                     dest_block.children.append(dupe)
             store.update_item(dest_block, user.id)
@@ -1204,11 +1204,11 @@ def duplicate_block(
             parent = store.get_item(parent_usage_key)
             # If source was already a child of the parent, add duplicate immediately afterward.
             # Otherwise, add child to end.
-            if source_item.location in parent.children:
-                source_index = parent.children.index(source_item.location)
-                parent.children.insert(source_index + 1, dest_block.location)
+            if source_item.usage_key in parent.children:
+                source_index = parent.children.index(source_item.usage_key)
+                parent.children.insert(source_index + 1, dest_block.usage_key)
             else:
-                parent.children.append(dest_block.location)
+                parent.children.append(dest_block.usage_key)
             store.update_item(parent, user.id)
 
         # .. event_implemented_name: XBLOCK_DUPLICATED
@@ -1216,13 +1216,13 @@ def duplicate_block(
         XBLOCK_DUPLICATED.send_event(
             time=datetime.now(timezone.utc),
             xblock_info=DuplicatedXBlockData(
-                usage_key=dest_block.location,
-                block_type=dest_block.location.block_type,
+                usage_key=dest_block.usage_key,
+                block_type=dest_block.usage_key.block_type,
                 source_usage_key=duplicate_source_usage_key,
             )
         )
 
-        return dest_block.location
+        return dest_block.usage_key
 
 
 def update_from_source(*, source_block, destination_block, user_id):
@@ -1415,17 +1415,17 @@ def get_course_settings(request, course_key, course_block):
     # see if the ORG of this course can be attributed to a defined configuration . In that case, the
     # course about page should be editable in Studio
     publisher_enabled = configuration_helpers.get_value_for_org(
-        course_block.location.org,
+        course_block.usage_key.org,
         'ENABLE_PUBLISHER',
         settings.FEATURES.get('ENABLE_PUBLISHER', False)
     )
     marketing_enabled = configuration_helpers.get_value_for_org(
-        course_block.location.org,
+        course_block.usage_key.org,
         'ENABLE_MKTG_SITE',
         settings.FEATURES.get('ENABLE_MKTG_SITE', False)
     )
     enable_extended_course_details = configuration_helpers.get_value_for_org(
-        course_block.location.org,
+        course_block.usage_key.org,
         'ENABLE_EXTENDED_COURSE_DETAILS',
         settings.FEATURES.get('ENABLE_EXTENDED_COURSE_DETAILS', False)
     )
@@ -1433,7 +1433,7 @@ def get_course_settings(request, course_key, course_block):
     about_page_editable = not publisher_enabled
     enrollment_end_editable = GlobalStaff().has_user(request.user) or not publisher_enabled
     short_description_editable = configuration_helpers.get_value_for_org(
-        course_block.location.org,
+        course_block.usage_key.org,
         'EDITABLE_SHORT_DESCRIPTION',
         settings.FEATURES.get('EDITABLE_SHORT_DESCRIPTION', True)
     )
@@ -1908,7 +1908,7 @@ def _get_course_index_context(request, course_key, course_block):
     )
     from openedx.core.djangoapps.content_staging import api as content_staging_api
 
-    lms_link = get_lms_link_for_item(course_block.location)
+    lms_link = get_lms_link_for_item(course_block.usage_key)
     reindex_link = None
     if settings.FEATURES.get('ENABLE_COURSEWARE_INDEX', False):
         if GlobalStaff().has_user(request.user):
@@ -1934,7 +1934,7 @@ def _get_course_index_context(request, course_key, course_block):
     deprecated_blocks_info = _deprecated_blocks_info(course_block, deprecated_block_names)
 
     frontend_app_publisher_url = configuration_helpers.get_value_for_org(
-        course_block.location.org,
+        course_block.usage_key.org,
         'FRONTEND_APP_PUBLISHER_URL',
         settings.FEATURES.get('FRONTEND_APP_PUBLISHER_URL', False)
     )
@@ -2039,14 +2039,14 @@ def get_container_handler_context(request, usage_key, course, xblock):  # pylint
 
     subsection = get_parent_xblock(unit)
     if subsection is None:
-        raise ValueError(f"Could not determine parent subsection from unit {unit.location}")
+        raise ValueError(f"Could not determine parent subsection from unit {unit.usage_key}")
 
     section = get_parent_xblock(subsection)
     if section is None:
-        raise ValueError(f"Could not determine ancestor section from unit {unit.location}")
+        raise ValueError(f"Could not determine ancestor section from unit {unit.usage_key}")
 
     # for the sequence navigator
-    prev_url, next_url = get_sibling_urls(subsection, unit.location)
+    prev_url, next_url = get_sibling_urls(subsection, unit.usage_key)
     # these are quoted here because they'll end up in a query string on the page,
     # and quoting with mako will trigger the xss linter...
     prev_url = quote_plus(prev_url) if prev_url else None
@@ -2068,21 +2068,21 @@ def get_container_handler_context(request, usage_key, course, xblock):  # pylint
     # preview will need this
     index = 1
     for child in subsection.get_children():
-        if child.location == unit.location:
+        if child.usage_key == unit.usage_key:
             break
         index += 1
 
     # Get the status of the user's clipboard so they can paste components if they have something to paste
     user_clipboard = content_staging_api.get_user_clipboard_json(request.user.id, request)
     library_block_types = [problem_type['component'] for problem_type in LIBRARY_BLOCK_TYPES]
-    is_library_xblock = xblock.location.block_type in library_block_types
+    is_library_xblock = xblock.usage_key.block_type in library_block_types
 
     context = {
         'language_code': request.LANGUAGE_CODE,
         'context_course': course,  # Needed only for display of menus at top of page.
         'action': action,
         'xblock': xblock,
-        'xblock_locator': xblock.location,
+        'xblock_locator': xblock.usage_key,
         'unit': unit,
         'is_unit_page': is_unit_page,
         'is_collapsible': is_library_xblock,
@@ -2376,7 +2376,7 @@ def get_xblock_render_error(request, xblock):
             "reorderable_items": set(),
             "paging": None,
             "force_render": None,
-            "item_url": "/container/{block.location}",
+            "item_url": "/container/{block.usage_key}",
             "tags_count_map": {},
         }
 

@@ -140,7 +140,7 @@ class TestGetCourseBlocks(UserPartitionTestMixin, CourseStructureTestCase):
         with patch('xmodule.modulestore.split_mongo.split.SplitModuleStoreRuntime.get_block', side_effect=side_effect):
             block_structure = get_course_blocks(
                 self.user,
-                self.course.location,
+                self.course.usage_key,
                 BlockStructureTransformers([]),
             )
         self.assertSetEqual(

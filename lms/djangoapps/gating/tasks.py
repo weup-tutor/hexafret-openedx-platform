@@ -44,7 +44,7 @@ def task_evaluate_subsection_completion_milestones(course_id, block_id, user_id)
                 subsection = course_structure[subsection_block]
                 log.debug(
                     "Gating: Evaluating completion milestone for subsection [%s] and user [%s]",
-                    str(subsection.location), user.id
+                    str(subsection.usage_key), user.id
                 )
                 gating_api.evaluate_prerequisite(course, subsection, user)
             except KeyError:

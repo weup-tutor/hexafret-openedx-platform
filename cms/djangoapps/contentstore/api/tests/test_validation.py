@@ -76,11 +76,11 @@ class CourseValidationViewTest(SharedModuleStoreTestCase, APITestCase):
         )
 
         section = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="chapter",
         )
         BlockFactory.create(
-            parent_location=section.location,
+            parent_location=section.usage_key,
             category="sequential",
         )
 
@@ -183,23 +183,23 @@ class TestMigrationViewSetCreate(SharedModuleStoreTestCase, APITestCase):
         Sets up test course structure.
         """
         section = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="chapter",
         )
         subsection = BlockFactory.create(
-            parent_location=section.location,
+            parent_location=section.usage_key,
             category="sequential",
         )
         unit = BlockFactory.create(
-            parent_location=subsection.location,
+            parent_location=subsection.usage_key,
             category="vertical",
         )
         cls.block1 = BlockFactory.create(
-            parent_location=unit.location,
+            parent_location=unit.usage_key,
             category="library_content",
         )
         cls.block2 = BlockFactory.create(
-            parent_location=unit.location,
+            parent_location=unit.usage_key,
             category="library_content",
         )
 
@@ -273,8 +273,8 @@ class TestMigrationViewSetCreate(SharedModuleStoreTestCase, APITestCase):
 
         data = response.json()
         self.assertListEqual(data, [
-            {'usage_key': str(self.block1.location)},
-            {'usage_key': str(self.block2.location)},
+            {'usage_key': str(self.block1.usage_key)},
+            {'usage_key': str(self.block2.usage_key)},
         ])
         mock_auth.assert_called_once()
 

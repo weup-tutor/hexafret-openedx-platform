@@ -62,7 +62,7 @@ class TestCourseGradeFactory(GradeTestBase):
             assert course_grade.percent == expected_percent
 
         def _assert_section_order(course_grade):
-            sections = course_grade.chapter_grades[self.chapter.location]['sections']
+            sections = course_grade.chapter_grades[self.chapter.usage_key]['sections']
             assert [section.display_name for section in sections] == [
                 self.sequence.display_name,
                 self.sequence2.display_name
@@ -131,7 +131,7 @@ class TestCourseGradeFactory(GradeTestBase):
         with mock_get_score(1, 2):
             grade_factory.update(self.request.user, self.course, force_update_subsections=True)
         course_grade = grade_factory.read(self.request.user, course_structure=self.course_structure)
-        subsection_grade = course_grade.subsection_grade(self.sequence.location)
+        subsection_grade = course_grade.subsection_grade(self.sequence.usage_key)
         assert subsection_grade.percent_graded == 0.5
 
     def test_subsection_type_graders(self):
@@ -141,12 +141,12 @@ class TestCourseGradeFactory(GradeTestBase):
         assert graders['NoCredit'].min_count == 0
 
     def test_create_zero_subs_grade_for_nonzero_course_grade(self):
-        subsection = self.course_structure[self.sequence.location]
+        subsection = self.course_structure[self.sequence.usage_key]
         with mock_get_score(1, 2):
             self.subsection_grade_factory.update(subsection)
         course_grade = CourseGradeFactory().update(self.request.user, self.course)
-        subsection1_grade = course_grade.subsection_grades[self.sequence.location]
-        subsection2_grade = course_grade.subsection_grades[self.sequence2.location]
+        subsection1_grade = course_grade.subsection_grades[self.sequence.usage_key]
+        subsection2_grade = course_grade.subsection_grades[self.sequence2.usage_key]
         assert isinstance(subsection1_grade, ReadSubsectionGrade)
         assert isinstance(subsection2_grade, ZeroSubsectionGrade)
 
@@ -160,7 +160,7 @@ class TestCourseGradeFactory(GradeTestBase):
 
     def test_course_grade_summary(self):
         with mock_get_score(1, 2):
-            self.subsection_grade_factory.update(self.course_structure[self.sequence.location])
+            self.subsection_grade_factory.update(self.course_structure[self.sequence.usage_key])
         course_grade = CourseGradeFactory().update(self.request.user, self.course)
         subsection_grades = list(course_grade.subsection_grades.values())
 
@@ -189,14 +189,14 @@ class TestCourseGradeFactory(GradeTestBase):
                     'detail': 'Homework 1 - Test Sequential X with an & Ampersand - 50.00% (1/2)',
                     'label': 'HW 01',
                     'percent': 0.5,
-                    'sequential_id': str(subsection_grades[0].location),
+                    'sequential_id': str(subsection_grades[0].usage_key),
                 },
                 {
                     'category': 'Homework',
                     'detail': 'Homework 2 - Test Sequential A - 0.00% (0/1)',
                     'label': 'HW 02',
                     'percent': 0.0,
-                    'sequential_id': str(subsection_grades[1].location),
+                    'sequential_id': str(subsection_grades[1].usage_key),
                 },
                 {
                     'category': 'Homework',

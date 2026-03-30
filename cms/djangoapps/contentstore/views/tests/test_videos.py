@@ -1708,12 +1708,12 @@ class CourseYoutubeEdxVideoIds(ModuleStoreTestCase):
 
         with self.store.bulk_operations(course_key):
             chapter_loc = self.store.create_child(
-                self.user.id, self.course.location, 'chapter', 'test_chapter'
-            ).location
+                self.user.id, self.course.usage_key, 'chapter', 'test_chapter'
+            ).usage_key
             seq_loc = self.store.create_child(
                 self.user.id, chapter_loc, 'sequential', 'test_seq'
-            ).location
-            vert_loc = self.store.create_child(self.user.id, seq_loc, 'vertical', 'test_vert').location
+            ).usage_key
+            vert_loc = self.store.create_child(self.user.id, seq_loc, 'vertical', 'test_vert').usage_key
             self.store.create_child(
                 self.user.id,
                 vert_loc,
@@ -1740,12 +1740,12 @@ class CourseYoutubeEdxVideoIds(ModuleStoreTestCase):
 
         with self.store.bulk_operations(course_key):
             chapter_loc = self.store.create_child(
-                self.user.id, self.course_with_no_youtube_videos.location, 'chapter', 'test_chapter'
-            ).location
+                self.user.id, self.course_with_no_youtube_videos.usage_key, 'chapter', 'test_chapter'
+            ).usage_key
             seq_loc = self.store.create_child(
                 self.user.id, chapter_loc, 'sequential', 'test_seq'
-            ).location
-            vert_loc = self.store.create_child(self.user.id, seq_loc, 'vertical', 'test_vert').location
+            ).usage_key
+            vert_loc = self.store.create_child(self.user.id, seq_loc, 'vertical', 'test_vert').usage_key
             self.store.create_child(
                 self.user.id, vert_loc, 'problem', 'test_problem', fields={"data": "<problem>Test</problem>"}
             )

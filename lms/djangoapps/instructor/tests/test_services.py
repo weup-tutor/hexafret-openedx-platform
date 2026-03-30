@@ -46,7 +46,7 @@ class InstructorServiceTests(SharedModuleStoreTestCase):
         self.module_to_reset = StudentModule.objects.create(
             student=self.student,
             course_id=self.course.id,
-            module_state_key=self.problem.location,
+            module_state_key=self.problem.usage_key,
             state=json.dumps({'attempts': 2}),
         )
 
@@ -64,7 +64,7 @@ class InstructorServiceTests(SharedModuleStoreTestCase):
         self.service.delete_student_attempt(
             self.student.username,
             str(self.course.id),
-            str(self.subsection.location),
+            str(self.subsection.usage_key),
             requesting_user=self.student,
         )
 
@@ -73,7 +73,7 @@ class InstructorServiceTests(SharedModuleStoreTestCase):
                                             module_state_key=self.module_to_reset.module_state_key).count() == 0
 
         # Assert we send update completion with 0.0
-        mock_completion_task.assert_called_once_with((self.student.username, str(self.subsection.location), 0.0))
+        mock_completion_task.assert_called_once_with((self.student.username, str(self.subsection.usage_key), 0.0))
 
     def test_reset_bad_content_id(self):
         """
@@ -109,7 +109,7 @@ class InstructorServiceTests(SharedModuleStoreTestCase):
         result = self.service.delete_student_attempt(  # lint-amnesty, pylint: disable=assignment-from-none
             self.student.username,
             str(self.course.id),
-            str(self.problem_2.location),
+            str(self.problem_2.usage_key),
             requesting_user=self.student,
         )
         assert result is None
@@ -119,8 +119,8 @@ class InstructorServiceTests(SharedModuleStoreTestCase):
         """
         Assert update_exam_completion task is triggered
         """
-        self.service.complete_student_attempt(self.student.username, str(self.subsection.location))
-        mock_completion_task.assert_called_once_with((self.student.username, str(self.subsection.location), 1.0))
+        self.service.complete_student_attempt(self.student.username, str(self.subsection.usage_key))
+        mock_completion_task.assert_called_once_with((self.student.username, str(self.subsection.usage_key), 1.0))
 
     def test_is_user_staff(self):
         """

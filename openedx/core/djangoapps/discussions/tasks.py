@@ -125,7 +125,7 @@ def get_discussable_units(course, enable_graded_units, discussable_units=None):
                     idx += 1
                     if not is_discussable_unit(unit, store, enable_graded_units, subsection):
                         if unit.discussion_enabled:
-                            log.info(f"Unit {unit.location} of course {course.id} has discussion enabled "
+                            log.info(f"Unit {unit.usage_key} of course {course.id} has discussion enabled "
                                      f"but is not discussable")
                         continue
                     # check if discussable_units is type of list and discussable_units is empty
@@ -133,11 +133,11 @@ def get_discussable_units(course, enable_graded_units, discussable_units=None):
                     if isinstance(discussable_units, list) and not discussable_units:
                         continue
 
-                    if isinstance(discussable_units, list) and (str(unit.location) not in discussable_units):
+                    if isinstance(discussable_units, list) and (str(unit.usage_key) not in discussable_units):
                         continue
 
                     yield DiscussionTopicContext(
-                        usage_key=unit.location,
+                        usage_key=unit.usage_key,
                         title=unit.display_name,
                         group_id=None,
                         ordering=idx,
@@ -154,7 +154,7 @@ def get_sections(course):
     Get sections for given course
     """
     for section in course.get_children():
-        if section.location.block_type == "chapter":
+        if section.usage_key.block_type == "chapter":
             yield section
 
 
@@ -163,7 +163,7 @@ def get_subsections(section):
     Get subsections for given section
     """
     for subsection in section.get_children():
-        if subsection.location.block_type == "sequential":
+        if subsection.usage_key.block_type == "sequential":
             yield subsection
 
 
@@ -172,7 +172,7 @@ def get_units(subsection):
     Get units for given subsection
     """
     for unit in subsection.get_children():
-        if unit.location.block_type == 'vertical':
+        if unit.usage_key.block_type == 'vertical':
             yield unit
 
 
@@ -240,7 +240,7 @@ def update_unit_discussion_state_from_discussion_blocks(
         log.info(f"Found {len(discussable_units)} discussable unit(s) in {course_key}")
         verticals = store.get_items(course_key, qualifiers={'block_type': 'vertical'})
         graded_subsections = {
-            block.location
+            block.usage_key
             for block in store.get_items(
                 course_key,
                 qualifies={'block_type': 'sequential'},
@@ -249,7 +249,7 @@ def update_unit_discussion_state_from_discussion_blocks(
         }
         subsections_with_discussions = set()
         for vertical in verticals:
-            if vertical.location in discussable_units:
+            if vertical.usage_key in discussable_units:
                 vertical.discussion_enabled = True
                 subsections_with_discussions.add(vertical.parent)
             else:

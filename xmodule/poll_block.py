@@ -140,8 +140,8 @@ class _BuiltInPollBlock(
         """
         fragment = Fragment()
         params = {
-            'element_id': self.location.html_id(),
-            'element_class': self.location.block_type,
+            'element_id': self.usage_key.html_id(),
+            'element_class': self.usage_key.block_type,
             'ajax_url': self.ajax_url,
             'configuration_json': self.dump_poll(),
         }

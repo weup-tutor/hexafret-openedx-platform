@@ -26,7 +26,7 @@ class TemplateTests(ModuleStoreTestCase):
 
     def test_get_some_templates(self):
         course = CourseFactory.create()
-        htmlblock = BlockFactory.create(category="html", parent_location=course.location)
+        htmlblock = BlockFactory.create(category="html", parent_location=course.usage_key)
 
         self.assertEqual(len(SequenceBlock.templates()), 0)
         self.assertGreater(len(htmlblock.templates()), 0)
@@ -50,14 +50,14 @@ class TemplateTests(ModuleStoreTestCase):
         self.assertEqual(course_from_store.id.run, '2014')
 
         test_chapter = BlockFactory.create(
-            parent_location=test_course.location,
+            parent_location=test_course.usage_key,
             category='chapter',
             display_name='chapter 1'
         )
         self.assertIsInstance(test_chapter, SequenceBlock)
         # refetch parent which should now point to child
         test_course = self.store.get_course(test_course.id.version_agnostic())
-        self.assertIn(test_chapter.location, test_course.children)
+        self.assertIn(test_chapter.usage_key, test_course.children)
 
         with self.assertRaises(DuplicateCourseError):
             CourseFactory.create(
@@ -106,7 +106,7 @@ class TemplateTests(ModuleStoreTestCase):
             user_id=ModuleStoreEnum.UserID.test,
         )
         BlockFactory.create(
-            parent_location=test_course.location,
+            parent_location=test_course.usage_key,
             category='chapter',
             display_name='chapter 1'
         )
@@ -115,7 +115,7 @@ class TemplateTests(ModuleStoreTestCase):
         # verify it can be retrieved by id
         self.assertIsInstance(self.store.get_course(id_locator), CourseBlock)
         # TODO reenable when split_draft supports getting specific versions
-        # guid_locator = test_course.location.course_agnostic()
+        # guid_locator = test_course.usage_key.course_agnostic()
         # Verify it can be retrieved by guid
         # self.assertIsInstance(self.store.get_item(guid_locator), CourseBlock)
         self.store.delete_course(id_locator, ModuleStoreEnum.UserID.test)

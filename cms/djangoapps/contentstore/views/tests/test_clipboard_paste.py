@@ -93,14 +93,14 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
 
         # Paste the unit
         paste_response = client.post(XBLOCK_ENDPOINT, {
-            "parent_locator": str(dest_sequential.location),
+            "parent_locator": str(dest_sequential.usage_key),
             "staged_content": "clipboard",
         }, format="json")
         assert paste_response.status_code == 200
         dest_unit_key = UsageKey.from_string(paste_response.json()["locator"])
 
         # Now there should be a one unit/vertical as a child of the destination sequential/subsection:
-        updated_sequential = self.store.get_item(dest_sequential.location)
+        updated_sequential = self.store.get_item(dest_sequential.usage_key)
         assert updated_sequential.children == [dest_unit_key]
         # And it should match the original:
         orig_unit = self.store.get_item(unit_key)
@@ -124,7 +124,7 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
         Test copying a component (XBlock) from one course into another
         """
         source_course = CourseFactory.create(display_name='Source Course')
-        source_block = BlockFactory.create(parent_location=source_course.location, **block_args)
+        source_block = BlockFactory.create(parent_location=source_course.usage_key, **block_args)
 
         dest_course = CourseFactory.create(display_name='Destination Course')
         with self.store.bulk_operations(dest_course.id):
@@ -134,12 +134,12 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
         # Copy the block
         client = APIClient()
         client.login(username=self.user.username, password=self.user_password)
-        copy_response = client.post(CLIPBOARD_ENDPOINT, {"usage_key": str(source_block.location)}, format="json")
+        copy_response = client.post(CLIPBOARD_ENDPOINT, {"usage_key": str(source_block.usage_key)}, format="json")
         assert copy_response.status_code == 200
 
         # Paste the unit
         paste_response = client.post(XBLOCK_ENDPOINT, {
-            "parent_locator": str(dest_sequential.location),
+            "parent_locator": str(dest_sequential.usage_key),
             "staged_content": "clipboard",
         }, format="json")
         assert paste_response.status_code == 200
@@ -148,7 +148,7 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
         dest_block = self.store.get_item(dest_block_key)
         assert dest_block.display_name == source_block.display_name
         # The new block should store a reference to where it was copied from
-        assert dest_block.copied_from_block == str(source_block.location)
+        assert dest_block.copied_from_block == str(source_block.usage_key)
 
     def _setup_tagged_content(self, course_key) -> dict:
         """
@@ -163,14 +163,14 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
                 category='discussion',
                 display_name='Toy_forum',
                 publish_item=True,
-            ).location
+            ).usage_key
         with self.store.bulk_operations(course_key):
             html_block_key = BlockFactory.create(
                 parent=self.store.get_item(unit_key),
                 category="html",
                 display_name="Toy_text",
                 publish_item=True,
-            ).location
+            ).usage_key
 
         library = ClipboardPasteFromV1LibraryTestCase.setup_library()
         with self.store.bulk_operations(course_key):
@@ -180,7 +180,7 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
                 source_library_id=str(library.context_key),
                 display_name="LC Block",
                 publish_item=True,
-            ).location
+            ).usage_key
 
         # Add tags to the unit
         taxonomy_all_org = tagging_api.create_taxonomy(
@@ -290,7 +290,7 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
 
         # Paste the unit
         paste_response = client.post(XBLOCK_ENDPOINT, {
-            "parent_locator": str(dest_sequential.location),
+            "parent_locator": str(dest_sequential.usage_key),
             "staged_content": "clipboard",
         }, format="json")
         assert paste_response.status_code == 200
@@ -351,7 +351,7 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
             target_filename="picture2.jpg",
         )
         source_html = BlockFactory.create(
-            parent_location=source_course.location,
+            parent_location=source_course.usage_key,
             category="html",
             display_name="Some HTML",
             data="""
@@ -373,7 +373,7 @@ class ClipboardPasteTestCase(ModuleStoreTestCase):
         )
 
         # Now copy the HTML block from the source cost and paste it into the destination:
-        copy_response = client.post(CLIPBOARD_ENDPOINT, {"usage_key": str(source_html.location)}, format="json")
+        copy_response = client.post(CLIPBOARD_ENDPOINT, {"usage_key": str(source_html.usage_key)}, format="json")
         assert copy_response.status_code == 200
 
         # Paste the video
@@ -646,13 +646,13 @@ class ClipboardPasteFromV1LibraryTestCase(ModuleStoreTestCase):
         """
         # Copy a library content block that has children:
         copy_response = self.client.post(CLIPBOARD_ENDPOINT, {
-            "usage_key": str(self.orig_lc_block.location)
+            "usage_key": str(self.orig_lc_block.usage_key)
         }, format="json")
         assert copy_response.status_code == 200
 
         # Paste the Library content block:
         paste_response = self.client.post(XBLOCK_ENDPOINT, {
-            "parent_locator": str(self.course.location),
+            "parent_locator": str(self.course.usage_key),
             "staged_content": "clipboard",
         }, format="json")
         assert paste_response.status_code == 200
@@ -667,14 +667,14 @@ class ClipboardPasteFromV1LibraryTestCase(ModuleStoreTestCase):
         # Otherwise, user state saved against this child will be lost when it syncs.
         self._sync_lc_block_from_library('dest_lc_block')
         updated_dest_child = self.store.get_item(self.dest_lc_block.children[0])
-        assert dest_child.location == updated_dest_child.location
+        assert dest_child.usage_key == updated_dest_child.usage_key
 
     def _sync_lc_block_from_library(self, attr_name):
         """
         Helper method to "sync" a Library Content Block by [re-]fetching its
         children from the library.
         """
-        usage_key = getattr(self, attr_name).location
+        usage_key = getattr(self, attr_name).usage_key
         # It's easiest to do this via the REST API:
         handler_url = reverse_usage_url('preview_handler', usage_key, kwargs={'handler': 'upgrade_and_sync'})
         response = self.client.post(handler_url)

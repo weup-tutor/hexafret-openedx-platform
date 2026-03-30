@@ -86,7 +86,7 @@ class DraftPublishedOpTestCourseSetup(unittest.TestCase):
                 parent_item = getattr(self, parent_id)
                 block_id = _make_block_id(block_type, idx)
                 setattr(self, block_id, BlockFactory.create(
-                    parent_location=parent_item.location,
+                    parent_location=parent_item.usage_key,
                     category=block_type,
                     modulestore=store,
                     publish_item=False,
@@ -433,7 +433,7 @@ class DraftPublishedOpBaseTestSetup(OLXFormatChecker, DraftPublishedOpTestCourse
                     self.course.id.make_usage_key(block_type=block_type, block_id=block_id)
                 )
             # Publish the draft item to the published branch.
-            self.store.publish(test_item.location, self.user_id)
+            self.store.publish(test_item.usage_key, self.user_id)
         # Since the elemental operation is now complete, shift to the post-operation export directory name.
         self.export_dir = self._make_new_export_dir_name()
 
@@ -448,7 +448,7 @@ class DraftPublishedOpBaseTestSetup(OLXFormatChecker, DraftPublishedOpTestCourse
                     self.course.id.make_usage_key(block_type=block_type, block_id=block_id)
                 )
             # Unpublish the draft item from the published branch.
-            self.store.unpublish(test_item.location, self.user_id)
+            self.store.unpublish(test_item.usage_key, self.user_id)
         # Since the elemental operation is now complete, shift to the post-operation export directory name.
         self.export_dir = self._make_new_export_dir_name()
 
@@ -463,7 +463,7 @@ class DraftPublishedOpBaseTestSetup(OLXFormatChecker, DraftPublishedOpTestCourse
                     self.course.id.make_usage_key(block_type=block_type, block_id=block_id)
                 )
             # Delete the item from the specified branch.
-            self.store.delete_item(test_item.location, self.user_id, revision=revision)
+            self.store.delete_item(test_item.usage_key, self.user_id, revision=revision)
         # Since the elemental operation is now complete, shift to the post-operation export directory name.
         self.export_dir = self._make_new_export_dir_name()
 
@@ -478,7 +478,7 @@ class DraftPublishedOpBaseTestSetup(OLXFormatChecker, DraftPublishedOpTestCourse
                     self.course.id.make_usage_key(block_type=block_type, block_id=block_id)
                 )
             # Convert the item from the specified branch from published to draft.
-            self.store.convert_to_draft(test_item.location, self.user_id)
+            self.store.convert_to_draft(test_item.usage_key, self.user_id)
         # Since the elemental operation is now complete, shift to the post-operation export directory name.
         self.export_dir = self._make_new_export_dir_name()
 
@@ -493,7 +493,7 @@ class DraftPublishedOpBaseTestSetup(OLXFormatChecker, DraftPublishedOpTestCourse
                     self.course.id.make_usage_key(block_type=block_type, block_id=block_id)
                 )
             # Revert the item from the specified branch from draft to published.
-            self.store.revert_to_published(test_item.location, self.user_id)
+            self.store.revert_to_published(test_item.usage_key, self.user_id)
         # Since the elemental operation is now complete, shift to the post-operation export directory name.
         self.export_dir = self._make_new_export_dir_name()
 

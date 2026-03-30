@@ -139,13 +139,13 @@ class InstructorTaskCourseTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase)
         """
         # Add a chapter to the course
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             display_name=TEST_CHAPTER_NAME,
         )
 
         # add a sequence to the course to which the problems can be added
         self.problem_section = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             metadata={'graded': True, 'format': 'Homework'},
             display_name=TEST_SECTION_NAME,
@@ -235,7 +235,7 @@ class InstructorTaskModuleTestCase(InstructorTaskCourseTestCase):
         factory = OptionResponseXMLFactory()
         factory_args = self._option_problem_factory_args()
         problem_xml = factory.build_xml(**factory_args)
-        return BlockFactory.create(parent_location=parent.location,
+        return BlockFactory.create(parent_location=parent.usage_key,
                                    parent=parent,
                                    category="problem",
                                    display_name=problem_url_name,
@@ -258,8 +258,8 @@ class InstructorTaskModuleTestCase(InstructorTaskCourseTestCase):
         """Get StudentModule object for test course, given the `username` and the problem's `block`."""
         return StudentModule.objects.get(course_id=self.course.id,
                                          student=User.objects.get(username=username),
-                                         module_type=block.location.block_type,
-                                         module_state_key=block.location,
+                                         module_type=block.usage_key.block_type,
+                                         module_state_key=block.usage_key,
                                          )
 
     def submit_student_answer(self, username, problem_url_name, responses):

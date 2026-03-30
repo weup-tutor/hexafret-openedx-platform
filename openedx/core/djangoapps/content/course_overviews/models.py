@@ -207,8 +207,8 @@ class CourseOverview(TimeStampedModel):
 
         course_overview.version = cls.VERSION
         course_overview.id = course.id
-        course_overview._location = course.location  # lint-amnesty, pylint: disable=protected-access
-        course_overview.org = course.location.org
+        course_overview._location = course.usage_key  # lint-amnesty, pylint: disable=protected-access
+        course_overview.org = course.usage_key.org
         course_overview.display_name = display_name
         course_overview.display_number_with_default = course.display_number_with_default
         course_overview.display_org_with_default = course.display_org_with_default
@@ -475,7 +475,7 @@ class CourseOverview(TimeStampedModel):
             padding_char (str): Character used for padding at end of base-32
                                 -encoded string, defaulting to '='
         """
-        return course_metadata_utils.clean_course_key(self.location.course_key, padding_char)
+        return course_metadata_utils.clean_course_key(self.usage_key.course_key, padding_char)
 
     @property
     def usage_key(self):
@@ -494,7 +494,7 @@ class CourseOverview(TimeStampedModel):
     @property
     def location(self):
         """
-        The old name for `usage_key`. This method is analogous to `XModuleMixin.location`.
+        The old name for `usage_key`. This method is analogous to `XModuleMixin.usage_key`.
         """
         return self.usage_key
 
@@ -508,7 +508,7 @@ class CourseOverview(TimeStampedModel):
         "Intro to Computer Science" with the course key "edX/CS-101/2014", the
         course number would be "CS-101"
         """
-        return course_metadata_utils.number_for_course_location(self.location)
+        return course_metadata_utils.number_for_course_location(self.usage_key)
 
     @property
     def url_name(self):

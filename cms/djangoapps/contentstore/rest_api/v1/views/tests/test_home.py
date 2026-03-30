@@ -127,7 +127,7 @@ class HomePageCoursesViewTest(CourseTestCase):
             "courses": [{
                 "course_key": course_id,
                 "display_name": self.course.display_name,
-                "lms_link": f'{settings.LMS_ROOT_URL}/courses/{course_id}/jump_to/{self.course.location}',
+                "lms_link": f'{settings.LMS_ROOT_URL}/courses/{course_id}/jump_to/{self.course.usage_key}',
                 "number": self.course.number,
                 "org": self.course.org,
                 "rerun_link": f'/course_rerun/{course_id}',
@@ -153,7 +153,7 @@ class HomePageCoursesViewTest(CourseTestCase):
                 OrderedDict([
                     ("course_key", course_id),
                     ("display_name", self.course.display_name),
-                    ("lms_link", f'{settings.LMS_ROOT_URL}/courses/{course_id}/jump_to/{self.course.location}'),
+                    ("lms_link", f'{settings.LMS_ROOT_URL}/courses/{course_id}/jump_to/{self.course.usage_key}'),
                     ("number", self.course.number),
                     ("org", self.course.org),
                     ("rerun_link", f'/course_rerun/{course_id}'),

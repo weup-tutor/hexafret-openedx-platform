@@ -244,7 +244,7 @@ class ViewsTestCaseMixin:
         # add some discussion blocks
         for i in range(block_count):
             BlockFactory.create(
-                parent_location=self.course.location,
+                parent_location=self.course.usage_key,
                 category="discussion",
                 discussion_id=f"id_module_{i}",
                 discussion_category=f"Category {i}",
@@ -2507,14 +2507,14 @@ class ForumThreadViewedEventTransformerTestCase(UrlResetMixin, ModuleStoreTestCa
         UserBasedRole(user=self.staff, role=CourseStaffRole.ROLE).add_course(self.course.id)
         CourseEnrollmentFactory.create(user=self.student, course_id=self.course.id)
         self.category = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id=self.CATEGORY_ID,
             discussion_category=self.PARENT_CATEGORY_NAME,
             discussion_target=self.CATEGORY_NAME,
         )
         self.team_category = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id=self.TEAM_CATEGORY_ID,
             discussion_category=self.TEAM_PARENT_CATEGORY_NAME,

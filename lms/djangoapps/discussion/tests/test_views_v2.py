@@ -1556,7 +1556,7 @@ class InlineDiscussionTestCase(
         self.student = UserFactory.create()
         CourseEnrollmentFactory(user=self.student, course_id=self.course.id)
         self.discussion1 = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id="discussion1",
             display_name="Discussion1",
@@ -1914,7 +1914,7 @@ class ThreadViewedEventTestCase(
         UserBasedRole(user=self.staff, role=CourseStaffRole.ROLE).add_course(self.course.id)
 
         self.category = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id=self.CATEGORY_ID,
             discussion_category=self.PARENT_CATEGORY_NAME,

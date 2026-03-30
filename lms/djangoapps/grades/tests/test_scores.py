@@ -97,7 +97,7 @@ class TestGetScore(TestCase):
         Creates a stub result from the submissions API for the given values.
         """
         if submission_value.exists:
-            return {str(self.location): submission_value._asdict()}
+            return {str(self.usage_key): submission_value._asdict()}
         else:
             return {}
 
@@ -108,7 +108,7 @@ class TestGetScore(TestCase):
         if csm_value.exists:
             stub_csm_record = namedtuple('stub_csm_record', 'correct, total, created')
             return {
-                self.location: stub_csm_record(
+                self.usage_key: stub_csm_record(
                     correct=csm_value.raw_earned,
                     total=csm_value.raw_possible,
                     created=csm_value.created
@@ -123,7 +123,7 @@ class TestGetScore(TestCase):
         """
         if persisted_block_value.exists:
             return BlockRecord(
-                self.location,
+                self.usage_key,
                 persisted_block_value.weight,
                 persisted_block_value.raw_possible,
                 persisted_block_value.graded,
@@ -135,7 +135,7 @@ class TestGetScore(TestCase):
         """
         Creates and returns a minimal BlockData object with the give values.
         """
-        block = BlockData(self.location)
+        block = BlockData(self.usage_key)
         block.display_name = self.display_name
         block.weight = content_block_value.weight
 
@@ -289,7 +289,7 @@ class TestInternalGetGraded(TestCase):
     @ddt.unpack
     def test_with_persisted_block(self, persisted_block_value, block_value):
         block = self._create_block(block_value)
-        block_record = BlockRecord(block.location, 0, 0, persisted_block_value)
+        block_record = BlockRecord(block.usage_key, 0, 0, persisted_block_value)
         assert scores._get_graded_from_block(block_record, block) == block_record.graded
 
 
@@ -306,7 +306,7 @@ class TestInternalGetScoreFromBlock(TestCase):
         Creates and returns a minimal BlockData object with the give value
         for raw_possible.
         """
-        block = BlockData(self.location)
+        block = BlockData(self.usage_key)
         block.transformer_data.get_or_create(GradesTransformer).max_score = raw_possible
         return block
 
@@ -341,5 +341,5 @@ class TestInternalGetScoreFromBlock(TestCase):
     @ddt.unpack
     def test_with_persisted_block(self, persisted_block_r_possible, block_r_possible, weight):
         block = self._create_block(block_r_possible)
-        block_record = BlockRecord(block.location, 0, persisted_block_r_possible, False)
+        block_record = BlockRecord(block.usage_key, 0, persisted_block_r_possible, False)
         self._verify_score_result(block_record, block, weight, persisted_block_r_possible)

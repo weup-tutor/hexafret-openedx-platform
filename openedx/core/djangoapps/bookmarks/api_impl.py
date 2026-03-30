@@ -183,9 +183,9 @@ def delete_bookmarks(usage_key):
         descriptor = modulestore().get_item(usage_key)
         for child in descriptor.get_children():
             if usage_key.block_type == 'chapter':
-                units_keys += [unit.location for unit in child.get_children()]
+                units_keys += [unit.usage_key for unit in child.get_children()]
             else:
-                units_keys.append(child.location)
+                units_keys.append(child.usage_key)
 
     bookmarks = Bookmark.objects.filter(usage_key__in=units_keys)
 

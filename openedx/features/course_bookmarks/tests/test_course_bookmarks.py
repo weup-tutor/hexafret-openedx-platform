@@ -29,9 +29,9 @@ class TestCourseBookmarksTool(SharedModuleStoreTestCase):
                 cls.course = CourseFactory.create()
                 with cls.store.bulk_operations(cls.course.id):
                     # Create a basic course structure
-                    chapter = BlockFactory.create(category='chapter', parent_location=cls.course.location)
-                    section = BlockFactory.create(category='sequential', parent_location=chapter.location)
-                    BlockFactory.create(category='vertical', parent_location=section.location)
+                    chapter = BlockFactory.create(category='chapter', parent_location=cls.course.usage_key)
+                    section = BlockFactory.create(category='sequential', parent_location=chapter.usage_key)
+                    BlockFactory.create(category='vertical', parent_location=section.usage_key)
 
     @ddt.data(
         [CourseUserType.ANONYMOUS, False],

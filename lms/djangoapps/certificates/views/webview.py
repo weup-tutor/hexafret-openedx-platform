@@ -148,7 +148,7 @@ def _update_certificate_context(context, course, course_overview, user_certifica
         certificate_type=context.get("certificate_type"))
 
     certificate_type_description = get_certificate_description(
-        user_certificate.mode, certificate_type, platform_name, course.location.course_key
+        user_certificate.mode, certificate_type, platform_name, course.usage_key.course_key
     )
     if certificate_type_description:
         context['certificate_type_description'] = certificate_type_description

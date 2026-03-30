@@ -35,7 +35,7 @@ class SubsectionGradeTest(GradeTestBase):  # lint-amnesty, pylint: disable=missi
             # read from db, and ensure output matches input
             saved_model = PersistentSubsectionGrade.read_grade(
                 user_id=self.request.user.id,
-                usage_key=self.sequence.location,
+                usage_key=self.sequence.usage_key,
             )
             read_grade = ReadSubsectionGrade(
                 self.sequence,

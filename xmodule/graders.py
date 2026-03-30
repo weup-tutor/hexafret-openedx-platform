@@ -383,7 +383,7 @@ class AssignmentFormatGrader(CourseGrader):
                     earned = scores[i].graded_total.earned
                     possible = scores[i].graded_total.possible
                     section_name = scores[i].display_name
-                    sequential_id = str(scores[i].location)
+                    sequential_id = str(scores[i].usage_key)
 
                 percentage = scores[i].percent_graded
                 summary_format = "{section_type} {index} - {name} - {percent:.2%} ({earned:.3n}/{possible:.3n})"
@@ -428,7 +428,7 @@ class AssignmentFormatGrader(CourseGrader):
             total_label = f"{self.short_label}"
             breakdown = [{'percent': total_percent, 'label': total_label,
                           'detail': total_detail, 'category': self.category, 'prominent': True,
-                          'sequential_id': str(scores[0].location) if scores else None}, ]
+                          'sequential_id': str(scores[0].usage_key) if scores else None}, ]
         else:
             # Translators: "Homework Average = 0%"
             total_detail = _("{section_type} Average = {percent:.2%}").format(

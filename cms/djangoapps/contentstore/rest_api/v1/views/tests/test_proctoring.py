@@ -197,7 +197,7 @@ class ProctoringExamSettingsPostTests(
         )
 
         # course settings have been updated
-        updated = modulestore().get_item(self.course.location)
+        updated = modulestore().get_item(self.course.usage_key)
         assert updated.enable_proctored_exams is True
         assert updated.proctoring_provider == "test_proctoring_provider"
         assert updated.proctoring_escalation_email == "foo@bar.com"
@@ -234,7 +234,7 @@ class ProctoringExamSettingsPostTests(
         )
 
         # course settings have been updated
-        updated = modulestore().get_item(self.course.location)
+        updated = modulestore().get_item(self.course.usage_key)
         assert updated.enable_proctored_exams is True
         assert updated.proctoring_provider == "test_proctoring_provider"
         assert updated.proctoring_escalation_email is None
@@ -265,7 +265,7 @@ class ProctoringExamSettingsPostTests(
         )
 
         # excluded course settings are not updated
-        updated = modulestore().get_item(self.course.location)
+        updated = modulestore().get_item(self.course.usage_key)
         assert updated.proctoring_escalation_email is None
 
     @override_settings(
@@ -295,7 +295,7 @@ class ProctoringExamSettingsPostTests(
         )
 
         # course settings have been updated
-        updated = modulestore().get_item(self.course.location)
+        updated = modulestore().get_item(self.course.usage_key)
         assert updated.enable_proctored_exams is False
         assert updated.proctoring_provider == "null"
 
@@ -361,7 +361,7 @@ class ProctoringExamSettingsPostTests(
             )
             logger_mock.assert_any_call(logger_string)
 
-        updated = modulestore().get_item(self.course.location)
+        updated = modulestore().get_item(self.course.usage_key)
         assert updated.create_zendesk_tickets is create_zendesk_tickets
 
     @override_waffle_flag(EXAMS_IDA, active=True)
@@ -393,7 +393,7 @@ class ProctoringExamSettingsPostTests(
         )
 
         # course settings have been updated
-        updated = modulestore().get_item(self.course.location)
+        updated = modulestore().get_item(self.course.usage_key)
         assert updated.enable_proctored_exams is True
         assert updated.proctoring_provider == "lti_external"
 
@@ -422,7 +422,7 @@ class ProctoringExamSettingsPostTests(
         )
 
         # course settings have been updated
-        updated = modulestore().get_item(self.course.location)
+        updated = modulestore().get_item(self.course.usage_key)
         assert updated.enable_proctored_exams is False
         assert updated.proctoring_provider == "null"
 

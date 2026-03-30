@@ -293,7 +293,7 @@ class OutlineTabTestViews(BaseCourseHomeTests):
         response = self.client.get(url)
         assert response.status_code == 200
 
-        exam_data = response.data['course_blocks']['blocks'][str(sequence.location)]
+        exam_data = response.data['course_blocks']['blocks'][str(sequence.usage_key)]
         assert not exam_data['complete']
         assert exam_data['description'] == 'My Exam'
         assert exam_data['display_name'] == 'Test Proctored Exam'
@@ -303,14 +303,14 @@ class OutlineTabTestViews(BaseCourseHomeTests):
     def test_assignment(self):
         course = CourseFactory.create()
         with self.store.bulk_operations(course.id):
-            chapter = BlockFactory.create(category='chapter', parent_location=course.location)
+            chapter = BlockFactory.create(category='chapter', parent_location=course.usage_key)
             sequential = BlockFactory.create(display_name='Test', category='sequential', graded=True, has_score=True,
-                                             parent_location=chapter.location)
-            BlockFactory.create(category='problem', graded=True, has_score=True, parent_location=sequential.location)
-            BlockFactory.create(category='problem', graded=True, has_score=True, parent_location=sequential.location)
+                                             parent_location=chapter.usage_key)
+            BlockFactory.create(category='problem', graded=True, has_score=True, parent_location=sequential.usage_key)
+            BlockFactory.create(category='problem', graded=True, has_score=True, parent_location=sequential.usage_key)
             sequential2 = BlockFactory.create(display_name='Ungraded', category='sequential',
-                                              parent_location=chapter.location)
-            BlockFactory.create(category='problem', parent_location=sequential2.location)
+                                              parent_location=chapter.usage_key)
+            BlockFactory.create(category='problem', parent_location=sequential2.usage_key)
         update_outline_from_modulestore(course.id)
         url = reverse('course-home:outline-tab', args=[course.id])
 
@@ -318,11 +318,11 @@ class OutlineTabTestViews(BaseCourseHomeTests):
         response = self.client.get(url)
         assert response.status_code == 200
 
-        exam_data = response.data['course_blocks']['blocks'][str(sequential.location)]
+        exam_data = response.data['course_blocks']['blocks'][str(sequential.usage_key)]
         assert exam_data['display_name'] == 'Test (2 Questions)'
         assert exam_data['icon'] == 'fa-pencil-square-o'
 
-        ungraded_data = response.data['course_blocks']['blocks'][str(sequential2.location)]
+        ungraded_data = response.data['course_blocks']['blocks'][str(sequential2.usage_key)]
         assert ungraded_data['display_name'] == 'Ungraded'
         assert ungraded_data['icon'] is None
 
@@ -516,28 +516,28 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
         Add test blocks to the self course.
         """
         with self.store.bulk_operations(self.course.id):
-            self.chapter = BlockFactory.create(category='chapter', parent_location=self.course.location)
+            self.chapter = BlockFactory.create(category='chapter', parent_location=self.course.usage_key)
             self.sequential = BlockFactory.create(
                 display_name='Test',
                 category='sequential',
                 graded=True,
                 has_score=True,
-                parent_location=self.chapter.location
+                parent_location=self.chapter.usage_key
             )
             self.vertical = BlockFactory.create(
                 category='vertical',
                 graded=True,
                 has_score=True,
-                parent_location=self.sequential.location
+                parent_location=self.sequential.usage_key
             )
             self.ungraded_sequential = BlockFactory.create(
                 display_name='Ungraded',
                 category='sequential',
-                parent_location=self.chapter.location
+                parent_location=self.chapter.usage_key
             )
             self.ungraded_vertical = BlockFactory.create(
                 category='vertical',
-                parent_location=self.ungraded_sequential.location
+                parent_location=self.ungraded_sequential.usage_key
             )
         update_outline_from_modulestore(self.course.id)
 
@@ -546,7 +546,7 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
             user=self.user,
             context_key=problem.context_key,
             block_type='problem',
-            block_key=problem.location,
+            block_key=problem.usage_key,
             completion=completion,
         )
 
@@ -561,13 +561,13 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
         response = self.client.get(self.url)
         assert response.status_code == 200
 
-        chapter_data = response.data['blocks'][str(self.chapter.location)]
-        assert str(self.sequential.location) in chapter_data['children']
+        chapter_data = response.data['blocks'][str(self.chapter.usage_key)]
+        assert str(self.sequential.usage_key) in chapter_data['children']
 
-        sequential_data = response.data['blocks'][str(self.sequential.location)]
-        assert str(self.vertical.location) in sequential_data['children']
+        sequential_data = response.data['blocks'][str(self.sequential.usage_key)]
+        assert str(self.vertical.usage_key) in sequential_data['children']
 
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
         assert vertical_data['children'] == []
 
     @ddt.data(True, False)
@@ -663,7 +663,7 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
         response = self.client.get(url)
         assert response.status_code == 200
 
-        exam_data = response.data['blocks'][str(sequence.location)]
+        exam_data = response.data['blocks'][str(sequence.usage_key)]
         assert not exam_data['complete']
         assert exam_data['display_name'] == 'Test Proctored Exam (1 Question)'
         assert exam_data['special_exam_info'] == 'My Exam'
@@ -679,15 +679,15 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
         response = self.client.get(self.url)
         assert response.status_code == 200
 
-        exam_data = response.data['blocks'][str(self.sequential.location)]
+        exam_data = response.data['blocks'][str(self.sequential.usage_key)]
         assert exam_data['display_name'] == 'Test'
         assert exam_data['icon'] is None
-        assert str(self.vertical.location) in exam_data['children']
+        assert str(self.vertical.usage_key) in exam_data['children']
 
-        ungraded_data = response.data['blocks'][str(self.ungraded_sequential.location)]
+        ungraded_data = response.data['blocks'][str(self.ungraded_sequential.usage_key)]
         assert ungraded_data['display_name'] == 'Ungraded'
         assert ungraded_data['icon'] is None
-        assert str(self.ungraded_vertical.location) in ungraded_data['children']
+        assert str(self.ungraded_vertical.usage_key) in ungraded_data['children']
 
     @override_waffle_flag(COURSE_ENABLE_UNENROLLED_ACCESS_FLAG, active=True)
     @ddt.data(*itertools.product(
@@ -754,8 +754,8 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
         response = self.client.get(url)
         assert response.status_code == 200
 
-        sequence_data = response.data['blocks'][str(self.sequential.location)]
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        sequence_data = response.data['blocks'][str(self.sequential.usage_key)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
         assert sequence_data['complete']
         assert vertical_data['complete']
 
@@ -768,8 +768,8 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
 
         response = self.client.get(reverse('course-home:course-navigation', args=[self.course.id]))
 
-        sequence_data = response.data['blocks'][str(self.sequential.location)]
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        sequence_data = response.data['blocks'][str(self.sequential.usage_key)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
 
         assert sequence_data['complete'] == problem_complete
         assert vertical_data['complete'] == problem_complete
@@ -807,8 +807,8 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
         ):
             response = self.client.get(reverse('course-home:course-navigation', args=[self.course.id]))
 
-        sequence_data = response.data['blocks'][str(self.sequential.location)]
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        sequence_data = response.data['blocks'][str(self.sequential.usage_key)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
 
         assert sequence_data['complete'] == expected
         assert vertical_data['complete'] == expected
@@ -834,8 +834,8 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
             'completion': 1,
             'completable_children': 2,
         }
-        sequence_data = response.data['blocks'][str(self.sequential.location)]
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        sequence_data = response.data['blocks'][str(self.sequential.usage_key)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
 
         assert not sequence_data['complete']
         assert not vertical_data['complete']
@@ -863,8 +863,8 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
             'completion': 2,
             'completable_children': 2,
         }
-        sequence_data = response.data['blocks'][str(self.sequential.location)]
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        sequence_data = response.data['blocks'][str(self.sequential.usage_key)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
 
         assert sequence_data['complete']
         assert vertical_data['complete']
@@ -886,7 +886,7 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
             BlockFactory.create(parent=self.vertical, category=category)
 
         response = self.client.get(reverse('course-home:course-navigation', args=[self.course.id]))
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
 
         assert vertical_data['icon'] == expected_icon
 
@@ -898,5 +898,5 @@ class SidebarBlocksTestViews(BaseCourseHomeTests):
 
         BlockFactory.create(parent=self.vertical, category='html')
         response = self.client.get(reverse('course-home:course-navigation', args=[self.course.id]))
-        vertical_data = response.data['blocks'][str(self.vertical.location)]
+        vertical_data = response.data['blocks'][str(self.vertical.usage_key)]
         assert vertical_data['icon'] == 'video'

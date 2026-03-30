@@ -80,11 +80,11 @@ class CoursewareIndex(View):
         # location in the MFE
         subsection_location = None
         if section and subsection:
-            section_block = course.get_child_by(lambda m: m.location.block_id == section)
+            section_block = course.get_child_by(lambda m: m.usage_key.block_id == section)
             if section_block:
-                subsection_block = section_block.get_child_by(lambda m: m.location.block_id == subsection)
+                subsection_block = section_block.get_child_by(lambda m: m.usage_key.block_id == subsection)
                 if subsection_block:
-                    subsection_location = subsection_block.location
+                    subsection_location = subsection_block.usage_key
 
         try:
             unit_key = UsageKey.from_string(request.GET.get('activate_block_id', ''))
@@ -120,7 +120,7 @@ def save_child_position(seq_block, child_name):
     child_name: url_name of the child
     """
     for position, child in enumerate(seq_block.get_children(), start=1):
-        if child.location.block_id == child_name:
+        if child.usage_key.block_id == child_name:
             # Only save if position changed
             if position != seq_block.position:
                 seq_block.position = position
@@ -136,7 +136,7 @@ def save_positions_recursively_up(user, request, field_data_cache, xmodule, cour
     current_block = xmodule
 
     while current_block:
-        parent_location = modulestore().get_parent_location(current_block.location)
+        parent_location = modulestore().get_parent_location(current_block.usage_key)
         parent = None
         if parent_location:
             parent_block = modulestore().get_item(parent_location)
@@ -145,11 +145,11 @@ def save_positions_recursively_up(user, request, field_data_cache, xmodule, cour
                 request,
                 parent_block,
                 field_data_cache,
-                current_block.location.course_key,
+                current_block.usage_key.course_key,
                 course=course
             )
 
         if parent and hasattr(parent, 'position'):
-            save_child_position(parent, current_block.location.block_id)
+            save_child_position(parent, current_block.usage_key.block_id)
 
         current_block = parent

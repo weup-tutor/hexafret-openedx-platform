@@ -400,7 +400,7 @@ def get_course_about_section(request, course, section_key):
 
     if section_key in html_sections:
         try:
-            loc = course.location.replace(category='about', name=section_key)
+            loc = course.usage_key.replace(category='about', name=section_key)
 
             # Use an empty cache
             field_data_cache = FieldDataCache([], course.id, request.user)
@@ -434,7 +434,7 @@ def get_course_about_section(request, course, section_key):
         except ItemNotFoundError:
             log.warning(
                 "Missing about section %s in course %s",
-                section_key, str(course.location)
+                section_key, str(course.usage_key)
             )
             return None
 
@@ -895,7 +895,7 @@ def get_course_syllabus_section(course, section_key):
         except ResourceNotFound:
             log.exception(
                 "Missing syllabus section %s in course %s",
-                section_key, str(course.location)
+                section_key, str(course.usage_key)
             )
             return "! Syllabus missing !"
 
@@ -988,7 +988,7 @@ def get_cms_block_link(block, page):
     """
     # This is fragile, but unfortunately the problem is that within the LMS we
     # can't use the reverse calls from the CMS
-    return f"//{settings.CMS_BASE}/{page}/{block.location}"
+    return f"//{settings.CMS_BASE}/{page}/{block.usage_key}"
 
 
 def get_studio_url(course, page):
@@ -1024,8 +1024,8 @@ def get_problems_in_section(section):
     for subsection in section_block.get_children():
         for vertical in subsection.get_children():
             for component in vertical.get_children():
-                if component.location.block_type == 'problem' and getattr(component, 'has_score', False):
-                    problem_blocks[str(component.location)] = component
+                if component.usage_key.block_type == 'problem' and getattr(component, 'has_score', False):
+                    problem_blocks[str(component.usage_key)] = component
 
     return problem_blocks
 

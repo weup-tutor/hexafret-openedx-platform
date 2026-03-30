@@ -341,24 +341,24 @@ class TestXBlockInCourse(SharedModuleStoreTestCase):
 
         vertical = self.store.create_child(
             self.user.id,
-            orphan_sequential.location,
+            orphan_sequential.usage_key,
             'vertical',
-            block_id=self.course.location.block_id
+            block_id=self.course.usage_key.block_id
         )
 
         discussion = self.store.create_child(
             self.user.id,
-            vertical.location,
+            vertical.usage_key,
             'discussion',
-            block_id=self.course.location.block_id
+            block_id=self.course.usage_key.block_id
         )
 
-        discussion = self.store.get_item(discussion.location)
+        discussion = self.store.get_item(discussion.usage_key)
 
         root = self.get_root(discussion)
         # Assert that orphan sequential is root of the discussion xblock.
-        assert orphan_sequential.location.block_type == root.location.block_type
-        assert orphan_sequential.location.block_id == root.location.block_id
+        assert orphan_sequential.usage_key.block_type == root.usage_key.block_type
+        assert orphan_sequential.usage_key.block_id == root.usage_key.block_id
 
         # Get xblock bound to a user and a block.
         discussion_xblock = get_block_for_descriptor(
@@ -406,7 +406,7 @@ class TestXBlockInCourse(SharedModuleStoreTestCase):
         Tests that the discussion xblock is hidden when discussion provider is openedx
         """
         # Enable new OPEN_EDX provider for this course
-        course_key = self.course.location.course_key
+        course_key = self.course.usage_key.course_key
         DiscussionsConfiguration.objects.create(
             context_key=course_key,
             enabled=True,

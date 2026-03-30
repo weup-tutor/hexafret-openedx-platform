@@ -64,7 +64,7 @@ class CommandsTestBase(SharedModuleStoreTestCase):
         )
 
         cls.discussion = BlockFactory.create(
-            category='discussion', parent_location=cls.course.location
+            category='discussion', parent_location=cls.course.usage_key
         )
 
         courses = store.get_courses()
@@ -196,7 +196,7 @@ class CommandsTestBase(SharedModuleStoreTestCase):
     def test_export_discussion_ids(self):
         output = self.call_command('dump_course_structure', str(self.course.id))
         dump = json.loads(output)
-        dumped_id = dump[str(self.discussion.location)]['metadata']['discussion_id']
+        dumped_id = dump[str(self.discussion.usage_key)]['metadata']['discussion_id']
         assert dumped_id == self.discussion.discussion_id
 
     def test_export_discussion_id_custom_id(self):

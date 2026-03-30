@@ -113,15 +113,15 @@ class TestFindUnit(SharedModuleStoreTestCase):
             cls.homework = BlockFactory.create(parent=cls.week1)
 
         # get updated course
-        cls.course = cls.store.get_item(course.location)
+        cls.course = cls.store.get_item(course.usage_key)
 
     def test_find_unit_success(self):
         """
         Test finding a nested unit.
         """
-        url = str(self.homework.location)
+        url = str(self.homework.usage_key)
         found_unit = tools.find_unit(self.course, url)
-        assert found_unit.location == self.homework.location
+        assert found_unit.usage_key == self.homework.usage_key
 
     def test_find_unit_notfound(self):
         """
@@ -151,13 +151,13 @@ class TestGetUnitsWithDueDate(ModuleStoreTestCase):
 
         due = datetime.datetime(2010, 5, 12, 2, 42, tzinfo=UTC)
         set_dates_for_course(course.id, [
-            (week1.location, {'due': due}),
-            (week2.location, {'due': due}),
-            (child.location, {'due': due}),
+            (week1.usage_key, {'due': due}),
+            (week2.usage_key, {'due': due}),
+            (child.usage_key, {'due': due}),
         ])
 
         # get updated course
-        self.course = self.store.get_item(course.location)
+        self.course = self.store.get_item(course.usage_key)
         self.week1 = week1
         self.week2 = week2
 
@@ -167,7 +167,7 @@ class TestGetUnitsWithDueDate(ModuleStoreTestCase):
             """
             URLs for sequence of nodes.
             """
-            return sorted(str(i.location) for i in seq)
+            return sorted(str(i.usage_key) for i in seq)
 
         assert urls(tools.get_units_with_due_date(self.course)) == urls((self.week1, self.week2))
 
@@ -189,7 +189,7 @@ class TestTitleOrUrl(unittest.TestCase):
             return 'test:hello'
 
         unit = mock.Mock(display_name=None)
-        unit.location.__str__ = mock_location_text
+        unit.usage_key.__str__ = mock_location_text
         assert tools.title_or_url(unit) == 'test:hello'
 
 
@@ -224,9 +224,9 @@ class TestSetDueDateExtension(ModuleStoreTestCase):
         user = UserFactory.create()
 
         # get updated course
-        self.course = self.store.get_item(course.location)
-        self.week1 = self.store.get_item(week1.location)
-        self.homework = self.store.get_item(homework.location)
+        self.course = self.store.get_item(course.usage_key)
+        self.week1 = self.store.get_item(week1.usage_key)
+        self.homework = self.store.get_item(homework.usage_key)
         self.assignment = assignment
         self.week2 = week2
         self.week3 = week3
@@ -341,7 +341,7 @@ class TestDataDumps(ModuleStoreTestCase):
         user1 = UserFactory.create()
         user2 = UserFactory.create()
         # get updated course
-        self.course = self.store.get_item(course.location)
+        self.course = self.store.get_item(course.usage_key)
         self.week1 = week1
         self.homework = homework
         self.week2 = week2

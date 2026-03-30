@@ -248,15 +248,15 @@ class AccessTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, MilestonesTes
         Tests course student have right access to content w/o preview.
         """
         course_key = self.course.id
-        chapter = BlockFactory.create(category="chapter", parent_location=self.course.location)
+        chapter = BlockFactory.create(category="chapter", parent_location=self.course.usage_key)
         overview = CourseOverview.get_from_id(course_key)
-        subsection = BlockFactory.create(category="sequential", parent_location=chapter.location)
-        unit = BlockFactory.create(category="vertical", parent_location=subsection.location)
+        subsection = BlockFactory.create(category="sequential", parent_location=chapter.usage_key)
+        unit = BlockFactory.create(category="vertical", parent_location=subsection.usage_key)
 
         with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred):
             html_block = BlockFactory.create(
                 category="html",
-                parent_location=unit.location,
+                parent_location=unit.usage_key,
                 display_name="Unpublished Block",
                 data='<p>This block should not be published.</p>',
                 publish_item=False,
@@ -278,14 +278,14 @@ class AccessTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, MilestonesTes
             assert bool(access.has_access(
                 self.student,
                 'load',
-                self.store.get_item(obj.location),
+                self.store.get_item(obj.usage_key),
                 course_key=self.course.id)
             )
 
         # If the document is not published yet, it should return an error when we try to fetch
         # it from the store.  This check confirms that the student would not be able to access it.
         with pytest.raises(ItemNotFoundError):
-            self.store.get_item(html_block.location)
+            self.store.get_item(html_block.usage_key)
 
     def test_has_access_based_on_roles(self):
         """
@@ -322,7 +322,7 @@ class AccessTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, MilestonesTes
         self.course.user_partitions.append(user_partition)
         self.course.cohort_config = {'cohorted': True}
 
-        chapter = BlockFactory.create(category="chapter", parent_location=self.course.location)
+        chapter = BlockFactory.create(category="chapter", parent_location=self.course.usage_key)
         chapter.group_access = {partition_id: [group_0_id]}
 
         modulestore().update_item(self.course, ModuleStoreEnum.UserID.test)
@@ -428,7 +428,7 @@ class AccessTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, MilestonesTes
         Tests that "visible_to_staff_only" overrides start date.
         """
         expected_access = expected_error_type is None
-        mock_unit = Mock(location=self.course.location, user_partitions=[])
+        mock_unit = Mock(location=self.course.usage_key, user_partitions=[])
         mock_unit._class_tags = {}  # Needed for detached check in _has_access_to_block
         mock_unit.visible_to_staff_only = visible_to_staff_only
         mock_unit.start = self.DATES[start]
@@ -460,7 +460,7 @@ class AccessTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, MilestonesTes
         start date is in the past or not set.
         """
         expected_access = expected_error_type is None
-        mock_unit = Mock(location=self.course.location, user_partitions=[])
+        mock_unit = Mock(location=self.course.usage_key, user_partitions=[])
         mock_unit._class_tags = {}  # Needed for detached check in _has_access_to_block
         mock_unit.visible_to_staff_only = False
         mock_unit.start = self.DATES[start]
@@ -491,7 +491,7 @@ class AccessTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, MilestonesTes
         When the flag is enabled, masquerading users see the same start date restrictions as regular students.
         """
         mock_unit = Mock(
-            location=self.course.location,
+            location=self.course.usage_key,
             user_partitions=[],
             _class_tags={},
             start=self.DATES[start],

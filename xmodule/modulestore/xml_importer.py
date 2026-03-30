@@ -493,7 +493,7 @@ class ImportManager:
         target modulestore.
         """
         all_locs = set(self.xml_module_store.modules[courselike_key].keys())
-        all_locs.remove(source_courselike.location)
+        all_locs.remove(source_courselike.usage_key)
 
         def depth_first(subtree):
             """
@@ -502,13 +502,13 @@ class ImportManager:
             if subtree.has_children:
                 for child in subtree.get_children():
                     try:
-                        all_locs.remove(child.location)
+                        all_locs.remove(child.usage_key)
                     except KeyError:
                         # tolerate same child occurring under 2 parents such as in
                         # ContentStoreTest.test_image_import
                         pass
                     if self.verbose:
-                        log.debug('importing block location %s', child.location)
+                        log.debug('importing block location %s', child.usage_key)
 
                     try:
                         _update_and_import_block(
@@ -522,9 +522,9 @@ class ImportManager:
                         )
                     except Exception:
                         log.exception(
-                            f'Course import {dest_id}: failed to import block location {child.location}'
+                            f'Course import {dest_id}: failed to import block location {child.usage_key}'
                         )
-                        raise BlockFailedToImport(child.display_name, child.location)  # pylint: disable=raise-missing-from
+                        raise BlockFailedToImport(child.display_name, child.usage_key)  # pylint: disable=raise-missing-from
 
                     depth_first(child)
 
@@ -549,7 +549,7 @@ class ImportManager:
                     f'Course import {dest_id}: failed to import block location {leftover}'
                 )
                 # pylint: disable=raise-missing-from
-                raise BlockFailedToImport(leftover.display_name, leftover.location)
+                raise BlockFailedToImport(leftover.display_name, leftover.usage_key)
 
     def post_course_import(self, dest_id):
         """
@@ -760,7 +760,7 @@ class LibraryImportManager(ImportManager):
         runtime = None
 
         if existing_lib:
-            dest_id = existing_lib.location.library_key
+            dest_id = existing_lib.usage_key.library_key
             runtime = existing_lib.runtime
 
         if self.create_if_not_present and not existing_lib:
@@ -842,7 +842,7 @@ def _update_and_import_block(  # pylint: disable=too-many-statements
     Update all the block reference fields to the destination course id,
     then import the block into the destination course.
     """
-    logging.debug('processing import of blocks %s...', str(block.location))
+    logging.debug('processing import of blocks %s...', str(block.usage_key))
 
     def _update_block_references(block, source_course_id, dest_course_id):
         """
@@ -909,13 +909,13 @@ def _update_and_import_block(  # pylint: disable=too-many-statements
     fields = _update_block_references(block, source_course_id, dest_course_id)
     asides = block.get_asides() if isinstance(block, XModuleMixin) else None
 
-    if block.location.block_type == 'library_content':
+    if block.usage_key.block_type == 'library_content':
         with store.branch_setting(branch_setting=ModuleStoreEnum.Branch.published_only):
-            lib_content_block_already_published = store.has_item(block.location)
+            lib_content_block_already_published = store.has_item(block.usage_key)
 
     block = store.import_xblock(
-        user_id, dest_course_id, block.location.block_type,
-        block.location.block_id, fields, runtime, asides=asides
+        user_id, dest_course_id, block.usage_key.block_type,
+        block.usage_key.block_id, fields, runtime, asides=asides
     )
 
     # TODO: Move this code once the following condition is met.
@@ -926,7 +926,7 @@ def _update_and_import_block(  # pylint: disable=too-many-statements
     # Special case handling for library content blocks. The fact that this is
     # in Modulestore code is _bad_ and breaks abstraction barriers, but is too
     # much work to factor out at this point.
-    if block.location.block_type == 'library_content':
+    if block.usage_key.block_type == 'library_content':
         # If library exists, update source_library_version and children
         # according to this existing library and library content block.
         if block.source_library_id and store.get_library(block.source_library_key):
@@ -965,7 +965,7 @@ def _update_and_import_block(  # pylint: disable=too-many-statements
             else:
                 # Publish it if importing the course for branch setting published_only.
                 if store.get_branch_setting() == ModuleStoreEnum.Branch.published_only:
-                    store.publish(block.location, user_id)
+                    store.publish(block.usage_key, user_id)
 
     return block
 
@@ -1015,7 +1015,7 @@ def _import_course_draft(
 
     def _import_block(block):
         # IMPORTANT: Be sure to update the block location in the NEW namespace
-        block_location = block.location.map_into_course(target_id)
+        block_location = block.usage_key.map_into_course(target_id)
         # Update the block's location to DRAFT revision
         # We need to call this method (instead of updating the location directly)
         # to ensure that pure XBlock field data is updated correctly.
@@ -1029,7 +1029,7 @@ def _import_course_draft(
         # in the list of children since they would have been
         # filtered out from the non-draft store export.
         if parent_url is not None and index is not None:
-            course_key = block.location.course_key
+            course_key = block.usage_key.course_key
             parent_location = UsageKey.from_string(parent_url).map_into_course(course_key)
 
             # IMPORTANT: Be sure to update the parent in the NEW namespace
@@ -1037,8 +1037,8 @@ def _import_course_draft(
 
             parent = store.get_item(parent_location, depth=0)
 
-            non_draft_location = block.location.map_into_course(target_id)
-            if not any(child.block_id == block.location.block_id for child in parent.children):
+            non_draft_location = block.usage_key.map_into_course(target_id)
+            if not any(child.block_id == block.usage_key.block_id for child in parent.children):
                 parent.children.insert(index, non_draft_location)
                 store.update_item(parent, user_id)
 
@@ -1081,11 +1081,11 @@ def _import_course_draft(
                         # aka sequential), so we have to replace the location.name
                         # with the XML filename that is part of the pack
                         filename, __ = os.path.splitext(filename)
-                        block.location = block.location.replace(name=filename)
+                        block.usage_key = block.usage_key.replace(name=filename)
 
                         index = index_in_children_list(block)
                         parent_url = get_parent_url(block, xml)
-                        draft_url = str(block.location)
+                        draft_url = str(block.usage_key)
 
                         draft = draft_node_constructor(
                             block=block, url=draft_url, parent_url=parent_url, index=index
@@ -1120,7 +1120,7 @@ def check_block_metadata_editability(block):
     we can't support editing. However we always allow 'display_name'
     and 'xml_attributes'
     """
-    allowed = allowed_metadata_by_category(block.location.block_type)
+    allowed = allowed_metadata_by_category(block.usage_key.block_type)
     if '*' in allowed:
         # everything is allowed
         return 0
@@ -1134,7 +1134,7 @@ def check_block_metadata_editability(block):
         print(
             ": found non-editable metadata on {url}. "
             "These metadata keys are not supported = {keys}".format(
-                url=str(block.location), keys=illegal_keys
+                url=str(block.usage_key), keys=illegal_keys
             )
         )
 
@@ -1195,7 +1195,7 @@ def validate_no_non_editable_metadata(module_store, course_id, category):  # lin
     err_cnt = 0
     for block_loc in module_store.modules[course_id]:
         block = module_store.modules[course_id][block_loc]
-        if block.location.block_type == category:
+        if block.usage_key.block_type == category:
             err_cnt = err_cnt + check_block_metadata_editability(block)
 
     return err_cnt
@@ -1208,7 +1208,7 @@ def validate_category_hierarchy(  # lint-amnesty, pylint: disable=missing-functi
     parents = []
     # get all blocks of parent_category
     for block in module_store.modules[course_id].values():
-        if block.location.block_type == parent_category:
+        if block.usage_key.block_type == parent_category:
             parents.append(block)
 
     for parent in parents:
@@ -1218,7 +1218,7 @@ def validate_category_hierarchy(  # lint-amnesty, pylint: disable=missing-functi
                 print(
                     "ERROR: child {child} of parent {parent} was expected to be "
                     "category of {expected} but was {actual}".format(
-                        child=child_loc, parent=parent.location,
+                        child=child_loc, parent=parent.usage_key,
                         expected=expected_child_category,
                         actual=child_loc.block_type
                     )
@@ -1264,7 +1264,7 @@ def validate_course_policy(module_store, course_id):
     # is there a reliable way to get the block location just given the course_id?
     warn_cnt = 0
     for block in module_store.modules[course_id].values():
-        if block.location.block_type == 'course':
+        if block.usage_key.block_type == 'course':
             if not block._field_data.has(block, 'rerandomize'):  # lint-amnesty, pylint: disable=protected-access
                 warn_cnt += 1
                 print(
@@ -1407,7 +1407,7 @@ def _update_block_location(block, new_location):
         list(block.get_explicitly_set_fields_by_scope(Scope.children).keys())
     )
 
-    block.location = new_location
+    block.usage_key = new_location
 
     # Pure XBlocks store the field data in a key-value store
     # in which one component of the key is the XBlock's location (equivalent to "scope_ids").

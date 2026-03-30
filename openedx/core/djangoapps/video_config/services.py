@@ -85,10 +85,10 @@ class VideoConfigService:
         """
         context = {}
 
-        if not sharing.is_public_sharing_enabled(video_block.location, video_block.public_access):
+        if not sharing.is_public_sharing_enabled(video_block.usage_key, video_block.public_access):
             return context
 
-        public_video_url = sharing.get_public_video_url(video_block.location)
+        public_video_url = sharing.get_public_video_url(video_block.usage_key)
         context['public_sharing_enabled'] = True
         context['public_video_url'] = public_video_url
 
@@ -192,7 +192,7 @@ class VideoConfigService:
                 try:
                     # for bumper videos, transcripts are stored in content store only
                     if is_bumper:
-                        get_transcript_for_video(video_block.location, filename, filename, language)
+                        get_transcript_for_video(video_block.usage_key, filename, filename, language)
                     else:
                         get_transcript(video_block, language)
                 except NotFoundError:
@@ -325,7 +325,7 @@ class VideoConfigService:
             html5_ids = get_html5_ids(video_block.html5_sources)
             for subs_id in html5_ids:
                 try:
-                    Transcript.asset(video_block.location, subs_id)
+                    Transcript.asset(video_block.usage_key, subs_id)
                 except NotFoundError:
                     # If a transcript does not not exist with particular html5_id then there is no need to check other
                     # html5_ids because we have to create a new transcript with this missing html5_id by turning on

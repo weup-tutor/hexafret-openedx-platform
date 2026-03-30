@@ -60,7 +60,7 @@ def grading_context(course, course_structure):
         scored_descendants_of_subsection = []
         for descendant_key in course_structure.post_order_traversal(
                 filter_func=possibly_scored,
-                start_node=subsection.location,
+                start_node=subsection.usage_key,
         ):
             scored_descendants_of_subsection.append(
                 course_structure[descendant_key],

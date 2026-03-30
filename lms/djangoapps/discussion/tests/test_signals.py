@@ -97,11 +97,11 @@ class CoursePublishHandlerTestCase(ModuleStoreTestCase):
         RequestCache().clear()
         discussion_id = 'discussion1'
         discussion_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="discussion",
             discussion_id=discussion_id,
         )
-        self._assert_discussion_id_map(course_key, {discussion_id: str(discussion_block.location)})
+        self._assert_discussion_id_map(course_key, {discussion_id: str(discussion_block.usage_key)})
 
     def _assert_discussion_id_map(self, course_key, expected_map):
         """

@@ -61,7 +61,7 @@ class WikiRedirectTestCase(EnterpriseTestConsentRequired, LoginEnrollmentTestCas
         # Now we test that the student will be redirected away from that page if the course doesn't exist
         # We do this in the same test because we want to make sure the redirected_to is constructed correctly
         # This is a location like /courses/*/wiki/* , but with an invalid course ID
-        bad_course_wiki_page = redirected_to.replace(self.toy.location.course, "bad_course")
+        bad_course_wiki_page = redirected_to.replace(self.toy.usage_key.course, "bad_course")
 
         resp = self.client.get(bad_course_wiki_page, HTTP_REFERER=referer)
         assert resp.status_code == 302

@@ -37,7 +37,7 @@ class StudioPageTestCase(CourseTestCase):
         """
         Returns the HTML for the xblock when shown within a unit or container page.
         """
-        preview_url = f'/xblock/{xblock.location}/{view_name}'
+        preview_url = f'/xblock/{xblock.usage_key}/{view_name}'
         resp = self.client.get_json(preview_url)
         self.assertEqual(resp.status_code, 200)
         resp_content = json.loads(resp.content.decode('utf-8'))

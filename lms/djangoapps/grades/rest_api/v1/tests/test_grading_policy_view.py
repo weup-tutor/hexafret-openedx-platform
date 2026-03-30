@@ -44,7 +44,7 @@ class GradingPolicyTestMixin:
         with cls.store.bulk_operations(cls.course.id, emit_signals=False):
             cls.sequential = BlockFactory.create(
                 category="sequential",
-                parent_location=cls.course.location,
+                parent_location=cls.course.usage_key,
                 display_name="Lesson 1",
                 format="Homework",
                 graded=True
@@ -55,7 +55,7 @@ class GradingPolicyTestMixin:
             problem_xml = factory.build_xml(**args)
             cls.problem = BlockFactory.create(
                 category="problem",
-                parent_location=cls.sequential.location,
+                parent_location=cls.sequential.usage_key,
                 display_name="Problem 1",
                 format="Homework",
                 data=problem_xml,
@@ -63,13 +63,13 @@ class GradingPolicyTestMixin:
 
             cls.video = BlockFactory.create(
                 category="video",
-                parent_location=cls.sequential.location,
+                parent_location=cls.sequential.usage_key,
                 display_name="Video 1",
             )
 
             cls.html = BlockFactory.create(
                 category="html",
-                parent_location=cls.sequential.location,
+                parent_location=cls.sequential.usage_key,
                 display_name="HTML 1",
             )
 

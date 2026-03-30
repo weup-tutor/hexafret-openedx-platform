@@ -450,11 +450,11 @@ class SequenceApiTestViews(MasqueradeMixin, BaseCoursewareTests):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.url = f'/api/courseware/sequence/{cls.sequence.location}'
+        cls.url = f'/api/courseware/sequence/{cls.sequence.usage_key}'
 
     @classmethod
     def tearDownClass(cls):
-        cls.store.delete_item(cls.sequence.location, cls.user.id)
+        cls.store.delete_item(cls.sequence.usage_key, cls.user.id)
         super().tearDownClass()
 
     def test_sequence_metadata(self):
@@ -465,7 +465,7 @@ class SequenceApiTestViews(MasqueradeMixin, BaseCoursewareTests):
 
     def test_unit_error(self):
         """Verify that we return a proper error when passed a non-sequence"""
-        response = self.client.get(f'/api/courseware/sequence/{self.unit.location}')
+        response = self.client.get(f'/api/courseware/sequence/{self.unit.usage_key}')
         assert response.status_code == 422
 
     @ddt.data(
@@ -481,8 +481,8 @@ class SequenceApiTestViews(MasqueradeMixin, BaseCoursewareTests):
         """Validate the metadata when hide-after-due is set for a sequence"""
         due = datetime.now() + timedelta(days=-1 if is_past_due else 1)
         sequence = BlockFactory(
-            parent_location=self.chapter.location,
-            # ^ It is very important that we use parent_location=self.chapter.location (and not parent=self.chapter), as
+            parent_location=self.chapter.usage_key,
+            # ^ It is very important that we use parent_location=self.chapter.usage_key (and not parent=self.chapter), as
             # chapter is a class attribute and passing it by value will update its .children=[] which will then leak
             # into other tests and cause errors if the children no longer exist.
             category='sequential',
@@ -497,7 +497,7 @@ class SequenceApiTestViews(MasqueradeMixin, BaseCoursewareTests):
         if masquerade_config:
             self.update_masquerade(**masquerade_config)
 
-        response = self.client.get(f'/api/courseware/sequence/{sequence.location}')
+        response = self.client.get(f'/api/courseware/sequence/{sequence.usage_key}')
         assert response.status_code == 200
         assert response.data['is_hidden_after_due'] == expected_hidden
         assert bool(response.data['banner_text']) == expected_banner
@@ -521,12 +521,12 @@ class ResumeApiTestViews(BaseCoursewareTests, CompletionWaffleTestMixin):
 
     def test_resume_with_completion(self):
         self.override_waffle_switch(True)
-        submit_completions_for_testing(self.user, [self.unit.location])
+        submit_completions_for_testing(self.user, [self.unit.usage_key])
         response = self.client.get(self.url)
         assert response.status_code == 200
-        assert response.data['block_id'] == str(self.unit.location)
-        assert response.data['unit_id'] == str(self.unit.location)
-        assert response.data['section_id'] == str(self.sequence.location)
+        assert response.data['block_id'] == str(self.unit.usage_key)
+        assert response.data['unit_id'] == str(self.unit.usage_key)
+        assert response.data['section_id'] == str(self.sequence.usage_key)
 
     def test_resume_invalid_key(self):
         """A resume key that does not exist should return null IDs (i.e. "redirect to first section")"""

@@ -132,11 +132,11 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
         now = datetime.now(utc)
         assignment_title_html = ['<a href=', '</a>']
         with self.store.bulk_operations(course.id):
-            section = BlockFactory.create(category='chapter', parent_location=course.location)
+            section = BlockFactory.create(category='chapter', parent_location=course.usage_key)
             BlockFactory.create(
                 category='sequential',
                 display_name='Released',
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 start=now - timedelta(days=1),
                 due=now + timedelta(days=6),
                 graded=True,
@@ -145,7 +145,7 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
             BlockFactory.create(
                 category='sequential',
                 display_name='Not released',
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 start=now + timedelta(days=1),
                 due=now + timedelta(days=7),
                 graded=True,
@@ -154,7 +154,7 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
             BlockFactory.create(
                 category='sequential',
                 display_name='Third nearest assignment',
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 start=now + timedelta(days=1),
                 due=now + timedelta(days=8),
                 graded=True,
@@ -163,7 +163,7 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
             BlockFactory.create(
                 category='sequential',
                 display_name='Past due date',
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 start=now - timedelta(days=14),
                 due=now - timedelta(days=7),
                 graded=True,
@@ -172,7 +172,7 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
             BlockFactory.create(
                 category='sequential',
                 display_name='Not returned since we do not get non-graded subsections',
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 start=now + timedelta(days=1),
                 due=now - timedelta(days=7),
                 graded=False,
@@ -180,7 +180,7 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
             BlockFactory.create(
                 category='sequential',
                 display_name='No start date',
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 start=None,
                 due=now + timedelta(days=9),
                 graded=True,
@@ -190,7 +190,7 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
                 category='sequential',
                 # Setting display name to None should set the assignment title to 'Assignment'
                 display_name=None,
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 start=now - timedelta(days=14),
                 due=now + timedelta(days=10),
                 graded=True,
@@ -199,9 +199,9 @@ class CourseDateSummaryTest(SharedModuleStoreTestCase):
             dummy_subsection = BlockFactory.create(category='sequential', graded=True, due=now + timedelta(days=11))
 
         # We are deleting this subsection right after creating it because we need to pass in a real
-        # location object (dummy_subsection.location), but do not want this to exist inside of the modulestore
+        # location object (dummy_subsection.usage_key), but do not want this to exist inside of the modulestore
         with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, course.id):
-            self.store.delete_item(dummy_subsection.location, user.id)
+            self.store.delete_item(dummy_subsection.usage_key, user.id)
 
         # Standard widget case where we restrict the number of assignments.
         expected_blocks = (

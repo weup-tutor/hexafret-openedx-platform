@@ -25,13 +25,13 @@ class StudioEditableBlock(XBlockMixin):
 
         for child in self.get_children():  # pylint: disable=no-member
             if can_reorder:
-                context['reorderable_items'].add(child.location)
+                context['reorderable_items'].add(child.usage_key)
             context['can_add'] = can_add
             rendered_child = child.render(StudioEditableBlock.get_preview_view_name(child), context)
             fragment.add_fragment_resources(rendered_child)
 
             contents.append({
-                'id': str(child.location),
+                'id': str(child.usage_key),
                 'content': rendered_child.content
             })
 

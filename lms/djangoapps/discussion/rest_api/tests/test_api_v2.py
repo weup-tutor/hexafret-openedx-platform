@@ -4063,20 +4063,20 @@ class CourseTopicsV2Test(ModuleStoreTestCase):
             }
         )
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="Week 1",
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Lesson 1",
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         self.verticals = [
             BlockFactory.create(
-                parent_location=self.sequential.location,
+                parent_location=self.sequential.usage_key,
                 category="vertical",
                 display_name=f"vertical-{idx}",
                 start=datetime(2015, 4, 1, tzinfo=UTC),
@@ -4084,7 +4084,7 @@ class CourseTopicsV2Test(ModuleStoreTestCase):
             for idx in range(10)
         ]
         staff_only_unit = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category="vertical",
             display_name="staff-vertical-1",
             metadata=dict(visible_to_staff_only=True),
@@ -4096,7 +4096,7 @@ class CourseTopicsV2Test(ModuleStoreTestCase):
         topic_links = []
         update_discussions_settings_from_course_task(str(self.course_key))
         self.staff_only_id = (
-            DiscussionTopicLink.objects.filter(usage_key__in=[staff_only_unit.location])
+            DiscussionTopicLink.objects.filter(usage_key__in=[staff_only_unit.usage_key])
             .values_list(
                 "external_id",
                 flat=True,
@@ -4289,7 +4289,7 @@ class GetCourseTopicsTest(ForumMockUtilsMixin, UrlResetMixin, ModuleStoreTestCas
         Build a discussion xblock in self.course.
         """
         BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id=topic_id,
             discussion_category=category,

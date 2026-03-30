@@ -48,7 +48,7 @@ class CompletionBatchTestCase(CompletionWaffleTestMixin, ModuleStoreTestCase):
         self.problem = BlockFactory.create(
             parent=self.course, category="problem", display_name="Test Problem", publish_item=False,
         )
-        assert str(self.problem.location) == self.BLOCK_KEY
+        assert str(self.problem.usage_key) == self.BLOCK_KEY
 
         # Create users
         self.staff_user = UserFactory(is_staff=True)

@@ -46,14 +46,14 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         """
         Verifies that get_bookmark returns data as expected.
         """
-        bookmark_data = api.get_bookmark(user=self.user, usage_key=self.sequential_1.location)
+        bookmark_data = api.get_bookmark(user=self.user, usage_key=self.sequential_1.usage_key)
         self.assert_bookmark_data_is_valid(self.bookmark_1, bookmark_data)
 
         # With Optional fields.
         with self.assertNumQueries(1):
             bookmark_data = api.get_bookmark(
                 user=self.user,
-                usage_key=self.sequential_1.location,
+                usage_key=self.sequential_1.usage_key,
                 fields=self.ALL_FIELDS
             )
         self.assert_bookmark_data_is_valid(self.bookmark_1, bookmark_data, check_optional_fields=True)
@@ -64,7 +64,7 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         """
         with self.assertNumQueries(1):
             with pytest.raises(ObjectDoesNotExist):
-                api.get_bookmark(user=self.other_user, usage_key=self.vertical_1.location)
+                api.get_bookmark(user=self.other_user, usage_key=self.vertical_1.usage_key)
 
     @ddt.data(
         1, 10, 20
@@ -119,15 +119,15 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         assert len(api.get_bookmarks(user=self.user, course_key=self.course.id)) == 4
 
         with self.assertNumQueries(10):
-            bookmark_data = api.create_bookmark(user=self.user, usage_key=self.vertical_2.location)
+            bookmark_data = api.create_bookmark(user=self.user, usage_key=self.vertical_2.usage_key)
 
         self.assert_bookmark_event_emitted(
             mock_tracker,
             event_name='edx.bookmark.added',
             course_id=str(self.course_id),
             bookmark_id=bookmark_data['id'],
-            component_type=self.vertical_2.location.block_type,
-            component_usage_id=str(self.vertical_2.location),
+            component_type=self.vertical_2.usage_key.block_type,
+            component_usage_id=str(self.vertical_2.usage_key),
         )
 
         assert len(api.get_bookmarks(user=self.user, course_key=self.course.id)) == 5
@@ -140,15 +140,15 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         assert len(api.get_bookmarks(user=self.user, course_key=self.course.id)) == 4
 
         with self.assertNumQueries(10):
-            bookmark_data = api.create_bookmark(user=self.user, usage_key=self.vertical_2.location)
+            bookmark_data = api.create_bookmark(user=self.user, usage_key=self.vertical_2.usage_key)
 
         self.assert_bookmark_event_emitted(
             mock_tracker,
             event_name='edx.bookmark.added',
             course_id=str(self.course_id),
             bookmark_id=bookmark_data['id'],
-            component_type=self.vertical_2.location.block_type,
-            component_usage_id=str(self.vertical_2.location),
+            component_type=self.vertical_2.usage_key.block_type,
+            component_usage_id=str(self.vertical_2.usage_key),
         )
 
         assert len(api.get_bookmarks(user=self.user, course_key=self.course.id)) == 5
@@ -156,7 +156,7 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         mock_tracker.reset_mock()
 
         with self.assertNumQueries(5):
-            bookmark_data_2 = api.create_bookmark(user=self.user, usage_key=self.vertical_2.location)
+            bookmark_data_2 = api.create_bookmark(user=self.user, usage_key=self.vertical_2.usage_key)
 
         assert len(api.get_bookmarks(user=self.user, course_key=self.course.id)) == 5
         assert bookmark_data == bookmark_data_2
@@ -186,19 +186,19 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         __, blocks, __ = self.create_course_with_bookmarks_count(max_bookmarks)
         with self.assertNumQueries(1):
             with pytest.raises(BookmarksLimitReachedError):
-                api.create_bookmark(user=self.user, usage_key=blocks[-1].location)
+                api.create_bookmark(user=self.user, usage_key=blocks[-1].usage_key)
 
         self.assert_no_events_were_emitted(mock_tracker)
 
         # if user tries to create bookmark in another course it should succeed
         assert len(api.get_bookmarks(user=self.user, course_key=self.other_course.id)) == 1
-        api.create_bookmark(user=self.user, usage_key=self.other_chapter_1.location)
+        api.create_bookmark(user=self.user, usage_key=self.other_chapter_1.usage_key)
         assert len(api.get_bookmarks(user=self.user, course_key=self.other_course.id)) == 2
 
         # if another user tries to create bookmark it should succeed
-        assert len(api.get_bookmarks(user=self.other_user, course_key=blocks[(- 1)].location.course_key)) == 0
-        api.create_bookmark(user=self.other_user, usage_key=blocks[-1].location)
-        assert len(api.get_bookmarks(user=self.other_user, course_key=blocks[(- 1)].location.course_key)) == 1
+        assert len(api.get_bookmarks(user=self.other_user, course_key=blocks[(- 1)].usage_key.course_key)) == 0
+        api.create_bookmark(user=self.other_user, usage_key=blocks[-1].usage_key)
+        assert len(api.get_bookmarks(user=self.other_user, course_key=blocks[(- 1)].usage_key.course_key)) == 1
 
     @patch('openedx.core.djangoapps.bookmarks.api_impl.tracker.emit')
     def test_delete_bookmark(self, mock_tracker):
@@ -208,35 +208,35 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         assert len(api.get_bookmarks(user=self.user)) == 5
 
         with self.assertNumQueries(3):
-            api.delete_bookmark(user=self.user, usage_key=self.sequential_1.location)
+            api.delete_bookmark(user=self.user, usage_key=self.sequential_1.usage_key)
 
         self.assert_bookmark_event_emitted(
             mock_tracker,
             event_name='edx.bookmark.removed',
             course_id=str(self.course_id),
             bookmark_id=self.bookmark_1.resource_id,
-            component_type=self.sequential_1.location.block_type,
-            component_usage_id=str(self.sequential_1.location),
+            component_type=self.sequential_1.usage_key.block_type,
+            component_usage_id=str(self.sequential_1.usage_key),
         )
 
         bookmarks_data = api.get_bookmarks(user=self.user)
         assert len(bookmarks_data) == 4
-        assert str(self.sequential_1.location) != bookmarks_data[0]['usage_id']
-        assert str(self.sequential_1.location) != bookmarks_data[1]['usage_id']
+        assert str(self.sequential_1.usage_key) != bookmarks_data[0]['usage_id']
+        assert str(self.sequential_1.usage_key) != bookmarks_data[1]['usage_id']
 
     @patch('openedx.core.djangoapps.bookmarks.api_impl.tracker.emit')
     def test_delete_bookmarks_with_vertical_block_type(self, mock_tracker):
         assert len(api.get_bookmarks(user=self.user)) == 5
 
-        api.delete_bookmarks(usage_key=self.vertical_3.location)
+        api.delete_bookmarks(usage_key=self.vertical_3.usage_key)
 
         self.assert_bookmark_event_emitted(
             mock_tracker,
             event_name='edx.bookmark.removed',
             course_id=str(self.course_id),
             bookmark_id=self.bookmark_3.resource_id,
-            component_type=self.vertical_1.location.block_type,
-            component_usage_id=str(self.vertical_3.location),
+            component_type=self.vertical_1.usage_key.block_type,
+            component_usage_id=str(self.vertical_3.usage_key),
         )
 
         assert len(api.get_bookmarks(self.user)) == 4
@@ -246,9 +246,9 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
     def test_delete_bookmarks_with_chapter_block_type(self, mock_tracker, mocked_modulestore):
         mocked_modulestore().get_item().get_children = Mock(
             return_value=[Mock(get_children=Mock(return_value=[Mock(
-                location=self.chapter_2.location)]))])
+                location=self.chapter_2.usage_key)]))])
 
-        api.delete_bookmarks(usage_key=self.chapter_2.location)
+        api.delete_bookmarks(usage_key=self.chapter_2.usage_key)
 
         assert mocked_modulestore.call_count == 2
         assert mocked_modulestore().get_item.call_count == 2
@@ -258,8 +258,8 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
             event_name='edx.bookmark.removed',
             course_id=str(self.course_id),
             bookmark_id=self.bookmark_4.resource_id,
-            component_type=self.chapter_2.location.block_type,
-            component_usage_id=str(self.chapter_2.location),
+            component_type=self.chapter_2.usage_key.block_type,
+            component_usage_id=str(self.chapter_2.usage_key),
         )
         assert len(api.get_bookmarks(self.user)) == 4
 
@@ -270,6 +270,6 @@ class BookmarksAPITests(BookmarkApiEventTestMixin, BookmarksTestsBase):
         """
         with self.assertNumQueries(1):
             with pytest.raises(ObjectDoesNotExist):
-                api.delete_bookmark(user=self.other_user, usage_key=self.vertical_1.location)
+                api.delete_bookmark(user=self.other_user, usage_key=self.vertical_1.usage_key)
 
         self.assert_no_events_were_emitted(mock_tracker)

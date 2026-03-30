@@ -69,7 +69,7 @@ def get_parent_xblock(xblock):
     """
     Returns the xblock that is the parent of the specified xblock, or None if it has no parent.
     """
-    locator = xblock.location
+    locator = xblock.usage_key
     parent_location = modulestore().get_parent_location(locator)
 
     if parent_location is None:
@@ -153,17 +153,17 @@ def xblock_studio_url(xblock, parent_xblock=None, find_parent=False):
             return None
     category = xblock.category
     if category == 'course':
-        return reverse_course_url('course_handler', xblock.location.course_key)
+        return reverse_course_url('course_handler', xblock.usage_key.course_key)
     elif category in ('chapter', 'sequential'):
         return '{url}?show={usage_key}'.format(
-            url=reverse_course_url('course_handler', xblock.location.course_key),
-            usage_key=urllib.parse.quote(str(xblock.location))
+            url=reverse_course_url('course_handler', xblock.usage_key.course_key),
+            usage_key=urllib.parse.quote(str(xblock.usage_key))
         )
     elif category == 'library':
-        library_key = xblock.location.course_key
+        library_key = xblock.usage_key.course_key
         return reverse_library_url('library_handler', library_key)
     else:
-        return reverse_usage_url('container_handler', xblock.location)
+        return reverse_usage_url('container_handler', xblock.usage_key)
 
 
 def xblock_lms_url(xblock) -> str:
@@ -177,7 +177,7 @@ def xblock_lms_url(xblock) -> str:
         str: The LMS URL for the specified xblock.
     """
     lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
-    return f"{lms_root_url}/courses/{xblock.location.course_key}/jump_to/{xblock.location}"
+    return f"{lms_root_url}/courses/{xblock.usage_key.course_key}/jump_to/{xblock.usage_key}"
 
 
 def xblock_embed_lms_url(xblock) -> str:
@@ -191,7 +191,7 @@ def xblock_embed_lms_url(xblock) -> str:
         str: The LMS URL for the specified xblock in embed mode.
     """
     lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
-    return f"{lms_root_url}/xblock/{xblock.location}"
+    return f"{lms_root_url}/xblock/{xblock.usage_key}"
 
 
 def xblock_type_display_name(xblock, default_display_name=None):
@@ -597,7 +597,7 @@ def _import_xml_node_to_parent(
     # Save the XBlock into modulestore. We need to save the block and its parent for this to work:
     new_xblock = store.update_item(temp_xblock, user.id, allow_not_found=True)
     new_xblock.parent = parent_key
-    parent_xblock.children.append(new_xblock.location)
+    parent_xblock.children.append(new_xblock.usage_key)
     store.update_item(parent_xblock, user.id)
 
     children_handled = False
@@ -622,13 +622,13 @@ def _import_xml_node_to_parent(
         # copy the tags from the upstream as ready-only
         content_tagging_api.copy_tags_as_read_only(
             new_xblock.upstream,
-            new_xblock.location,
+            new_xblock.usage_key,
         )
     elif tags and node_copied_from:
         object_tags = tags.get(node_copied_from)
         if object_tags:
             content_tagging_api.set_all_object_tags(
-                content_key=new_xblock.location,
+                content_key=new_xblock.usage_key,
                 object_tags=object_tags,
             )
 
@@ -812,7 +812,7 @@ def is_item_in_course_tree(item):
     if its parent has been deleted and is now an orphan.
     """
     ancestor = item.get_parent()
-    while ancestor is not None and ancestor.location.block_type != "course":
+    while ancestor is not None and ancestor.usage_key.block_type != "course":
         ancestor = ancestor.get_parent()
 
     return ancestor is not None

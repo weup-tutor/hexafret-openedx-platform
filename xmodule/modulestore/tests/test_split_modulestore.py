@@ -464,11 +464,11 @@ class SplitModuleTest(unittest.TestCase):
             for revision in course_spec.get('revisions', []):
                 for (block_type, block_id), fields in revision.get('update', {}).items():
                     # cheat since course is most frequent
-                    if course.location.block_id == block_id:
+                    if course.usage_key.block_id == block_id:
                         block = course
                     else:
                         # not easy to figure out the category but get_item won't care
-                        block_usage = BlockUsageLocator.make_relative(course.location, block_type, block_id)
+                        block_usage = BlockUsageLocator.make_relative(course.usage_key, block_type, block_id)
                         block = split_store.get_item(block_usage)
                     for key, value in fields.items():
                         setattr(block, key, value)
@@ -477,10 +477,10 @@ class SplitModuleTest(unittest.TestCase):
                 for spec in revision.get('create', []):
                     if spec['parent'] in new_ele_dict:
                         parent = new_ele_dict.get(spec['parent'])
-                    elif spec['parent'] == course.location.block_id:
+                    elif spec['parent'] == course.usage_key.block_id:
                         parent = course
                     else:
-                        block_usage = BlockUsageLocator.make_relative(course.location, spec['parent_type'], spec['parent'])  # lint-amnesty, pylint: disable=line-too-long
+                        block_usage = BlockUsageLocator.make_relative(course.usage_key, spec['parent_type'], spec['parent'])  # lint-amnesty, pylint: disable=line-too-long
                         parent = split_store.get_item(block_usage)
                     block_id = LocalId(spec['id'])
                     child = split_store.create_xblock(
@@ -518,7 +518,7 @@ class SplitModuleTest(unittest.TestCase):
         matches the _id.
         """
         for element in collection:
-            if element.location.block_id == _id:
+            if element.usage_key.block_id == _id:
                 return element
 
 
@@ -570,7 +570,7 @@ class SplitModuleCourseTests(SplitModuleTest):
         assert len(courses) == 3, 'Wrong number of courses'
         # check metadata -- NOTE no promised order
         course = self.findByIdInResult(courses, "head12345")
-        assert course.location.org == 'testx'
+        assert course.usage_key.org == 'testx'
         assert course.category == 'course', 'wrong category'
         assert len(course.tabs) == 5, 'wrong number of tabs'
         assert course.display_name == 'The Ancient Greek Hero', 'wrong display name'
@@ -623,8 +623,8 @@ class SplitModuleCourseTests(SplitModuleTest):
             assert len(courses_published) == 1, len(courses_published)
             course = self.findByIdInResult(courses_published, "head23456")
             assert course is not None, 'published courses'
-            assert course.location.course_key.org == 'testx'
-            assert course.location.course_key.course == 'wonderful'
+            assert course.usage_key.course_key.org == 'testx'
+            assert course.usage_key.course_key.course == 'wonderful'
             assert course.category == 'course', 'wrong category'
             assert len(course.tabs) == 3, 'wrong number of tabs'
             assert course.display_name == 'The most wonderful course', course.display_name
@@ -650,11 +650,11 @@ class SplitModuleCourseTests(SplitModuleTest):
         '''
         locator = CourseLocator(org='testx', course='GreekHero', run="run", branch=BRANCH_NAME_DRAFT)
         head_course = modulestore().get_course(locator)
-        assert head_course.location.version_guid != head_course.previous_version
+        assert head_course.usage_key.version_guid != head_course.previous_version
         locator = CourseLocator(version_guid=head_course.previous_version)
         course = modulestore().get_course(locator)
-        assert course.location.course_key.org is None
-        assert course.location.version_guid == head_course.previous_version
+        assert course.usage_key.course_key.org is None
+        assert course.usage_key.version_guid == head_course.previous_version
         assert course.category == 'course'
         assert len(course.tabs) == 5
         assert course.display_name == 'The Ancient Greek Hero'
@@ -668,9 +668,9 @@ class SplitModuleCourseTests(SplitModuleTest):
 
         locator = CourseLocator(org='testx', course='GreekHero', run="run", branch=BRANCH_NAME_DRAFT)
         course = modulestore().get_course(locator)
-        assert course.location.course_key.org == 'testx'
-        assert course.location.course_key.course == 'GreekHero'
-        assert course.location.course_key.run == 'run'
+        assert course.usage_key.course_key.org == 'testx'
+        assert course.usage_key.course_key.course == 'GreekHero'
+        assert course.usage_key.course_key.run == 'run'
         assert course.category == 'course'
         assert len(course.tabs) == 5
         assert course.display_name == 'The Ancient Greek Hero'
@@ -682,11 +682,11 @@ class SplitModuleCourseTests(SplitModuleTest):
 
         locator = CourseLocator(org='testx', course='wonderful', run="run", branch=BRANCH_NAME_PUBLISHED)
         course = modulestore().get_course(locator)
-        published_version = course.location.version_guid
+        published_version = course.usage_key.version_guid
 
         locator = CourseLocator(org='testx', course='wonderful', run="run", branch=BRANCH_NAME_DRAFT)
         course = modulestore().get_course(locator)
-        assert course.location.version_guid != published_version
+        assert course.usage_key.version_guid != published_version
 
     def test_get_course_negative(self):
         # Now negative testing
@@ -878,7 +878,7 @@ class TestCourseStructureCache(CacheIsolationMixin, SplitModuleTest):
         Helper function to get a structure from a course.
         """
         return modulestore().db_connection.get_structure(
-            course.location.as_object_id(course.location.version_guid)
+            course.usage_key.as_object_id(course.usage_key.version_guid)
         )
 
 
@@ -898,10 +898,10 @@ class SplitModuleItemTests(SplitModuleTest):
         course = modulestore().get_course(course_locator)
         previous_version = course.previous_version
         # positive tests of various forms
-        locator = course.location.map_into_course(CourseLocator(version_guid=previous_version))
+        locator = course.usage_key.map_into_course(CourseLocator(version_guid=previous_version))
         assert modulestore().has_item(locator), ("couldn't find in %s" % previous_version)
 
-        locator = course.location.version_agnostic()
+        locator = course.usage_key.version_agnostic()
         assert modulestore().has_item(locator)
         assert not modulestore()\
             .has_item(BlockUsageLocator(locator.course_key.for_branch(BRANCH_NAME_PUBLISHED),
@@ -945,7 +945,7 @@ class SplitModuleItemTests(SplitModuleTest):
         previous_version = course.previous_version
 
         # positive tests of various forms
-        locator = course.location.map_into_course(CourseLocator(version_guid=previous_version))
+        locator = course.usage_key.map_into_course(CourseLocator(version_guid=previous_version))
         block = modulestore().get_item(locator)
         assert isinstance(block, CourseBlock)
         assert isinstance(modulestore().get_item(locator), CourseBlock)
@@ -954,9 +954,9 @@ class SplitModuleItemTests(SplitModuleTest):
             """
             Check contents of block
             """
-            assert block.location.org == 'testx'
-            assert block.location.course == 'GreekHero'
-            assert block.location.run == 'run'
+            assert block.usage_key.org == 'testx'
+            assert block.usage_key.course == 'GreekHero'
+            assert block.usage_key.run == 'run'
             assert len(block.tabs) == 5, 'wrong number of tabs'
             assert block.display_name == 'The Ancient Greek Hero'
             assert block.advertised_start == 'Fall 2013'
@@ -967,11 +967,11 @@ class SplitModuleItemTests(SplitModuleTest):
                 block.grade_cutoffs, {"Pass": 0.45},
             )
 
-        verify_greek_hero(modulestore().get_item(course.location))
+        verify_greek_hero(modulestore().get_item(course.usage_key))
 
         # try to look up other branches
         with pytest.raises(ItemNotFoundError):
-            modulestore().get_item(course.location.for_branch(BRANCH_NAME_PUBLISHED))
+            modulestore().get_item(course.usage_key.for_branch(BRANCH_NAME_PUBLISHED))
 
     def test_get_non_root(self):
         # not a course obj
@@ -979,8 +979,8 @@ class SplitModuleItemTests(SplitModuleTest):
             CourseLocator(org='testx', course='GreekHero', run="run", branch=BRANCH_NAME_DRAFT), 'chapter', 'chapter1'
         )
         block = modulestore().get_item(locator)
-        assert block.location.org == 'testx'
-        assert block.location.course == 'GreekHero'
+        assert block.usage_key.org == 'testx'
+        assert block.usage_key.course == 'GreekHero'
         assert block.category == 'chapter'
         assert block.display_name == 'Hercules'
         assert block.edited_by == TEST_ASSISTANT_USER_ID
@@ -1106,8 +1106,8 @@ class SplitModuleItemTests(SplitModuleTest):
         ]
         for child in children:
             assert child.category == 'chapter'
-            assert child.location.block_id in expected_ids
-            expected_ids.remove(child.location.block_id)
+            assert child.usage_key.block_id in expected_ids
+            expected_ids.remove(child.usage_key.block_id)
         assert len(expected_ids) == 0
 
 
@@ -1158,15 +1158,15 @@ class TestItemCrud(SplitModuleTest):
             fields={'display_name': 'new sequential'}
         )
         # check that course version changed and course's previous is the other one
-        assert new_block.location.course == 'GreekHero'
-        assert new_block.location.version_guid != premod_course.location.version_guid
+        assert new_block.usage_key.course == 'GreekHero'
+        assert new_block.usage_key.version_guid != premod_course.usage_key.version_guid
         assert locator.version_guid is None,\
             'Version inadvertently filled in'  # lint-amnesty, pylint: disable=no-member
         current_course = modulestore().get_course(locator)
-        assert new_block.location.version_guid == current_course.location.version_guid
+        assert new_block.usage_key.version_guid == current_course.usage_key.version_guid
 
-        history_info = modulestore().get_course_history_info(current_course.location.course_key)
-        assert history_info['previous_version'] == premod_course.location.version_guid
+        history_info = modulestore().get_course_history_info(current_course.usage_key.course_key)
+        assert history_info['previous_version'] == premod_course.usage_key.version_guid
         assert history_info['original_version'] == premod_history['original_version']
         assert history_info['edited_by'] == 'user123'
         # check block's info: category, definition_locator, and display_name
@@ -1174,8 +1174,8 @@ class TestItemCrud(SplitModuleTest):
         assert new_block.definition_locator is not None
         assert new_block.display_name == 'new sequential'
         # check that block does not exist in previous version
-        locator = new_block.location.map_into_course(
-            CourseLocator(version_guid=premod_course.location.version_guid)
+        locator = new_block.usage_key.map_into_course(
+            CourseLocator(version_guid=premod_course.usage_key.version_guid)
         )
         with pytest.raises(ItemNotFoundError):
             modulestore().get_item(locator)
@@ -1201,9 +1201,9 @@ class TestItemCrud(SplitModuleTest):
             definition_locator=original.definition_locator
         )
         # check that course version changed and course's previous is the other one
-        assert new_block.location.version_guid != premod_course.location.version_guid
+        assert new_block.usage_key.version_guid != premod_course.usage_key.version_guid
         parent = modulestore().get_item(locator)
-        assert new_block.location.version_agnostic() in version_agnostic(parent.children)
+        assert new_block.usage_key.version_agnostic() in version_agnostic(parent.children)
         assert new_block.definition_locator.definition_id == original.definition_locator.definition_id
 
     def test_unique_naming(self):
@@ -1235,9 +1235,9 @@ class TestItemCrud(SplitModuleTest):
         )
         # check that course version changed and course's previous is the other one
         parent = modulestore().get_item(locator)
-        assert new_block.location.block_id != another_block.location.block_id
-        assert new_block.location.version_agnostic() in version_agnostic(parent.children)
-        assert another_block.location.version_agnostic() in version_agnostic(parent.children)
+        assert new_block.usage_key.block_id != another_block.usage_key.block_id
+        assert new_block.usage_key.version_agnostic() in version_agnostic(parent.children)
+        assert another_block.usage_key.version_agnostic() in version_agnostic(parent.children)
         assert new_block.data == new_payload
         assert another_block.data == another_payload
         # check definition histories
@@ -1262,7 +1262,7 @@ class TestItemCrud(SplitModuleTest):
         )
         # check that course version changed and course's previous is the other one
         new_block = modulestore().get_item(chapter_locator)
-        assert new_block.location.block_id == 'foo.bar_-~:0'
+        assert new_block.usage_key.block_id == 'foo.bar_-~:0'
         # hardcode to ensure BUL init didn't change
         # now try making that a parent of something
         new_payload = "<problem>empty</problem>"
@@ -1274,7 +1274,7 @@ class TestItemCrud(SplitModuleTest):
         )
         # check that course version changed and course's previous is the other one
         new_block = modulestore().get_item(problem_locator)
-        assert new_block.location.block_id == problem_locator.block_id
+        assert new_block.usage_key.block_id == problem_locator.block_id
         chapter = modulestore().get_item(chapter_locator)
         assert problem_locator in version_agnostic(chapter.children)
 
@@ -1288,7 +1288,7 @@ class TestItemCrud(SplitModuleTest):
         with modulestore().bulk_operations(course_key):
             new_course = modulestore().create_course('test_org', 'test_transaction', 'test_run', user, BRANCH_NAME_DRAFT)  # lint-amnesty, pylint: disable=line-too-long
             new_course_locator = new_course.id
-            index_history_info = modulestore().get_course_history_info(new_course.location.course_key)
+            index_history_info = modulestore().get_course_history_info(new_course.usage_key.course_key)
             course_block_prev_version = new_course.previous_version
             course_block_update_version = new_course.update_version
             assert new_course_locator.version_guid is not None, 'Want to test a definite version'
@@ -1296,39 +1296,39 @@ class TestItemCrud(SplitModuleTest):
 
             # positive simple case: no force, add chapter
             new_ele = modulestore().create_child(
-                user, new_course.location, 'chapter',
+                user, new_course.usage_key, 'chapter',
                 fields={'display_name': 'chapter 1'},
             )
             # version info shouldn't change
             assert new_ele.update_version == course_block_update_version
-            assert new_ele.update_version == new_ele.location.version_guid
+            assert new_ele.update_version == new_ele.usage_key.version_guid
             refetch_course = modulestore().get_course(versionless_course_locator)
-            assert refetch_course.location.version_guid == new_course.location.version_guid
+            assert refetch_course.usage_key.version_guid == new_course.usage_key.version_guid
             assert refetch_course.previous_version == course_block_prev_version
             assert refetch_course.update_version == course_block_update_version
-            refetch_index_history_info = modulestore().get_course_history_info(refetch_course.location.course_key)
+            refetch_index_history_info = modulestore().get_course_history_info(refetch_course.usage_key.course_key)
             assert refetch_index_history_info == index_history_info
-            assert new_ele.location.version_agnostic() in version_agnostic(refetch_course.children)
+            assert new_ele.usage_key.version_agnostic() in version_agnostic(refetch_course.children)
 
             # try to create existing item
             with pytest.raises(DuplicateItemError):
                 _fail = modulestore().create_child(
-                    user, new_course.location, 'chapter',
-                    block_id=new_ele.location.block_id,
+                    user, new_course.usage_key, 'chapter',
+                    block_id=new_ele.usage_key.block_id,
                     fields={'display_name': 'chapter 2'},
                 )
 
         # start a new transaction
         with modulestore().bulk_operations(course_key):
             new_ele = modulestore().create_child(
-                user, new_course.location, 'chapter',
+                user, new_course.usage_key, 'chapter',
                 fields={'display_name': 'chapter 2'},
             )
-            transaction_guid = new_ele.location.version_guid
+            transaction_guid = new_ele.usage_key.version_guid
             # ensure force w/ continue gives exception
             with pytest.raises(VersionConflictError):
                 _fail = modulestore().create_child(
-                    user, new_course.location, 'chapter',
+                    user, new_course.usage_key, 'chapter',
                     fields={'display_name': 'chapter 2'},
                     force=True
                 )
@@ -1336,22 +1336,22 @@ class TestItemCrud(SplitModuleTest):
             # ensure trying to continue the old one gives exception
             with pytest.raises(VersionConflictError):
                 _fail = modulestore().create_child(
-                    user, new_course.location, 'chapter',
+                    user, new_course.usage_key, 'chapter',
                     fields={'display_name': 'chapter 3'},
                 )
 
             # add new child to old parent in continued (leave off version_guid)
-            course_block_locator = new_course.location.version_agnostic()
+            course_block_locator = new_course.usage_key.version_agnostic()
             new_ele = modulestore().create_child(
                 user, course_block_locator, 'chapter',
                 fields={'display_name': 'chapter 4'},
             )
             assert new_ele.update_version != course_block_update_version
-            assert new_ele.location.version_guid == transaction_guid
+            assert new_ele.usage_key.version_guid == transaction_guid
 
             # check children, previous_version
             refetch_course = modulestore().get_course(versionless_course_locator)
-            assert new_ele.location.version_agnostic() in version_agnostic(refetch_course.children)
+            assert new_ele.usage_key.version_agnostic() in version_agnostic(refetch_course.children)
             assert refetch_course.previous_version == course_block_update_version
             assert refetch_course.update_version == transaction_guid
 
@@ -1396,7 +1396,7 @@ class TestItemCrud(SplitModuleTest):
         )
         problem = modulestore().get_item(locator)
         pre_def_id = problem.definition_locator.definition_id
-        pre_version_guid = problem.location.version_guid
+        pre_version_guid = problem.usage_key.version_guid
         assert pre_def_id is not None
         assert pre_version_guid is not None
         assert problem.max_attempts != 4, 'Invalidates rest of test'
@@ -1406,17 +1406,17 @@ class TestItemCrud(SplitModuleTest):
         updated_problem = modulestore().update_item(problem, self.user_id)
         # check that course version changed and course's previous is the other one
         assert updated_problem.definition_locator.definition_id == pre_def_id
-        assert updated_problem.location.version_guid != pre_version_guid
+        assert updated_problem.usage_key.version_guid != pre_version_guid
         assert updated_problem.max_attempts == 4
         # refetch to ensure original didn't change
-        original_location = problem.location.map_into_course(CourseLocator(version_guid=pre_version_guid))
+        original_location = problem.usage_key.map_into_course(CourseLocator(version_guid=pre_version_guid))
         problem = modulestore().get_item(original_location)
         assert problem.max_attempts != 4, 'original changed'
 
         current_course = modulestore().get_course(locator.course_key)
-        assert updated_problem.location.version_guid == current_course.location.version_guid
+        assert updated_problem.usage_key.version_guid == current_course.usage_key.version_guid
 
-        history_info = modulestore().get_course_history_info(current_course.location.course_key)
+        history_info = modulestore().get_course_history_info(current_course.usage_key.course_key)
         assert history_info['previous_version'] == pre_version_guid
         assert history_info['edited_by'] == self.user_id
 
@@ -1429,7 +1429,7 @@ class TestItemCrud(SplitModuleTest):
         )
         block = modulestore().get_item(locator)
         pre_def_id = block.definition_locator.definition_id
-        pre_version_guid = block.location.version_guid
+        pre_version_guid = block.usage_key.version_guid
 
         # reorder children
         assert len(block.children) > 0, 'meaningless test'
@@ -1438,7 +1438,7 @@ class TestItemCrud(SplitModuleTest):
         updated_problem = modulestore().update_item(block, self.user_id)
         # check that course version changed and course's previous is the other one
         assert updated_problem.definition_locator.definition_id == pre_def_id
-        assert updated_problem.location.version_guid != pre_version_guid
+        assert updated_problem.usage_key.version_guid != pre_version_guid
         assert version_agnostic(updated_problem.children) == version_agnostic(block.children)
         assert moved_child not in version_agnostic(updated_problem.children)
         locator = locator.course_key.make_usage_key('chapter', "chapter1")
@@ -1456,14 +1456,14 @@ class TestItemCrud(SplitModuleTest):
         )
         block = modulestore().get_item(locator)
         pre_def_id = block.definition_locator.definition_id
-        pre_version_guid = block.location.version_guid
+        pre_version_guid = block.usage_key.version_guid
 
         block.grading_policy['GRADER'][0]['min_count'] = 13
         block.save()  # decache model changes
         updated_block = modulestore().update_item(block, self.user_id)
 
         assert updated_block.definition_locator.definition_id != pre_def_id
-        assert updated_block.location.version_guid != pre_version_guid
+        assert updated_block.usage_key.version_guid != pre_version_guid
         assert updated_block.grading_policy['GRADER'][0]['min_count'] == 13
 
     def test_update_manifold(self):
@@ -1498,7 +1498,7 @@ class TestItemCrud(SplitModuleTest):
         # now begin the test
         block = modulestore().get_item(locator)
         pre_def_id = block.definition_locator.definition_id
-        pre_version_guid = block.location.version_guid
+        pre_version_guid = block.usage_key.version_guid
 
         assert block.grading_policy['GRADER'][0]['min_count'] != 13
         block.grading_policy['GRADER'][0]['min_count'] = 13
@@ -1508,7 +1508,7 @@ class TestItemCrud(SplitModuleTest):
         block.save()  # decache model changes
         updated_block = modulestore().update_item(block, self.user_id)
         assert updated_block.definition_locator.definition_id != pre_def_id
-        assert updated_block.location.version_guid != pre_version_guid
+        assert updated_block.usage_key.version_guid != pre_version_guid
         assert updated_block.grading_policy['GRADER'][0]['min_count'] == 13
         assert updated_block.children[0].version_agnostic() == block.children[0].version_agnostic()
         assert updated_block.advertised_start == 'Soon'
@@ -1516,12 +1516,12 @@ class TestItemCrud(SplitModuleTest):
     def test_delete_item(self):
         course = self.create_course_for_deletion()
         with pytest.raises(ValueError):
-            modulestore().delete_item(course.location, self.user_id)
+            modulestore().delete_item(course.usage_key, self.user_id)
         reusable_location = course.id.version_agnostic().for_branch(BRANCH_NAME_DRAFT)
 
         # delete a leaf
         problems = modulestore().get_items(reusable_location, qualifiers={'category': 'problem'})
-        locn_to_del = problems[0].location
+        locn_to_del = problems[0].usage_key
         new_course_loc = modulestore().delete_item(locn_to_del, self.user_id)
         deleted = locn_to_del.version_agnostic()
         assert not modulestore().has_item(deleted)
@@ -1531,11 +1531,11 @@ class TestItemCrud(SplitModuleTest):
             modulestore().delete_item(deleted, self.user_id)
 
         assert modulestore().has_item(locn_to_del.course_agnostic())
-        assert new_course_loc.version_guid != course.location.version_guid
+        assert new_course_loc.version_guid != course.usage_key.version_guid
 
         # delete a subtree
         nodes = modulestore().get_items(reusable_location, qualifiers={'category': 'chapter'})
-        new_course_loc = modulestore().delete_item(nodes[0].location, self.user_id)
+        new_course_loc = modulestore().delete_item(nodes[0].usage_key, self.user_id)
         # check subtree
 
         def check_subtree(node):
@@ -1543,7 +1543,7 @@ class TestItemCrud(SplitModuleTest):
             Check contents of subtree recursively
             """
             if node:
-                node_loc = node.location
+                node_loc = node.usage_key
                 assert not modulestore().has_item(node_loc.version_agnostic())
                 assert modulestore().has_item(node_loc.course_agnostic())
                 if node.has_children:
@@ -1556,7 +1556,7 @@ class TestItemCrud(SplitModuleTest):
         Create a course we can delete
         """
         course = modulestore().create_course('nihilx', 'deletion', 'run', TEST_USER_ID, BRANCH_NAME_DRAFT)
-        root = course.location.version_agnostic().for_branch(BRANCH_NAME_DRAFT)
+        root = course.usage_key.version_agnostic().for_branch(BRANCH_NAME_DRAFT)
         for _ in range(4):
             self.create_subtree_for_deletion(root, ['chapter', 'vertical', 'problem'])
         return modulestore().get_item(root)
@@ -1570,7 +1570,7 @@ class TestItemCrud(SplitModuleTest):
         node = modulestore().create_child(
             TEST_USER_ID, parent.version_agnostic(), category_queue[0]
         )
-        node_loc = node.location.map_into_course(parent.course_key)
+        node_loc = node.usage_key.map_into_course(parent.course_key)
         for _ in range(4):
             self.create_subtree_for_deletion(node_loc, category_queue[1:])
 
@@ -1589,13 +1589,13 @@ class TestItemCrud(SplitModuleTest):
             versionless_course_locator = new_course_locator.version_agnostic()
             first_child = store.create_child(
                 self.user_id,
-                new_course.location,
+                new_course.usage_key,
                 "chapter"
             )
             refetch_course = store.get_course(versionless_course_locator)
             second_child = store.create_child(
                 self.user_id,
-                refetch_course.location,
+                refetch_course.usage_key,
                 "chapter",
                 position=0
             )
@@ -1603,8 +1603,8 @@ class TestItemCrud(SplitModuleTest):
             # First child should have been moved to second position, and better child takes the lead
             refetch_course = store.get_course(versionless_course_locator)
             children = refetch_course.get_children()
-            assert str(children[1].location) == str(first_child.location)
-            assert str(children[0].location) == str(second_child.location)
+            assert str(children[1].usage_key) == str(first_child.usage_key)
+            assert str(children[0].usage_key) == str(second_child.usage_key)
 
             # Clean up the data so we don't break other tests which apparently expect a particular state
             store.delete_course(refetch_course.id, user)
@@ -1622,7 +1622,7 @@ class TestCourseCreation(SplitModuleTest):
         new_course = modulestore().create_course(
             'test_org', 'test_course', 'test_run', TEST_USER_ID, BRANCH_NAME_DRAFT
         )
-        new_locator = new_course.location
+        new_locator = new_course.usage_key
         # check index entry
         index_info = modulestore().get_course_index_info(new_locator.course_key)
         assert index_info['org'] == 'test_org'
@@ -1652,7 +1652,7 @@ class TestCourseCreation(SplitModuleTest):
         new_draft = modulestore().create_course(
             'best', 'leech', 'leech_run', TEST_OTHER_USER_ID, BRANCH_NAME_DRAFT,
             versions_dict=original_index['versions'])
-        new_draft_locator = new_draft.location
+        new_draft_locator = new_draft.usage_key
         self.assertRegex(new_draft_locator.org, 'best')
         # the edited_by and other meta fields on the new course will be the original author not this one
         assert new_draft.edited_by == TEST_USER_ID
@@ -1664,12 +1664,12 @@ class TestCourseCreation(SplitModuleTest):
         new_published_locator = new_draft_locator.course_key.for_branch(BRANCH_NAME_PUBLISHED)
         new_published = modulestore().get_course(new_published_locator)
         assert new_published.edited_by == TEST_USER_ID
-        assert new_published.location.version_guid == original_index['versions'][BRANCH_NAME_PUBLISHED]
+        assert new_published.usage_key.version_guid == original_index['versions'][BRANCH_NAME_PUBLISHED]
 
         # changing this course will not change the original course
-        # using new_draft.location will insert the chapter under the course root
+        # using new_draft.usage_key will insert the chapter under the course root
         new_item = modulestore().create_child(
-            TEST_OTHER_USER_ID, new_draft.location, 'chapter',
+            TEST_OTHER_USER_ID, new_draft.usage_key, 'chapter',
             fields={'display_name': 'new chapter'}
         )
         new_draft_locator = new_draft_locator.course_key.version_agnostic()
@@ -1677,13 +1677,13 @@ class TestCourseCreation(SplitModuleTest):
         assert new_index['versions'][BRANCH_NAME_DRAFT] != original_index['versions'][BRANCH_NAME_DRAFT]
         new_draft = modulestore().get_course(new_draft_locator)
         assert new_item.edited_by == TEST_OTHER_USER_ID
-        assert new_item.location.version_guid != original_index['versions'][BRANCH_NAME_DRAFT]
-        assert new_draft.location.version_guid != original_index['versions'][BRANCH_NAME_DRAFT]
+        assert new_item.usage_key.version_guid != original_index['versions'][BRANCH_NAME_DRAFT]
+        assert new_draft.usage_key.version_guid != original_index['versions'][BRANCH_NAME_DRAFT]
         structure_info = modulestore().get_course_history_info(new_draft_locator)
         assert structure_info['edited_by'] == TEST_OTHER_USER_ID
 
         original_course = modulestore().get_course(original_locator)
-        assert original_course.location.version_guid == original_index['versions'][BRANCH_NAME_DRAFT]
+        assert original_course.usage_key.version_guid == original_index['versions'][BRANCH_NAME_DRAFT]
 
     def test_derived_course(self):
         """
@@ -1702,7 +1702,7 @@ class TestCourseCreation(SplitModuleTest):
             versions_dict={BRANCH_NAME_DRAFT: original_index['versions'][BRANCH_NAME_DRAFT]},
             fields=fields
         )
-        new_draft_locator = new_draft.location
+        new_draft_locator = new_draft.usage_key
         self.assertRegex(new_draft_locator.org, 'counter')
         # the edited_by and other meta fields on the new course will be the original author not this one
         assert new_draft.edited_by == TEST_OTHER_USER_ID
@@ -1731,13 +1731,13 @@ class TestCourseCreation(SplitModuleTest):
         versions[BRANCH_NAME_DRAFT] = head_course.previous_version
         modulestore().update_course_index(None, course_info)
         course = modulestore().get_course(locator)
-        assert course.location.version_guid == versions[BRANCH_NAME_DRAFT]
+        assert course.usage_key.version_guid == versions[BRANCH_NAME_DRAFT]
 
         # an allowed but not recommended way to publish a course
         versions[BRANCH_NAME_PUBLISHED] = versions[BRANCH_NAME_DRAFT]
         modulestore().update_course_index(None, course_info)
         course = modulestore().get_course(locator.for_branch(BRANCH_NAME_PUBLISHED))
-        assert course.location.version_guid == versions[BRANCH_NAME_DRAFT]
+        assert course.usage_key.version_guid == versions[BRANCH_NAME_DRAFT]
 
     def test_create_with_root(self):
         """
@@ -1748,11 +1748,11 @@ class TestCourseCreation(SplitModuleTest):
             'test_org', 'test_transaction', 'test_run', user, BRANCH_NAME_DRAFT,
             root_block_id='top', root_category='chapter'
         )
-        assert new_course.location.block_id == 'top'
+        assert new_course.usage_key.block_id == 'top'
         assert new_course.category == 'chapter'
         # look at db to verify
         db_structure = modulestore().db_connection.get_structure(
-            new_course.location.as_object_id(new_course.location.version_guid)
+            new_course.usage_key.as_object_id(new_course.usage_key.version_guid)
         )
         assert db_structure is not None, "Didn't find course"
         assert BlockKey('course', 'course') not in db_structure['blocks']
@@ -1766,7 +1766,7 @@ class TestCourseCreation(SplitModuleTest):
         user = random.getrandbits(32)
         courses = modulestore().get_courses(BRANCH_NAME_DRAFT)
         with pytest.raises(DuplicateCourseError):
-            dupe_course_key = courses[0].location.course_key
+            dupe_course_key = courses[0].usage_key.course_key
             modulestore().create_course(
                 dupe_course_key.org, dupe_course_key.course, dupe_course_key.run, user, BRANCH_NAME_DRAFT
             )
@@ -1848,15 +1848,15 @@ class TestInheritance(SplitModuleTest):
 
         chapter.visible_to_staff_only = True
         modulestore().update_item(chapter, self.user_id)
-        problem = modulestore().get_item(problem.location.version_agnostic())
+        problem = modulestore().get_item(problem.usage_key.version_agnostic())
         assert problem.visible_to_staff_only
 
         # unset on parent, retrieve child, verify unset
-        chapter = modulestore().get_item(chapter.location.version_agnostic())
+        chapter = modulestore().get_item(chapter.usage_key.version_agnostic())
         del chapter.visible_to_staff_only
         modulestore().update_item(chapter, self.user_id)
 
-        problem = modulestore().get_item(problem.location.version_agnostic())
+        problem = modulestore().get_item(problem.usage_key.version_agnostic())
         assert not problem.visible_to_staff_only
 
     def test_dynamic_inheritance(self):
@@ -1869,7 +1869,7 @@ class TestInheritance(SplitModuleTest):
         chapter.visible_to_staff_only = True
         orphan_problem = modulestore().create_item(self.user_id, course_key, 'problem')
         assert not orphan_problem.visible_to_staff_only
-        parented_problem = modulestore().create_child(self.user_id, chapter.location.version_agnostic(), 'problem')  # lint-amnesty, pylint: disable=unused-variable
+        parented_problem = modulestore().create_child(self.user_id, chapter.usage_key.version_agnostic(), 'problem')  # lint-amnesty, pylint: disable=unused-variable
         # FIXME LMS-11376
 #         self.assertTrue(parented_problem.visible_to_staff_only)
 
@@ -1912,22 +1912,22 @@ class TestPublish(SplitModuleTest):
         expected.remove(BlockKey.from_usage_key(chapter1))
         # check that it's not in published course
         with pytest.raises(ItemNotFoundError):
-            modulestore().get_item(new_block.location.map_into_course(dest_course))
+            modulestore().get_item(new_block.usage_key.map_into_course(dest_course))
         # publish it
-        modulestore().copy(self.user_id, source_course, dest_course, [new_block.location], None)
-        expected.append(BlockKey.from_usage_key(new_block.location))
+        modulestore().copy(self.user_id, source_course, dest_course, [new_block.usage_key], None)
+        expected.append(BlockKey.from_usage_key(new_block.usage_key))
         # check that it is in the published course and that its parent is the chapter
-        pub_block = modulestore().get_item(new_block.location.map_into_course(dest_course))
-        assert modulestore().get_parent_location(pub_block.location).block_id == chapter1.block_id
+        pub_block = modulestore().get_item(new_block.usage_key.map_into_course(dest_course))
+        assert modulestore().get_parent_location(pub_block.usage_key).block_id == chapter1.block_id
         # ensure intentionally orphaned blocks work (e.g., course_info)
         new_block = modulestore().create_item(
             self.user_id, source_course, "course_info", block_id="handouts"
         )
         # publish it
-        modulestore().copy(self.user_id, source_course, dest_course, [new_block.location], None)
-        expected.append(BlockKey.from_usage_key(new_block.location))
+        modulestore().copy(self.user_id, source_course, dest_course, [new_block.usage_key], None)
+        expected.append(BlockKey.from_usage_key(new_block.usage_key))
         # check that it is in the published course (no error means it worked)
-        pub_block = modulestore().get_item(new_block.location.map_into_course(dest_course))
+        pub_block = modulestore().get_item(new_block.usage_key.map_into_course(dest_course))
         self._check_course(source_course, dest_course, expected, unexpected)
 
     def test_exceptions(self):
@@ -1973,7 +1973,7 @@ class TestPublish(SplitModuleTest):
         chapter1 = modulestore().get_item(source_course.make_usage_key("chapter", "chapter1"))
         chapter3 = modulestore().get_item(source_course.make_usage_key("chapter", "chapter3"))
         chapter1.children.append(problem1)
-        chapter3.children.remove(problem1.map_into_course(chapter3.location.course_key))
+        chapter3.children.remove(problem1.map_into_course(chapter3.usage_key.course_key))
         modulestore().delete_item(source_course.make_usage_key("problem", "problem3_2"), self.user_id)
         modulestore().copy(self.user_id, source_course, dest_course, [head], [chapter2])
         expected = [
@@ -1998,7 +1998,7 @@ class TestPublish(SplitModuleTest):
             assert source.update_version == pub_copy.source_version,\
                 f"Versions don't match for {expected}: {source.update_version} != {pub_copy.update_version}"
             assert self.user_id == pub_copy.edited_by,\
-                f'{pub_copy.location} edited_by {pub_copy.edited_by} not {self.user_id}'
+                f'{pub_copy.usage_key} edited_by {pub_copy.edited_by} not {self.user_id}'
             for field in source.fields.values():
                 if field.name == 'children':
                     self._compare_children(field.read_from(source), field.read_from(pub_copy), unexpected_blocks)

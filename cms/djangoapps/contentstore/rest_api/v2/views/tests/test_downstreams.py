@@ -518,7 +518,7 @@ class CreateDownstreamViewTest(CourseTestCase, _BaseDownstreamViewTestMixin, Sha
         `library_content_key` as upstream
         """
         data = {
-            "parent_locator": str(self.course.location),
+            "parent_locator": str(self.course.usage_key),
             "display_name": "Test block",
             "library_content_key": library_content_key,
             "category": category,

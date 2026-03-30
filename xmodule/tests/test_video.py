@@ -1074,8 +1074,8 @@ class VideoBlockIndexingTestCase(unittest.TestCase):
         '''
 
         block = instantiate_block(data=xml_data_transcripts)
-        save_to_store(SRT_FILEDATA, "subs_grmtran1.srt", 'text/srt', block.location)
-        save_to_store(CRO_SRT_FILEDATA, "subs_croatian1.srt", 'text/srt', block.location)
+        save_to_store(SRT_FILEDATA, "subs_grmtran1.srt", 'text/srt', block.usage_key)
+        save_to_store(CRO_SRT_FILEDATA, "subs_croatian1.srt", 'text/srt', block.usage_key)
         assert block.index_dictionary() ==\
                {'content': {'display_name': 'Test Video',
                             'transcript_ge': 'sprechen sie deutsch? Ja, ich spreche Deutsch',

@@ -80,7 +80,7 @@ class CommonCertificatesTestCase(ModuleStoreTestCase):
             certificate_available_date=datetime.datetime.today() - datetime.timedelta(days=1),
             certificates_display_behavior=CertificatesDisplayBehaviors.END_WITH_DATE
         )
-        self.course_id = self.course.location.course_key
+        self.course_id = self.course.usage_key.course_key
         self.user = UserFactory.create(
             email='joe_user@edx.org',
             username='joeuser',

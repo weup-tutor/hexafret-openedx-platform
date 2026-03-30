@@ -251,7 +251,7 @@ class ProgressTabTestViews(BaseCourseHomeTests):
 
         params = {
             "user_id": self.user.id,
-            "usage_key": subsection.location,
+            "usage_key": subsection.usage_key,
             "course_version": self.course.course_version,
             "subtree_edited_timestamp": "2016-08-01 18:53:24.354741Z",
             "earned_all": 6.0,

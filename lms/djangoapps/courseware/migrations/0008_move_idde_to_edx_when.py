@@ -18,12 +18,12 @@ def move_overrides_to_edx_when(apps, schema_editor):
             abs_date = date_field.from_json(json.loads(override.value))
             api.set_date_for_block(
                 override.course_id,
-                override.location,
+                override.usage_key,
                 'due',
                 abs_date,
                 user=override.student)
         except Exception:  # pylint: disable=broad-except
-            log.exception("migrating %d %r: %r", override.id, override.location, override.value)
+            log.exception("migrating %d %r: %r", override.id, override.usage_key, override.value)
 
 
 class Migration(migrations.Migration):

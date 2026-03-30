@@ -112,7 +112,7 @@ def get_assignments_for_problem(problem_block, user_id, course_key):
     locations = []
     current_block = problem_block
     while current_block:
-        locations.append(current_block.location)
+        locations.append(current_block.usage_key)
         current_block = current_block.get_parent()
     assignments = GradedAssignment.objects.filter(
         user=user_id, course_key=course_key, usage_key__in=locations

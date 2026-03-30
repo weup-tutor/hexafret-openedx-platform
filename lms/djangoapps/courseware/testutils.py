@@ -99,7 +99,7 @@ class RenderXBlockTestMixin(MasqueradeMixin, metaclass=ABCMeta):
             self.course = CourseFactory.create(**self.course_options())
             chapter = BlockFactory.create(parent=self.course, category='chapter')
             self.vertical_block = BlockFactory.create(
-                parent_location=chapter.location,
+                parent_location=chapter.usage_key,
                 category='vertical',
                 display_name="Vertical"
             )
@@ -151,7 +151,7 @@ class RenderXBlockTestMixin(MasqueradeMixin, metaclass=ABCMeta):
         if url_params:
             url_params = urlencode(url_params)
 
-        response = self.get_response(self.block_to_be_tested.location, url_params)
+        response = self.get_response(self.block_to_be_tested.usage_key, url_params)
         if expected_response_code == 200:
             self.assertContains(response, self.html_block.data, status_code=expected_response_code)
             unexpected_elements = self.block_specific_chrome_html_elements + self.COURSEWARE_CHROME_HTML_ELEMENTS

@@ -491,7 +491,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         else fall back to problem category.
         """
         if self.display_name is None or not self.display_name.strip():
-            return self.location.block_type
+            return self.usage_key.block_type
 
         return self.display_name
 
@@ -652,7 +652,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         try:
             lcp = LoncapaProblem(
                 problem_text=self.data,
-                id=self.location.html_id(),
+                id=self.usage_key.html_id(),
                 capa_system=capa_system,
                 capa_block=self,
                 state={},
@@ -660,7 +660,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
                 minimal_init=True,
             )
         except responsetypes.LoncapaProblemError:
-            log.exception("LcpFatalError for block %s while getting max score", str(self.location))
+            log.exception("LcpFatalError for block %s while getting max score", str(self.usage_key))
             maximum_score = 0
         else:
             maximum_score = lcp.get_max_score()
@@ -719,7 +719,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
             try:
                 lcp = LoncapaProblem(
                     problem_text=self.data,
-                    id=self.location.html_id(),
+                    id=self.usage_key.html_id(),
                     capa_system=capa_system,
                     # We choose to run without a fully initialized CapaModule
                     capa_block=None,
@@ -816,7 +816,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         try:
             lcp = self.new_lcp(self.get_state_for_lcp())
         except Exception as err:
-            msg = f"cannot create LoncapaProblem {str(self.location)}: {err}"
+            msg = f"cannot create LoncapaProblem {str(self.usage_key)}: {err}"
             raise LoncapaProblemError(msg).with_traceback(sys.exc_info()[2])
 
         if self.score is None:
@@ -834,7 +834,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         elif self.rerandomize == RANDOMIZATION.PER_STUDENT:
             user_id = self.runtime.service(self, "user").get_current_user().opt_attrs.get(ATTR_KEY_USER_ID) or 0
             # see comment on randomization_bin
-            self.seed = randomization_bin(user_id, str(self.location).encode("utf-8"))
+            self.seed = randomization_bin(user_id, str(self.usage_key).encode("utf-8"))
         else:
             self.seed = struct.unpack("i", os.urandom(4))[0]
 
@@ -876,7 +876,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
 
         return LoncapaProblem(
             problem_text=text,
-            id=self.location.html_id(),
+            id=self.usage_key.html_id(),
             state=state,
             seed=self.get_seed(),
             capa_system=capa_system,
@@ -966,8 +966,8 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         return render_to_string(
             "problem_ajax.html",
             {
-                "element_id": self.location.html_id(),
-                "id": str(self.location),
+                "element_id": self.usage_key.html_id(),
+                "id": str(self.usage_key),
                 "ajax_url": self.ajax_url,
                 "current_score": curr_score,
                 "total_possible": total_possible,
@@ -981,7 +981,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         """
         Log a fatal LoncapaProblem error and return an HTML message for display to the user.
         """
-        log.exception("LcpFatalError Encountered for %s", str(self.location))
+        log.exception("LcpFatalError Encountered for %s", str(self.usage_key))
         if error:
             return HTML('<p>Error formatting HTML for problem:</p><p><pre style="color:red">{msg}</pre></p>').format(
                 msg=str(error)
@@ -1097,12 +1097,12 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         `err` is the Exception encountered while rendering the problem HTML.
         """
         problem_display_name = self.display_name_with_default
-        problem_location = str(self.location)
+        problem_location = str(self.usage_key)
         log.exception("ProblemGetHtmlError: %r, %r, %s", problem_display_name, problem_location, str(err))
 
         if self.debug:
             msg = HTML("[courseware.capa.capa_block] Failed to generate HTML for problem {url}").format(
-                url=str(self.location)
+                url=str(self.usage_key)
             )
             msg += HTML("<p>Error:</p><p><pre>{msg}</pre></p>").format(msg=str(err))
             msg += HTML("<p><pre>{tb}</pre></p>").format(tb=traceback.format_exc())
@@ -1223,7 +1223,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         # Log this demand-hint request. Note that this only logs the last hint requested (although now
         # all previously shown hints are still displayed).
         event_info = {}
-        event_info["module_id"] = str(self.location)
+        event_info["module_id"] = str(self.usage_key)
         event_info["hint_index"] = hint_index
         event_info["hint_len"] = len(demand_hints)
         event_info["hint_text"] = get_inner_html_from_xpath(demand_hints[hint_index])
@@ -1292,8 +1292,8 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
 
         context = {
             "problem": content,
-            "id": str(self.location),
-            "short_id": self.location.html_id(),
+            "id": str(self.usage_key),
+            "short_id": self.usage_key.html_id(),
             "submit_button": submit_button,
             "submit_button_submitting": submit_button_submitting,
             "should_enable_submit_button": should_enable_submit_button,
@@ -1316,7 +1316,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
 
         if encapsulate:
             html = HTML('<div id="problem_{id}" class="problem" data-url="{ajax_url}">{html}</div>').format(
-                id=self.location.html_id(), ajax_url=self.ajax_url, html=HTML(html)
+                id=self.usage_key.html_id(), ajax_url=self.ajax_url, html=HTML(html)
             )
 
         # Now do all the substitutions which the LMS block_render normally does, but
@@ -1598,7 +1598,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
             (and also screen reader text).
         """
         event_info = {}
-        event_info["problem_id"] = str(self.location)
+        event_info["problem_id"] = str(self.usage_key)
         self.publish_unmasked("showanswer", event_info)
         if not self.answer_available():
             raise NotFoundError("Answer is not available")
@@ -1747,7 +1747,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         """
         event_info = {}
         event_info["state"] = self.lcp.get_state()
-        event_info["problem_id"] = str(self.location)
+        event_info["problem_id"] = str(self.usage_key)
 
         self.lcp.has_saved_answers = False
         answers = self.make_dict_of_responses(data)
@@ -1766,7 +1766,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         if self.closed():
             log.error(
                 "ProblemClosedError: Problem %s, close date: %s, due:%s, is_past_due: %s, attempts: %s/%s,",
-                str(self.location),
+                str(self.usage_key),
                 self.close_date,
                 self.due,
                 self.is_past_due(),
@@ -2080,7 +2080,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         """
         event_info = {}
         event_info["state"] = self.lcp.get_state()
-        event_info["problem_id"] = str(self.location)
+        event_info["problem_id"] = str(self.usage_key)
 
         answers = self.make_dict_of_responses(data)
         event_info["answers"] = answers
@@ -2132,7 +2132,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         """
         event_info = {}
         event_info["old_state"] = self.lcp.get_state()
-        event_info["problem_id"] = str(self.location)
+        event_info["problem_id"] = str(self.usage_key)
         _ = self.runtime.service(self, "i18n").gettext
 
         if self.closed():
@@ -2196,7 +2196,7 @@ class _BuiltInProblemBlock(  # pylint: disable=too-many-public-methods,too-many-
         Returns the error messages for exceptions occurring while performing
         the rescoring, rather than throwing them.
         """
-        event_info = {"state": self.lcp.get_state(), "problem_id": str(self.location)}
+        event_info = {"state": self.lcp.get_state(), "problem_id": str(self.usage_key)}
 
         _ = self.runtime.service(self, "i18n").gettext
 

@@ -508,7 +508,7 @@ class XmlMixin:
             # if folder is course then create file with name {course_run}.xml
             filepath = self._format_filepath(
                 self.category,
-                self.location.run if self.category == "course" else url_path,
+                self.usage_key.run if self.category == "course" else url_path,
             )
             self.runtime.export_fs.makedirs(os.path.dirname(filepath), recreate=True)
             with self.runtime.export_fs.open(filepath, "wb") as fileobj:
@@ -529,8 +529,8 @@ class XmlMixin:
         # Special case for course pointers:
         if self.category == "course":
             # add org and course attributes on the pointer tag
-            node.set("org", self.location.org)
-            node.set("course", self.location.course)
+            node.set("org", self.usage_key.org)
+            node.set("course", self.usage_key.course)
 
     def definition_to_xml(self, resource_fs):
         """

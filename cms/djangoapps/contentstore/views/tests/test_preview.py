@@ -47,7 +47,7 @@ class GetPreviewHtmlTestCase(ModuleStoreTestCase):
         """
         course = CourseFactory.create()
         html = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="html",
             data={'data': "<html>foobar</html>"}
         )
@@ -95,7 +95,7 @@ class GetPreviewHtmlTestCase(ModuleStoreTestCase):
         """
         course = CourseFactory.create()
         html = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="html",
             data={'data': "<html>foobar</html>"}
         )
@@ -130,19 +130,19 @@ class GetPreviewHtmlTestCase(ModuleStoreTestCase):
         course = CourseFactory.create()
 
         conditional_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="conditional"
         )
 
         # child conditional_block
         BlockFactory.create(
-            parent_location=conditional_block.location,
+            parent_location=conditional_block.usage_key,
             category="conditional"
         )
 
         url = reverse_usage_url(
             'preview_handler',
-            conditional_block.location,
+            conditional_block.usage_key,
             kwargs={'handler': 'xmodule_handler/conditional_get'}
         )
         response = client.post(url)
@@ -158,18 +158,18 @@ class GetPreviewHtmlTestCase(ModuleStoreTestCase):
         course = CourseFactory.create()
 
         block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="problem"
         )
 
         url = reverse_usage_url(
             'preview_handler',
-            block.location,
+            block.usage_key,
             kwargs={'handler': 'xmodule_handler/problem_check'}
         )
         response = client.post(url)
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(modulestore().has_changes(modulestore().get_item(block.location)))
+        self.assertFalse(modulestore().has_changes(modulestore().get_item(block.usage_key)))
 
 
 @XBlock.needs("i18n")
@@ -238,7 +238,7 @@ class CmsModuleSystemShimTest(ModuleStoreTestCase):
         self.contentstore = contentstore()
         self.block = BlockFactory(category="problem", parent=course)
         _prepare_runtime_for_preview(self.request, block=self.block)
-        self.course = self.store.get_item(course.location)
+        self.course = self.store.get_item(course.usage_key)
 
     def test_get_user_role(self):
         assert self.block.runtime.get_user_role() == 'staff'

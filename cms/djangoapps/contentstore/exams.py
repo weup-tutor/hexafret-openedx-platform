@@ -56,7 +56,7 @@ def register_exams(course_key):
     exams_list = []
     locations = []
     for timed_exam in timed_exams:
-        location = str(timed_exam.location)
+        location = str(timed_exam.usage_key)
         msg = (
             'Found {location} as an exam in course structure.'.format(
                 location=location
@@ -84,7 +84,7 @@ def register_exams(course_key):
 
         exams_list.append({
             'course_id': str(course_key),
-            'content_id': str(timed_exam.location),
+            'content_id': str(timed_exam.usage_key),
             'exam_name': timed_exam.display_name,
             'time_limit_mins': timed_exam.default_time_limit_minutes,
             # If the subsection has no due date, then infer a due date from the course end date. This behavior is a

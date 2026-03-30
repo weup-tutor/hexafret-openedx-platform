@@ -185,7 +185,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         except AttributeError:
             log.warning(
                 "Error while getting block instance for descriptor with location: [%s]",
-                self.location
+                self.usage_key
             )
             return None
 
@@ -196,7 +196,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         If none match, return None
         """
         for child in self.get_children():
-            if child.location == location:
+            if child.usage_key == location:
                 return child
 
         return None
@@ -232,13 +232,13 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         except NoSuchServiceError:
             log.warning(
                 "Error while getting user service in runtime with location: [%s]",
-                self.location
+                self.usage_key
             )
             return []
         except ValueError:
             log.warning(
                 "Error while getting group ID for partition with location: [%s]",
-                self.location
+                self.usage_key
             )
             return []
 
@@ -293,7 +293,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
                 updated_group_id = [g_id for g_id, loc in self.group_id_to_child.items() if loc == child_location][0]
                 inactive_contents.append({
                     'group_name': _('{group_name} (inactive)').format(group_name=group_name),
-                    'id': str(child.location),
+                    'id': str(child.usage_key),
                     'content': rendered_child.content,
                     'group_id': updated_group_id,
                 })
@@ -301,7 +301,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
 
             active_contents.append({
                 'group_name': group_name,
-                'id': str(child.location),
+                'id': str(child.usage_key),
                 'content': rendered_child.content,
                 'group_id': updated_group_id,
             })
@@ -325,7 +325,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         """
         fragment = Fragment()
         root_xblock = context.get('root_xblock')
-        is_root = root_xblock and root_xblock.location == self.location
+        is_root = root_xblock and root_xblock.usage_key == self.usage_key
         active_groups_preview = None
         inactive_groups_preview = None
 
@@ -415,7 +415,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         except Exception:
             log.info(
                 "Can't get usage_id of Nonetype object in course {course_key}".format(
-                    course_key=str(self.location.course_key)
+                    course_key=str(self.usage_key.course_key)
                 )
             )
             raise
@@ -440,7 +440,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
             for group in user_partition.groups:
                 group_id = str(group.id)
                 child_location = self.group_id_to_child.get(group_id, None)
-                if child_location == vertical.location:
+                if child_location == vertical.usage_key:
                     return (group.name, group.id)
         return (None, None)
 
@@ -576,7 +576,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
             Returns the child block which matches the specified location, or None if one is not found.
             """
             for child in children:
-                if child.location == location:
+                if child.usage_key == location:
                     return child
             return None
 
@@ -627,7 +627,7 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         (not including superclass validation messages).
         """
         _ = self.runtime.service(self, "i18n").ugettext
-        split_validation = StudioValidation(self.location)
+        split_validation = StudioValidation(self.usage_key)
         if self.user_partition_id < 0:
             split_validation.add(
                 StudioValidationMessage(
@@ -722,13 +722,13 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         assert hasattr(self.runtime, 'modulestore') and hasattr(self.runtime.modulestore, 'get_course'), \
             "modulestore has to be available"
 
-        course_block = self.runtime.modulestore.get_course(self.location.course_key)
+        course_block = self.runtime.modulestore.get_course(self.usage_key.course_key)
         group_configuration_url = None
         if 'split_test' in course_block.advanced_modules:
             user_partition = self.get_selected_partition()
             if user_partition:
                 group_configuration_url = "{url}#{configuration_id}".format(
-                    url='/group_configurations/' + str(self.location.course_key),
+                    url='/group_configurations/' + str(self.usage_key.course_key),
                     configuration_id=str(user_partition.id)
                 )
 
@@ -745,11 +745,11 @@ class SplitTestBlock(  # lint-amnesty, pylint: disable=abstract-method
         assert hasattr(self.runtime, 'modulestore') and hasattr(self.runtime.modulestore, 'create_item'), \
             "editor_saved should only be called when a mutable modulestore is available"
         modulestore = self.runtime.modulestore
-        dest_usage_key = self.location.replace(category="vertical", name=uuid4().hex)
+        dest_usage_key = self.usage_key.replace(category="vertical", name=uuid4().hex)
         metadata = {'display_name': DEFAULT_GROUP_NAME.format(group_id=group.id)}
         modulestore.create_item(
             user_id,
-            self.location.course_key,
+            self.usage_key.course_key,
             dest_usage_key.block_type,
             block_id=dest_usage_key.block_id,
             definition_data=None,

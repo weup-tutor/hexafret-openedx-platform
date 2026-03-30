@@ -111,7 +111,7 @@ class MixedSplitTestCase(ModuleStoreTestCase):
         return BlockFactory.create(
             category=category,
             parent=parent_block,
-            parent_location=parent_block.location,
+            parent_location=parent_block.usage_key,
             modulestore=self.store,
             **extra
         )
@@ -140,7 +140,7 @@ class ProceduralCourseTestMixin:
                     user_id=user_id
                 )
                 self.populated_usage_keys.setdefault(xblock_type, []).append(
-                    child.location
+                    child.usage_key
                 )
                 descend(child, stack[1:])
 

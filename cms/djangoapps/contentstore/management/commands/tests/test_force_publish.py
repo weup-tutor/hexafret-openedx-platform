@@ -76,16 +76,16 @@ class TestForcePublishModifications(ModuleStoreTestCase):
         Test 'force_publish' command
         """
         # Add some changes to course
-        chapter = BlockFactory.create(category='chapter', parent_location=self.course.location)
+        chapter = BlockFactory.create(category='chapter', parent_location=self.course.usage_key)
         self.store.create_child(
             self.test_user_id,
-            chapter.location,
+            chapter.usage_key,
             'html',
             block_id='html_component'
         )
 
         # verify that course has changes.
-        self.assertTrue(self.store.has_changes(self.store.get_item(self.course.location)))
+        self.assertTrue(self.store.has_changes(self.store.get_item(self.course.usage_key)))
 
         # get draft and publish branch versions
         versions = get_course_versions(str(self.course.id))
@@ -102,7 +102,7 @@ class TestForcePublishModifications(ModuleStoreTestCase):
             call_command('force_publish', str(self.course.id), '--commit')
 
             # verify that course has no changes
-            self.assertFalse(self.store.has_changes(self.store.get_item(self.course.location)))
+            self.assertFalse(self.store.has_changes(self.store.get_item(self.course.usage_key)))
 
             # get new draft and publish branch versions
             versions = get_course_versions(str(self.course.id))

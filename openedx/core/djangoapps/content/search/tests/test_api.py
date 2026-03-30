@@ -79,11 +79,11 @@ class TestSearchApi(ModuleStoreTestCase):
             # Create XBlocks
             self.sequential = self.store.create_child(
                 self.user_id,
-                self.course.location,
+                self.course.usage_key,
                 "sequential",
                 "test_sequential"
             )
-            self.store.create_child(self.user_id, self.sequential.location, "vertical", "test_vertical")
+            self.store.create_child(self.user_id, self.sequential.usage_key, "vertical", "test_vertical")
         self.doc_sequential = {
             "id": "block-v1org1test_coursetest_runtypesequentialblocktest_sequential-f702c144",
             "type": "course_block",

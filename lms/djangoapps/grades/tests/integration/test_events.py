@@ -94,7 +94,7 @@ class GradesEventIntegrationTest(ProblemSubmissionTestMixin, SharedModuleStoreTe
                     'event_transaction_id': event_transaction_id,
                     'event_transaction_type': events.PROBLEM_SUBMITTED_EVENT_TYPE,
                     'course_id': str(self.course.id),
-                    'problem_id': str(self.problem.location),
+                    'problem_id': str(self.problem.usage_key),
                     'weighted_earned': 2.0,
                     'weighted_possible': 2.0,
                 },
@@ -126,7 +126,7 @@ class GradesEventIntegrationTest(ProblemSubmissionTestMixin, SharedModuleStoreTe
                 reset_student_attempts(
                     self.course.id,
                     self.student,
-                    self.problem.location,
+                    self.problem.usage_key,
                     self.instructor,
                     delete_module=True,
                     emit_signals_and_events=emit_signals
@@ -144,7 +144,7 @@ class GradesEventIntegrationTest(ProblemSubmissionTestMixin, SharedModuleStoreTe
                 {
                     'user_id': str(self.student.id),
                     'course_id': str(self.course.id),
-                    'problem_id': str(self.problem.location),
+                    'problem_id': str(self.problem.usage_key),
                     'instructor_id': str(self.instructor.id),
                     'event_transaction_id': event_transaction_id,
                     'event_transaction_type': events.STATE_DELETED_EVENT_TYPE,
@@ -189,12 +189,12 @@ class GradesEventIntegrationTest(ProblemSubmissionTestMixin, SharedModuleStoreTe
         with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, self.course.id):
             self.problem.data = new_problem_xml
             self.store.update_item(self.problem, self.instructor.id)
-        self.store.publish(self.problem.location, self.instructor.id)
+        self.store.publish(self.problem.usage_key, self.instructor.id)
 
         with patch('lms.djangoapps.grades.events.tracker') as events_tracker:
             submit_rescore_problem_for_student(
                 request=get_mock_request(self.instructor),
-                usage_key=self.problem.location,
+                usage_key=self.problem.usage_key,
                 student=self.student,
                 only_if_higher=False
             )
@@ -216,7 +216,7 @@ class GradesEventIntegrationTest(ProblemSubmissionTestMixin, SharedModuleStoreTe
                     {
                         'course_id': str(self.course.id),
                         'user_id': str(self.student.id),
-                        'problem_id': str(self.problem.location),
+                        'problem_id': str(self.problem.usage_key),
                         'new_weighted_earned': 2,
                         'new_weighted_possible': 2,
                         'only_if_higher': False,

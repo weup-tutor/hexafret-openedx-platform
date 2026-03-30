@@ -352,7 +352,7 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
                 continue
             # fetch library summaries and filter out any duplicated entry across/within stores
             for library_summary in store.get_library_summaries(**kwargs):
-                library_id = self._clean_locator_for_mapping(library_summary.location)
+                library_id = self._clean_locator_for_mapping(library_summary.usage_key)
                 if library_id not in library_summaries:
                     library_summaries[library_id] = library_summary
         return list(library_summaries.values())
@@ -368,7 +368,7 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
                 continue
             # filter out ones which were fetched from earlier stores but locations may not be ==
             for library in store.get_libraries(**kwargs):
-                library_id = self._clean_locator_for_mapping(library.location)
+                library_id = self._clean_locator_for_mapping(library.usage_key)
                 if library_id not in libraries:
                     # library is indeed unique. save it in result
                     libraries[library_id] = library
@@ -766,9 +766,9 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
             XBLOCK_CREATED.send_event(
                 time=datetime.now(timezone.utc),
                 xblock_info=XBlockData(
-                    usage_key=xblock.location.for_branch(None),
+                    usage_key=xblock.usage_key.for_branch(None),
                     block_type=block_type,
-                    version=xblock.location
+                    version=xblock.usage_key
                 )
             )
 
@@ -805,9 +805,9 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
             XBLOCK_CREATED.send_event(
                 time=datetime.now(timezone.utc),
                 xblock_info=XBlockData(
-                    usage_key=xblock.location.for_branch(None),
+                    usage_key=xblock.usage_key.for_branch(None),
                     block_type=block_type,
-                    version=xblock.location
+                    version=xblock.usage_key
                 )
             )
 
@@ -840,7 +840,7 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
         Update the xblock persisted to be the same as the given for all types of fields
         (content, children, and metadata) attribute the change to the given user.
         """
-        course_key = xblock.location.course_key
+        course_key = xblock.usage_key.course_key
         store = self._verify_modulestore_support(course_key, 'update_item')
         xblock = store.update_item(xblock, user_id, allow_not_found, **kwargs)
 
@@ -850,9 +850,9 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
             XBLOCK_UPDATED.send_event(
                 time=datetime.now(timezone.utc),
                 xblock_info=XBlockData(
-                    usage_key=xblock.location.for_branch(None),
-                    block_type=xblock.location.block_type,
-                    version=xblock.location
+                    usage_key=xblock.usage_key.for_branch(None),
+                    block_type=xblock.usage_key.block_type,
+                    version=xblock.usage_key
                 )
             )
 
@@ -1031,7 +1031,7 @@ class MixedModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase):
         :param xblock: the block to check
         :return: True if the draft and published versions differ
         """
-        store = self._verify_modulestore_support(xblock.location.course_key, 'has_changes')
+        store = self._verify_modulestore_support(xblock.usage_key.course_key, 'has_changes')
         return store.has_changes(xblock)
 
     def check_supports(self, course_key, method):

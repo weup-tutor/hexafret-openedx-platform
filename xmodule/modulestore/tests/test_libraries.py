@@ -82,20 +82,20 @@ class TestLibraries(MixedSplitTestCase):
         # In the library, create a vertical block with a child:
         vert_block = BlockFactory.create(
             category="vertical",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user_id,
             publish_item=False,
             modulestore=self.store,
         )
         child_block = BlockFactory.create(
             category="html",
-            parent_location=vert_block.location,
+            parent_location=vert_block.usage_key,
             user_id=self.user_id,
             publish_item=False,
             metadata={"data": "Hello world", },
             modulestore=self.store,
         )
-        assert child_block.parent.replace(version_guid=None, branch=None) == vert_block.location
+        assert child_block.parent.replace(version_guid=None, branch=None) == vert_block.usage_key
 
     def test_update_item(self):
         """
@@ -105,21 +105,21 @@ class TestLibraries(MixedSplitTestCase):
 
         block = BlockFactory.create(
             category="html",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user_id,
             publish_item=False,
             metadata={"data": "Hello world", },
             modulestore=self.store,
         )
-        block_key = block.location
+        block_key = block.usage_key
         block.data = "NEW"
-        old_version = self.store.get_item(block_key, remove_version=False, remove_branch=False).location.version_guid
+        old_version = self.store.get_item(block_key, remove_version=False, remove_branch=False).usage_key.version_guid
         self.store.update_item(block, self.user_id)
         # Reload block from the modulestore
         block = self.store.get_item(block_key)
         assert block.data == 'NEW'
-        assert block.location == block_key
-        new_version = self.store.get_item(block_key, remove_version=False, remove_branch=False).location.version_guid
+        assert block.usage_key == block_key
+        new_version = self.store.get_item(block_key, remove_version=False, remove_branch=False).usage_key.version_guid
         assert old_version != new_version
 
     def test_delete_item(self):
@@ -127,17 +127,17 @@ class TestLibraries(MixedSplitTestCase):
         Test to make sure delete_item() works on blocks in a library
         """
         library = LibraryFactory.create(modulestore=self.store)
-        lib_key = library.location.library_key
+        lib_key = library.usage_key.library_key
         block = BlockFactory.create(
             category="html",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user_id,
             publish_item=False,
             modulestore=self.store,
         )
         library = self.store.get_library(lib_key)
         assert len(library.children) == 1
-        self.store.delete_item(block.location, self.user_id)
+        self.store.delete_item(block.usage_key, self.user_id)
         library = self.store.get_library(lib_key)
         assert len(library.children) == 0
 
@@ -149,20 +149,20 @@ class TestLibraries(MixedSplitTestCase):
     def test_get_library_keys(self):
         """ Test get_library_keys() """
         libraries = [LibraryFactory.create(modulestore=self.store) for _ in range(3)]
-        lib_keys_expected = {lib.location.library_key for lib in libraries}
+        lib_keys_expected = {lib.usage_key.library_key for lib in libraries}
         lib_keys_actual = set(self.store.get_library_keys())
         assert lib_keys_expected == lib_keys_actual
 
     def test_get_libraries(self):
         """ Test get_libraries() """
         libraries = [LibraryFactory.create(modulestore=self.store) for _ in range(3)]
-        lib_dict = {lib.location.library_key: lib for lib in libraries}
+        lib_dict = {lib.usage_key.library_key: lib for lib in libraries}
 
         lib_list = self.store.get_libraries()
 
         assert len(lib_list) == len(libraries)
         for lib in lib_list:
-            assert lib.location.library_key in lib_dict
+            assert lib.usage_key.library_key in lib_dict
 
     def test_strip(self):
         """
@@ -170,30 +170,30 @@ class TestLibraries(MixedSplitTestCase):
         branch and version info by default.
         """
         # Create a library
-        lib_key = LibraryFactory.create(modulestore=self.store).location.library_key
+        lib_key = LibraryFactory.create(modulestore=self.store).usage_key.library_key
         # Re-load the library from the modulestore, explicitly including version information:
         lib = self.store.get_library(lib_key)
-        assert lib.location.version_guid is None
-        assert lib.location.branch is None
-        assert lib.location.library_key.version_guid is None
-        assert lib.location.library_key.branch is None
+        assert lib.usage_key.version_guid is None
+        assert lib.usage_key.branch is None
+        assert lib.usage_key.library_key.version_guid is None
+        assert lib.usage_key.library_key.branch is None
 
     def test_get_lib_version(self):
         """
         Test that we can get version data about a library from get_library()
         """
         # Create a library
-        lib_key = LibraryFactory.create(modulestore=self.store).location.library_key
+        lib_key = LibraryFactory.create(modulestore=self.store).usage_key.library_key
         # Re-load the library from the modulestore, explicitly including version information:
         lib = self.store.get_library(lib_key, remove_version=False, remove_branch=False)
-        version = lib.location.library_key.version_guid
+        version = lib.usage_key.library_key.version_guid
         assert isinstance(version, ObjectId)
 
     def test_xblock_in_lib_have_published_version_returns_false(self):
         library = LibraryFactory.create(modulestore=self.store)
         block = BlockFactory.create(
             category="html",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user_id,
             publish_item=False,
             modulestore=self.store,

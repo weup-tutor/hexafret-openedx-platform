@@ -200,7 +200,7 @@ class UpstreamTestCase(ModuleStoreTestCase):
         assert downstream.data == "<html><body>Upstream content V2</body></html>"
 
         # Verify tags
-        object_tags = tagging_api.get_object_tags(str(downstream.location))
+        object_tags = tagging_api.get_object_tags(str(downstream.usage_key))
         assert len(object_tags) == len(self.upstream_tags)
         for object_tag in object_tags:
             assert object_tag.value in self.upstream_tags
@@ -231,7 +231,7 @@ class UpstreamTestCase(ModuleStoreTestCase):
         assert downstream.data == "<html><body>Upstream content V3</body></html>"
 
         # Verify tags
-        object_tags = tagging_api.get_object_tags(str(downstream.location))
+        object_tags = tagging_api.get_object_tags(str(downstream.usage_key))
         assert len(object_tags) == len(new_upstream_tags)
         for object_tag in object_tags:
             assert object_tag.value in new_upstream_tags
@@ -588,7 +588,7 @@ class UpstreamTestCase(ModuleStoreTestCase):
         sync_from_upstream_block(downstream, self.user)
 
         # Verify tags
-        object_tags = tagging_api.get_object_tags(str(downstream.location))
+        object_tags = tagging_api.get_object_tags(str(downstream.usage_key))
         assert len(object_tags) == len(expected_tags)
         for object_tag in object_tags:
             assert object_tag.value in expected_tags
@@ -604,7 +604,7 @@ class UpstreamTestCase(ModuleStoreTestCase):
         sync_from_upstream_block(downstream, self.user)
 
         #Verify tags
-        object_tags = tagging_api.get_object_tags(str(downstream.location))
+        object_tags = tagging_api.get_object_tags(str(downstream.usage_key))
         assert len(object_tags) == len(new_upstream_tags)
         for object_tag in object_tags:
             assert object_tag.value in new_upstream_tags

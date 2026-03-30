@@ -86,54 +86,54 @@ class CourseGradingViewTest(SharedModuleStoreTestCase, APITestCase):
             "Pass": 0.5,
         }
         cls.section = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="chapter",
         )
         cls.subsection1 = BlockFactory.create(
-            parent_location=cls.section.location,
+            parent_location=cls.section.usage_key,
             category="sequential",
         )
         unit1 = BlockFactory.create(
-            parent_location=cls.subsection1.location,
+            parent_location=cls.subsection1.usage_key,
             category="vertical",
         )
         BlockFactory.create(
-            parent_location=unit1.location,
+            parent_location=unit1.usage_key,
             category="video",
         )
         BlockFactory.create(
-            parent_location=unit1.location,
+            parent_location=unit1.usage_key,
             category="problem",
         )
 
         cls.subsection2 = BlockFactory.create(
-            parent_location=cls.section.location,
+            parent_location=cls.section.usage_key,
             category="sequential",
         )
         unit2 = BlockFactory.create(
-            parent_location=cls.subsection2.location,
+            parent_location=cls.subsection2.usage_key,
             category="vertical",
         )
         unit3 = BlockFactory.create(
-            parent_location=cls.subsection2.location,
+            parent_location=cls.subsection2.usage_key,
             category="vertical",
         )
         BlockFactory.create(
-            parent_location=unit3.location,
+            parent_location=unit3.usage_key,
             category="video",
         )
         BlockFactory.create(
-            parent_location=unit3.location,
+            parent_location=unit3.usage_key,
             category="video",
         )
         cls.homework = BlockFactory.create(
-            parent_location=cls.section.location,
+            parent_location=cls.section.usage_key,
             category="sequential",
             graded=True,
             format='Homework',
         )
         cls.midterm = BlockFactory.create(
-            parent_location=cls.section.location,
+            parent_location=cls.section.usage_key,
             category="sequential",
             graded=True,
             format='Midterm Exam',
@@ -190,28 +190,28 @@ class CourseGradingViewTest(SharedModuleStoreTestCase, APITestCase):
                     'assignment_type': None,
                     'display_name': self.subsection1.display_name,
                     'graded': False,
-                    'module_id': str(self.subsection1.location),
+                    'module_id': str(self.subsection1.usage_key),
                     'short_label': None
                 },
                 {
                     'assignment_type': None,
                     'display_name': self.subsection2.display_name,
                     'graded': False,
-                    'module_id': str(self.subsection2.location),
+                    'module_id': str(self.subsection2.usage_key),
                     'short_label': None
                 },
                 {
                     'assignment_type': 'Homework',
                     'display_name': self.homework.display_name,
                     'graded': True,
-                    'module_id': str(self.homework.location),
+                    'module_id': str(self.homework.usage_key),
                     'short_label': 'HW 01',
                 },
                 {
                     'assignment_type': 'Midterm Exam',
                     'display_name': self.midterm.display_name,
                     'graded': True,
-                    'module_id': str(self.midterm.location),
+                    'module_id': str(self.midterm.usage_key),
                     'short_label': 'Midterm 01',
                 },
             ],
@@ -303,19 +303,19 @@ class GradebookViewTestBase(GradeViewTestMixin, APITestCase):
 
         cls.chapter_1 = BlockFactory.create(
             category='chapter',
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             display_name="Chapter 1",
         )
         cls.chapter_2 = BlockFactory.create(
             category='chapter',
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             display_name="Chapter 2",
         )
         cls.subsections = {
-            cls.chapter_1.location: [
+            cls.chapter_1.usage_key: [
                 BlockFactory.create(
                     category='sequential',
-                    parent_location=cls.chapter_1.location,
+                    parent_location=cls.chapter_1.usage_key,
                     due=datetime(2017, 12, 18, 11, 30, 00),
                     display_name='HW 1',
                     format='Homework',
@@ -323,17 +323,17 @@ class GradebookViewTestBase(GradeViewTestMixin, APITestCase):
                 ),
                 BlockFactory.create(
                     category='sequential',
-                    parent_location=cls.chapter_1.location,
+                    parent_location=cls.chapter_1.usage_key,
                     due=datetime(2017, 12, 18, 11, 30, 00),
                     display_name='Lab 1',
                     format='Lab',
                     graded=True,
                 ),
             ],
-            cls.chapter_2.location: [
+            cls.chapter_2.usage_key: [
                 BlockFactory.create(
                     category='sequential',
-                    parent_location=cls.chapter_2.location,
+                    parent_location=cls.chapter_2.usage_key,
                     due=datetime(2017, 12, 18, 11, 30, 00),
                     display_name='HW 2',
                     format='Homework',
@@ -341,7 +341,7 @@ class GradebookViewTestBase(GradeViewTestMixin, APITestCase):
                 ),
                 BlockFactory.create(
                     category='sequential',
-                    parent_location=cls.chapter_2.location,
+                    parent_location=cls.chapter_2.usage_key,
                     due=datetime(2017, 12, 18, 11, 30, 00),
                     display_name='Lab 2',
                     format='Lab',
@@ -353,7 +353,7 @@ class GradebookViewTestBase(GradeViewTestMixin, APITestCase):
         # Data about graded subsections visible to staff only
         # should not be exposed via the gradebook API
         cls.hidden_subsection = BlockFactory.create(
-            parent_location=cls.chapter_1.location,
+            parent_location=cls.chapter_1.usage_key,
             category='sequential',
             graded=True,
             visible_to_staff_only=True,
@@ -414,29 +414,29 @@ class GradebookViewTest(GradebookViewTestBase):
     def setUpClass(cls):
         super().setUpClass()
         cls.mock_subsection_grades = {
-            cls.subsections[cls.chapter_1.location][0].location: cls.mock_subsection_grade(
-                cls.subsections[cls.chapter_1.location][0],
+            cls.subsections[cls.chapter_1.usage_key][0].usage_key: cls.mock_subsection_grade(
+                cls.subsections[cls.chapter_1.usage_key][0],
                 earned_all=1.0,
                 possible_all=2.0,
                 earned_graded=1.0,
                 possible_graded=2.0,
             ),
-            cls.subsections[cls.chapter_1.location][1].location: cls.mock_subsection_grade(
-                cls.subsections[cls.chapter_1.location][1],
+            cls.subsections[cls.chapter_1.usage_key][1].usage_key: cls.mock_subsection_grade(
+                cls.subsections[cls.chapter_1.usage_key][1],
                 earned_all=1.0,
                 possible_all=2.0,
                 earned_graded=1.0,
                 possible_graded=2.0,
             ),
-            cls.subsections[cls.chapter_2.location][0].location: cls.mock_subsection_grade(
-                cls.subsections[cls.chapter_2.location][0],
+            cls.subsections[cls.chapter_2.usage_key][0].usage_key: cls.mock_subsection_grade(
+                cls.subsections[cls.chapter_2.usage_key][0],
                 earned_all=1.0,
                 possible_all=2.0,
                 earned_graded=1.0,
                 possible_graded=2.0,
             ),
-            cls.subsections[cls.chapter_2.location][1].location: cls.mock_subsection_grade(
-                cls.subsections[cls.chapter_2.location][1],
+            cls.subsections[cls.chapter_2.usage_key][1].usage_key: cls.mock_subsection_grade(
+                cls.subsections[cls.chapter_2.usage_key][1],
                 earned_all=1.0,
                 possible_all=2.0,
                 earned_graded=1.0,
@@ -483,7 +483,7 @@ class GradebookViewTest(GradebookViewTestBase):
                 ('attempted', True),
                 ('category', 'Homework'),
                 ('label', 'HW 01'),
-                ('module_id', str(self.subsections[self.chapter_1.location][0].location)),
+                ('module_id', str(self.subsections[self.chapter_1.usage_key][0].usage_key)),
                 ('percent', 0.5),
                 ('score_earned', 1.0),
                 ('score_possible', 2.0),
@@ -493,7 +493,7 @@ class GradebookViewTest(GradebookViewTestBase):
                 ('attempted', True),
                 ('category', 'Lab'),
                 ('label', 'Lab 01'),
-                ('module_id', str(self.subsections[self.chapter_1.location][1].location)),
+                ('module_id', str(self.subsections[self.chapter_1.usage_key][1].usage_key)),
                 ('percent', 0.5),
                 ('score_earned', 1.0),
                 ('score_possible', 2.0),
@@ -503,7 +503,7 @@ class GradebookViewTest(GradebookViewTestBase):
                 ('attempted', True),
                 ('category', 'Homework'),
                 ('label', 'HW 02'),
-                ('module_id', str(self.subsections[self.chapter_2.location][0].location)),
+                ('module_id', str(self.subsections[self.chapter_2.usage_key][0].usage_key)),
                 ('percent', 0.5),
                 ('score_earned', 1.0),
                 ('score_possible', 2.0),
@@ -513,7 +513,7 @@ class GradebookViewTest(GradebookViewTestBase):
                 ('attempted', True),
                 ('category', 'Lab'),
                 ('label', 'Lab 02'),
-                ('module_id', str(self.subsections[self.chapter_2.location][1].location)),
+                ('module_id', str(self.subsections[self.chapter_2.usage_key][1].usage_key)),
                 ('percent', 0.5),
                 ('score_earned', 1.0),
                 ('score_possible', 2.0),
@@ -696,8 +696,8 @@ class GradebookViewTest(GradebookViewTestBase):
                 possible_graded_override=2.0,
             )
             mock_subsection_grades = {
-                self.subsections[self.chapter_1.location][0].location: self.mock_subsection_grade(
-                    self.subsections[self.chapter_1.location][0],
+                self.subsections[self.chapter_1.usage_key][0].usage_key: self.mock_subsection_grade(
+                    self.subsections[self.chapter_1.usage_key][0],
                     earned_all=1.0,
                     possible_all=2.0,
                     earned_graded=2.0,
@@ -705,8 +705,8 @@ class GradebookViewTest(GradebookViewTestBase):
                     first_attempted=None,
                     override=mock_override,
                 ),
-                self.subsections[self.chapter_1.location][1].location: self.mock_subsection_grade(
-                    self.subsections[self.chapter_1.location][1],
+                self.subsections[self.chapter_1.usage_key][1].usage_key: self.mock_subsection_grade(
+                    self.subsections[self.chapter_1.usage_key][1],
                     earned_all=1.0,
                     possible_all=2.0,
                     earned_graded=2.0,
@@ -714,8 +714,8 @@ class GradebookViewTest(GradebookViewTestBase):
                     first_attempted=None,
                     override=mock_override,
                 ),
-                self.subsections[self.chapter_2.location][0].location: self.mock_subsection_grade(
-                    self.subsections[self.chapter_2.location][0],
+                self.subsections[self.chapter_2.usage_key][0].usage_key: self.mock_subsection_grade(
+                    self.subsections[self.chapter_2.usage_key][0],
                     earned_all=1.0,
                     possible_all=2.0,
                     earned_graded=2.0,
@@ -723,8 +723,8 @@ class GradebookViewTest(GradebookViewTestBase):
                     first_attempted=None,
                     override=mock_override,
                 ),
-                self.subsections[self.chapter_2.location][1].location: self.mock_subsection_grade(
-                    self.subsections[self.chapter_2.location][1],
+                self.subsections[self.chapter_2.usage_key][1].usage_key: self.mock_subsection_grade(
+                    self.subsections[self.chapter_2.usage_key][1],
                     earned_all=1.0,
                     possible_all=2.0,
                     earned_graded=2.0,
@@ -1564,7 +1564,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
                 post_data = [
                     {
                         'user_id': self.student.id,
-                        'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                        'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                         'grade': {},  # doesn't matter what we put here.
                     }
                 ]
@@ -1588,7 +1588,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             post_data = [
                 {
                     'user_id': unenrolled_student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                     'grade': {},  # doesn't matter what we put here.
                 }
             ]
@@ -1602,7 +1602,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             expected_data = [
                 {
                     'user_id': unenrolled_student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                     'success': False,
                     'reason': 'CourseEnrollment matching query does not exist.',
                 },
@@ -1621,7 +1621,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             post_data = [
                 {
                     'user_id': -123,
-                    'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                     'grade': {},  # doesn't matter what we put here.
                 }
             ]
@@ -1635,7 +1635,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             expected_data = [
                 {
                     'user_id': -123,
-                    'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                     'success': False,
                     'reason': 'User matching query does not exist.',
                 },
@@ -1725,7 +1725,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             post_data = [
                 {
                     'user_id': self.student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                     'grade': {
                         'earned_all_override': 3,
                         'possible_all_override': 3,
@@ -1735,7 +1735,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
                 },
                 {
                     'user_id': self.student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][1].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][1].usage_key),
                     'grade': {
                         'earned_all_override': 1,
                         'possible_all_override': 4,
@@ -1754,13 +1754,13 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             expected_data = [
                 {
                     'user_id': self.student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                     'success': True,
                     'reason': None,
                 },
                 {
                     'user_id': self.student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][1].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][1].usage_key),
                     'success': True,
                     'reason': None,
                 },
@@ -1771,7 +1771,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             second_post_data = [
                 {
                     'user_id': self.student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][1].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][1].usage_key),
                     'grade': {
                         'earned_all_override': 3,
                         'possible_all_override': 4,
@@ -1795,12 +1795,12 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             # didn't mock out CourseGradeFactory.read() to return a non-zero score for anything).
             for usage_key, expected_grades, expected_grade_overrides in (
                 (
-                    self.subsections[self.chapter_1.location][0].location,
+                    self.subsections[self.chapter_1.usage_key][0].usage_key,
                     GradeFields(0, 0, 0, 0),
                     GradeFields(3, 3, 2, 2)
                 ),
                 (
-                    self.subsections[self.chapter_1.location][1].location,
+                    self.subsections[self.chapter_1.usage_key][1].usage_key,
                     GradeFields(0, 0, 0, 0),
                     GradeFields(3, 4, 3, 4)
                 ),
@@ -1832,7 +1832,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
             post_data = [
                 {
                     'user_id': self.student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][0].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][0].usage_key),
                     'grade': {
                         'earned_all_override': 0,
                         'possible_all_override': 3,
@@ -1842,7 +1842,7 @@ class GradebookBulkUpdateViewTest(GradebookViewTestBase):
                 },
                 {
                     'user_id': self.student.id,
-                    'usage_id': str(self.subsections[self.chapter_1.location][1].location),
+                    'usage_id': str(self.subsections[self.chapter_1.usage_key][1].usage_key),
                     'grade': {
                         'earned_all_override': 0,
                         'possible_all_override': 4,
@@ -1881,7 +1881,7 @@ class SubsectionGradeViewTest(GradebookViewTestBase):
         cls.record_a = BlockRecord(locator=cls.locator_a, weight=1, raw_possible=10, graded=False)
         cls.record_b = BlockRecord(locator=cls.locator_b, weight=1, raw_possible=10, graded=True)
         cls.block_records = BlockRecordList([cls.record_a, cls.record_b], cls.course_key)
-        cls.usage_key = cls.subsections[cls.chapter_1.location][0].location
+        cls.usage_key = cls.subsections[cls.chapter_1.usage_key][0].usage_key
         cls.user = UserFactory.create()
         cls.user_id = cls.user.id
         cls.params = {
@@ -2226,7 +2226,7 @@ class SubsectionGradeViewTest(GradebookViewTestBase):
     def test_get_override_for_unreleased_block(self):
         self.login_course_staff()
         unreleased_subsection = BlockFactory.create(
-            parent_location=self.chapter_1.location,
+            parent_location=self.chapter_1.usage_key,
             category='sequential',
             graded=True,
             start=datetime(2999, 1, 1, tzinfo=UTC),  # arbitrary future date
@@ -2237,7 +2237,7 @@ class SubsectionGradeViewTest(GradebookViewTestBase):
         bs_api.update_course_in_cache(self.course_data.course_key)
 
         resp = self.client.get(
-            self.get_url(subsection_id=unreleased_subsection.location)
+            self.get_url(subsection_id=unreleased_subsection.usage_key)
         )
 
         expected_data = {
@@ -2252,7 +2252,7 @@ class SubsectionGradeViewTest(GradebookViewTestBase):
             'user_id': self.user_id,
             'override': None,
             'course_id': str(self.usage_key.course_key),
-            'subsection_id': str(unreleased_subsection.location),
+            'subsection_id': str(unreleased_subsection.usage_key),
             'history': []
         }
         assert expected_data == resp.data

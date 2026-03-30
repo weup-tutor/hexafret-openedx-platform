@@ -318,7 +318,7 @@ class EntranceExamTestCases(LoginEnrollmentTestCase, ModuleStoreTestCase, Milest
         Tests entrance exam xblock has `entrance_exam_passed` key in json response.
         """
         request_factory = RequestFactoryNoCsrf()
-        data = {f'input_{str(self.problem_1.location.html_id())}_2_1': 'choice_2'}
+        data = {f'input_{str(self.problem_1.usage_key.html_id())}_2_1': 'choice_2'}
         request = request_factory.post(
             'problem_check',
             data=data
@@ -327,7 +327,7 @@ class EntranceExamTestCases(LoginEnrollmentTestCase, ModuleStoreTestCase, Milest
         response = handle_xblock_callback(
             request,
             str(self.course.id),
-            str(self.problem_1.location),
+            str(self.problem_1.usage_key),
             'xmodule_handler',
             'problem_check',
         )
@@ -417,7 +417,7 @@ def add_entrance_exam_milestone(course, entrance_exam):
     )
     add_course_content_milestone(
         str(course.id),
-        str(entrance_exam.location),
+        str(entrance_exam.usage_key),
         milestone_relationship_types['FULFILLS'],
         milestone
     )

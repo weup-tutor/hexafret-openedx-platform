@@ -153,7 +153,7 @@ class LegacyLibraryContentBlock(ItemBankMixin, XModuleToXBlockMixin, XBlock):
             return super().author_view(context)
         fragment = Fragment()
         root_xblock = context.get('root_xblock')
-        is_root = root_xblock and root_xblock.location == self.location
+        is_root = root_xblock and root_xblock.usage_key == self.usage_key
         try:
             is_updating = self.get_tools().are_children_syncing(self)
         except LibraryToolsUnavailable:
@@ -590,7 +590,7 @@ class LegacyLibrarySummary:
         self.display_name = display_name if display_name else _("Empty")
 
         self.id = library_locator  # pylint: disable=invalid-name
-        self.location = library_locator.make_usage_key('library', 'library')
+        self.usage_key = library_locator.make_usage_key('library', 'library')
 
     @property
     def display_org_with_default(self):
@@ -598,7 +598,7 @@ class LegacyLibrarySummary:
         Org display names are not implemented. This just provides API compatibility with CourseBlock.
         Always returns the raw 'org' field from the key.
         """
-        return self.location.library_key.org
+        return self.usage_key.library_key.org
 
     @property
     def display_number_with_default(self):
@@ -606,4 +606,4 @@ class LegacyLibrarySummary:
         Display numbers are not implemented. This just provides API compatibility with CourseBlock.
         Always returns the raw 'library' field from the key.
         """
-        return self.location.library_key.library
+        return self.usage_key.library_key.library

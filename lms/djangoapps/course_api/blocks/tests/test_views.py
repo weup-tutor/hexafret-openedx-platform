@@ -48,10 +48,10 @@ class TestBlocksView(SharedModuleStoreTestCase):
         cls.course_usage_key = cls.store.make_course_usage_key(cls.course_key)
 
         cls.non_orphaned_block_usage_keys = {
-            str(item.location)
+            str(item.usage_key)
             for item in cls.store.get_items(cls.course_key)
             # remove all orphaned items in the course, except for the root 'course' block
-            if cls.store.get_parent_location(item.location) or item.category == 'course'
+            if cls.store.get_parent_location(item.usage_key) or item.category == 'course'
         }
 
     def setUp(self):
@@ -135,7 +135,7 @@ class TestBlocksView(SharedModuleStoreTestCase):
 
             if xblock.has_children:
                 self.assertSetEqual(
-                    {str(child.location) for child in xblock.get_children()},
+                    {str(child.usage_key) for child in xblock.get_children()},
                     set(block_data['children']),
                 )
 
@@ -418,10 +418,10 @@ class TestBlocksInCourseView(TestBlocksView, CompletionWaffleTestMixin):  # pyli
         self.query_params['course_id'] = str(self.course_key)
         self.override_waffle_switch(True)
         self.non_orphaned_raw_block_usage_keys = {
-            item.location
+            item.usage_key
             for item in self.store.get_items(self.course_key)
             # remove all orphaned items in the course, except for the root 'course' block
-            if self.store.get_parent_location(item.location) or item.category == 'course'
+            if self.store.get_parent_location(item.usage_key) or item.category == 'course'
         }
 
     def test_no_course_id(self):
@@ -442,7 +442,7 @@ class TestBlocksInCourseView(TestBlocksView, CompletionWaffleTestMixin):  # pyli
     def test_completion_one_unit(self):
         for item in self.store.get_items(self.course_key):
             if item.category == 'html':
-                block_usage_key = item.location
+                block_usage_key = item.usage_key
                 break
 
         submit_completions_for_testing(self.user, [block_usage_key])
@@ -525,7 +525,7 @@ class TestBlocksInCourseView(TestBlocksView, CompletionWaffleTestMixin):  # pyli
             return False
 
         BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id='topic_id',
             discussion_category='category',
@@ -565,10 +565,10 @@ class TestBlockMetadataView(SharedModuleStoreTestCase):  # pylint: disable=test-
         cls.course_usage_key = cls.store.make_course_usage_key(cls.course_key)
 
         cls.non_orphaned_block_usage_keys = {
-            str(item.location)
+            str(item.usage_key)
             for item in cls.store.get_items(cls.course_key)
             # remove all orphaned items in the course, except for the root 'course' block
-            if cls.store.get_parent_location(item.location) or item.category == 'course'
+            if cls.store.get_parent_location(item.usage_key) or item.category == 'course'
         }
 
     def setUp(self):

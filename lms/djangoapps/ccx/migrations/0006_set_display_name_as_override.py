@@ -40,7 +40,7 @@ def save_display_name(apps, schema_editor):
 
         CcxFieldOverride.objects.get_or_create(
             ccx=ccx,
-            location=course.location,
+            location=course.usage_key,
             field='display_name',
             defaults={'value': serialized_display_name},
         )

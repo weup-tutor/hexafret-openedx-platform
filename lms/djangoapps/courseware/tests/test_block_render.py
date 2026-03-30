@@ -562,7 +562,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
     def setUp(self):
         super().setUp()
 
-        self.location = self.course_key.make_usage_key('chapter', 'Overview')
+        self.usage_key = self.course_key.make_usage_key('chapter', 'Overview')
         self.mock_user = UserFactory.create()
         self.request_factory = RequestFactoryNoCsrf()
 
@@ -625,7 +625,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
         response = render.handle_xblock_callback(
             request,
             str(self.course_key),
-            quote_slashes(str(self.location)),
+            quote_slashes(str(self.usage_key)),
             'xmodule_handler',
             'goto_position',
         )
@@ -644,7 +644,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
         response = render.handle_xblock_callback(
             request,
             str(self.course_key),
-            quote_slashes(str(self.location)),
+            quote_slashes(str(self.usage_key)),
             'xmodule_handler',
             'goto_position',
         )
@@ -668,7 +668,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
             data={'file_id': (self._mock_file(), ) * (settings.MAX_FILEUPLOADS_PER_INPUT + 1)}
         )
         request.user = self.mock_user
-        assert render.handle_xblock_callback(request, str(self.course_key), quote_slashes(str(self.location)), 'dummy_handler').content.decode('utf-8') == json.dumps({'success': (f'Submission aborted! Maximum {settings.MAX_FILEUPLOADS_PER_INPUT:d} files may be submitted at once')}, indent=2)  # pylint: disable=line-too-long
+        assert render.handle_xblock_callback(request, str(self.course_key), quote_slashes(str(self.usage_key)), 'dummy_handler').content.decode('utf-8') == json.dumps({'success': (f'Submission aborted! Maximum {settings.MAX_FILEUPLOADS_PER_INPUT:d} files may be submitted at once')}, indent=2)  # pylint: disable=line-too-long
 
     def test_too_large_file(self):
         inputfile = self._mock_file(size=1 + settings.STUDENT_FILEUPLOAD_MAX_SIZE)
@@ -677,7 +677,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
             data={'file_id': inputfile}
         )
         request.user = self.mock_user
-        assert render.handle_xblock_callback(request, str(self.course_key), quote_slashes(str(self.location)), 'dummy_handler').content.decode('utf-8') == json.dumps({'success': ('Submission aborted! Your file "%s" is too large (max size: %d MB)' % (inputfile.name, (settings.STUDENT_FILEUPLOAD_MAX_SIZE / (1000 ** 2))))}, indent=2)  # pylint: disable=line-too-long
+        assert render.handle_xblock_callback(request, str(self.course_key), quote_slashes(str(self.usage_key)), 'dummy_handler').content.decode('utf-8') == json.dumps({'success': ('Submission aborted! Your file "%s" is too large (max size: %d MB)' % (inputfile.name, (settings.STUDENT_FILEUPLOAD_MAX_SIZE / (1000 ** 2))))}, indent=2)  # pylint: disable=line-too-long
 
     def test_xblock_dispatch(self):
         request = self.request_factory.post('dummy_url', data={'position': 1})
@@ -685,7 +685,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
         response = render.handle_xblock_callback(
             request,
             str(self.course_key),
-            quote_slashes(str(self.location)),
+            quote_slashes(str(self.usage_key)),
             'xmodule_handler',
             'goto_position',
         )
@@ -698,7 +698,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
             render.handle_xblock_callback(
                 request,
                 'bad_course_id',
-                quote_slashes(str(self.location)),
+                quote_slashes(str(self.usage_key)),
                 'xmodule_handler',
                 'goto_position',
             )
@@ -722,7 +722,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
             render.handle_xblock_callback(
                 request,
                 str(self.course_key),
-                quote_slashes(str(self.location)),
+                quote_slashes(str(self.usage_key)),
                 'xmodule_handler',
                 'bad_dispatch',
             )
@@ -734,7 +734,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
             render.handle_xblock_callback(
                 request,
                 str(self.course_key),
-                quote_slashes(str(self.location)),
+                quote_slashes(str(self.usage_key)),
                 'bad_handler',
                 'bad_dispatch',
             )
@@ -942,7 +942,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
         render.handle_xblock_callback(
             request,
             str(course.id),
-            quote_slashes(str(block.location)),
+            quote_slashes(str(block.usage_key)),
             'xmodule_handler',
             'problem_check',
         )
@@ -963,7 +963,7 @@ class TestHandleXBlockCallback(SharedModuleStoreTestCase, LoginEnrollmentTestCas
             'parent': course,
         }
         block = BlockFactory.create(**block_kwargs)
-        usage_id = str(block.location)
+        usage_id = str(block.usage_key)
 
         # Send no special parameters, which will be invalid, but we don't care
         request = self.request_factory.post('/', data='{}', content_type='application/json')
@@ -989,10 +989,10 @@ class TestXBlockView(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
     def setUp(self):
         super().setUp()
 
-        self.location = str(self.course_key.make_usage_key('html', 'toyhtml'))
+        self.usage_key = str(self.course_key.make_usage_key('html', 'toyhtml'))
         self.request_factory = RequestFactory()
 
-        self.view_args = [str(self.course_key), quote_slashes(self.location), 'student_view']
+        self.view_args = [str(self.course_key), quote_slashes(self.usage_key), 'student_view']
         self.xblock_view_url = reverse('xblock_view', args=self.view_args)
 
     def test_xblock_view_handler(self):
@@ -1399,7 +1399,7 @@ class TestProctoringRendering(ModuleStoreTestCase):
 
         exam_id = create_exam(
             course_id=str(self.course_key),
-            content_id=str(sequence.location.replace(branch=None, version=None)),
+            content_id=str(sequence.usage_key.replace(branch=None, version=None)),
             exam_name='foo',
             time_limit_mins=10,
             is_proctored=True,
@@ -1472,8 +1472,8 @@ class TestGatedSubsectionRendering(ModuleStoreTestCase, MilestonesTestCaseMixin)
         self.field_data_cache = FieldDataCache.cache_for_block_descendents(
             self.course.id, self.request.user, self.course, depth=2
         )
-        gating_api.add_prerequisite(self.course.id, self.open_seq.location)
-        gating_api.set_required_content(self.course.id, self.gated_seq.location, self.open_seq.location, 100)
+        gating_api.add_prerequisite(self.course.id, self.open_seq.usage_key)
+        gating_api.set_required_content(self.course.id, self.gated_seq.usage_key, self.open_seq.usage_key, 100)
 
     def _find_url_name(self, toc, url_name):
         """
@@ -1537,7 +1537,7 @@ class TestHtmlModifiers(ModuleStoreTestCase):
             category='html',
             data=self.content_string + self.rewrite_link + self.rewrite_bad_link + self.course_link
         )
-        self.location = self.block.location
+        self.usage_key = self.block.usage_key
         self.field_data_cache = FieldDataCache.cache_for_block_descendents(
             self.course.id,
             self.user,
@@ -1548,7 +1548,7 @@ class TestHtmlModifiers(ModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
             wrap_xblock_display=True,
         )
@@ -1560,7 +1560,7 @@ class TestHtmlModifiers(ModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
             wrap_xblock_display=False,
         )
@@ -1572,23 +1572,23 @@ class TestHtmlModifiers(ModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
         )
         result_fragment = block.render(STUDENT_VIEW)
-        key = self.course.location
+        key = self.course.usage_key
         assert f'/asset-v1:{key.org}+{key.course}+{key.run}+type@asset+block/foo_content' in result_fragment.content
 
     def test_static_badlink_rewrite(self):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
         )
         result_fragment = block.render(STUDENT_VIEW)
 
-        key = self.course.location
+        key = self.course.usage_key
         assert f'/asset-v1:{key.org}+{key.course}+{key.run}+type@asset+block/file.jpg' in result_fragment.content
 
     def test_static_asset_path_use(self):
@@ -1600,7 +1600,7 @@ class TestHtmlModifiers(ModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
             static_asset_path="toy_course_dir",
         )
@@ -1638,7 +1638,7 @@ class TestHtmlModifiers(ModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
         )
         result_fragment = block.render(STUDENT_VIEW)
@@ -1739,7 +1739,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
             display_name='Option Response Problem'
         )
 
-        self.location = self.block.location
+        self.usage_key = self.block.usage_key
         self.field_data_cache = FieldDataCache.cache_for_block_descendents(
             self.course.id,
             self.user,
@@ -1751,7 +1751,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
         )
         result_fragment = block.render(STUDENT_VIEW)
@@ -1761,7 +1761,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
         )
         result_fragment = block.render(STUDENT_VIEW)
@@ -1793,7 +1793,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            problem_block.location,
+            problem_block.usage_key,
             self.field_data_cache
         )
         html_fragment = block.render(STUDENT_VIEW)
@@ -1803,7 +1803,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
         <label for="sd_fs_{block_id}"> / 0</label>
       </div>""")
 
-        assert expected_score_override_html.format(block_id=problem_block.location.block_id) in\
+        assert expected_score_override_html.format(block_id=problem_block.usage_key.block_id) in\
                html_fragment.content
 
     @XBlock.register_temp_plugin(DetachedXBlock, identifier='detached-block')
@@ -1822,7 +1822,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            detached_block.location,
+            detached_block.usage_key,
             field_data_cache,
         )
         result_fragment = block.render(STUDENT_VIEW)
@@ -1833,7 +1833,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
         block = render.get_block(
             self.user,
             self.request,
-            self.location,
+            self.usage_key,
             self.field_data_cache,
         )
         result_fragment = block.render(STUDENT_VIEW)
@@ -1856,7 +1856,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
             block = render.get_block(
                 self.user,
                 self.request,
-                html_block.location,
+                html_block.usage_key,
                 field_data_cache,
             )
             block.render(STUDENT_VIEW)
@@ -1867,7 +1867,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
 
         StudentModuleFactory.create(
             course_id=self.course.id,
-            module_state_key=self.location,
+            module_state_key=self.usage_key,
             student=UserFactory(),
             grade=1,
             max_grade=1,
@@ -1878,7 +1878,7 @@ class TestStaffDebugInfo(SharedModuleStoreTestCase):
             block = render.get_block(
                 self.user,
                 self.request,
-                self.location,
+                self.usage_key,
                 self.field_data_cache,
             )
             block.render(STUDENT_VIEW)
@@ -2063,7 +2063,7 @@ class TestModuleTrackingContext(SharedModuleStoreTestCase):
             render.handle_xblock_callback(
                 self.request,
                 str(self.course.id),
-                quote_slashes(str(block.location)),
+                quote_slashes(str(block.usage_key)),
                 'xmodule_handler',
                 'problem_check',
             )
@@ -2122,12 +2122,12 @@ class TestXBlockRuntimeEvent(TestSubmittingProblems):
     def setUp(self):
         super().setUp()
         self.homework = self.add_graded_section_to_course('homework')
-        self.problem = self.add_dropdown_to_section(self.homework.location, 'p1', 1)
+        self.problem = self.add_dropdown_to_section(self.homework.usage_key, 'p1', 1)
         self.grade_dict = {'value': 0.18, 'max_value': 32}
         self.delete_dict = {'value': None, 'max_value': None}
 
     def get_block_for_user(self, user):
-        """Helper function to get useful block at self.location in self.course_id for user"""
+        """Helper function to get useful block at self.usage_key in self.course_id for user"""
         mock_request = MagicMock()
         mock_request.user = user
         field_data_cache = FieldDataCache.cache_for_block_descendents(
@@ -2136,7 +2136,7 @@ class TestXBlockRuntimeEvent(TestSubmittingProblems):
         return render.get_block(
             user,
             mock_request,
-            self.problem.location,
+            self.problem.usage_key,
             field_data_cache,
         )
 
@@ -2149,7 +2149,7 @@ class TestXBlockRuntimeEvent(TestSubmittingProblems):
     def test_xblock_runtime_publish(self):
         """Tests the publish mechanism"""
         self.set_block_grade_using_publish(self.grade_dict)
-        student_module = StudentModule.objects.get(student=self.student_user, module_state_key=self.problem.location)
+        student_module = StudentModule.objects.get(student=self.student_user, module_state_key=self.problem.usage_key)
         assert student_module.grade == self.grade_dict['value']
         assert student_module.max_grade == self.grade_dict['max_value']
 
@@ -2157,7 +2157,7 @@ class TestXBlockRuntimeEvent(TestSubmittingProblems):
         """Test deleting the grade using the publish mechanism"""
         block = self.set_block_grade_using_publish(self.grade_dict)
         block.runtime.publish(block, 'grade', self.delete_dict)
-        student_module = StudentModule.objects.get(student=self.student_user, module_state_key=self.problem.location)
+        student_module = StudentModule.objects.get(student=self.student_user, module_state_key=self.problem.usage_key)
         assert student_module.grade is None
         assert student_module.max_grade is None
 
@@ -2173,7 +2173,7 @@ class TestXBlockRuntimeEvent(TestSubmittingProblems):
                 'weight': None,
                 'user_id': self.student_user.id,
                 'course_id': str(self.course.id),
-                'usage_id': str(self.problem.location),
+                'usage_id': str(self.problem.usage_key),
                 'only_if_higher': None,
                 'modified': datetime.now().replace(tzinfo=pytz.UTC),
                 'score_db_table': 'csm',
@@ -2198,7 +2198,7 @@ class TestRebindBlock(TestSubmittingProblems):
         self.anon_user = AnonymousUser()
 
     def get_block_for_user(self, user, item=None):
-        """Helper function to get useful block at self.location in self.course_id for user"""
+        """Helper function to get useful block at self.usage_key in self.course_id for user"""
         mock_request = MagicMock()
         mock_request.user = user
         field_data_cache = FieldDataCache.cache_for_block_descendents(
@@ -2210,7 +2210,7 @@ class TestRebindBlock(TestSubmittingProblems):
         return render.get_block(
             user,
             mock_request,
-            item.location,
+            item.usage_key,
             field_data_cache,
         )
 
@@ -2285,7 +2285,7 @@ class TestEventPublishing(ModuleStoreTestCase, LoginEnrollmentTestCase):
         course = CourseFactory()
         block = BlockFactory(category='xblock', parent=course)
         field_data_cache = FieldDataCache([course, block], course.id, self.mock_user)
-        block = render.get_block(self.mock_user, request, block.location, field_data_cache)
+        block = render.get_block(self.mock_user, request, block.usage_key, field_data_cache)
 
         event_type = 'event_type'
         event = {'event': 'data'}
@@ -2881,7 +2881,7 @@ class LmsModuleSystemShimTest(SharedModuleStoreTestCase):
     def test_course_id(self):
         block = BlockFactory(category="pure", parent=self.course)
 
-        rendered_block = render.get_block(self.user, Mock(), block.location, None)
+        rendered_block = render.get_block(self.user, Mock(), block.usage_key, None)
         assert str(rendered_block.scope_ids.usage_id.context_key) == self.COURSE_ID
         with warnings.catch_warnings():  # For now, also test the deprecated accessor for backwards compatibility:
             warnings.simplefilter("ignore", category=DeprecationWarning)

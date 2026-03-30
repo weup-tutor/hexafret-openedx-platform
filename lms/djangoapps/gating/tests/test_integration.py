@@ -123,7 +123,7 @@ class TestGatedContent(MilestonesTestCaseMixin, SharedModuleStoreTestCase):
                 display_name='problem 3',
             )
         # get updated course
-        cls.course = cls.store.get_item(course.location)
+        cls.course = cls.store.get_item(course.usage_key)
 
     def setup_gating_milestone(self, min_score, min_completion):
         """
@@ -131,11 +131,11 @@ class TestGatedContent(MilestonesTestCaseMixin, SharedModuleStoreTestCase):
         Gating content: seq1 (must be fulfilled before access to seq2)
         Gated content: seq2 (requires completion of seq1 before access)
         """
-        gating_api.add_prerequisite(self.course.id, str(self.seq1.location))
+        gating_api.add_prerequisite(self.course.id, str(self.seq1.usage_key))
         gating_api.set_required_content(
-            self.course.id, str(self.seq2.location), str(self.seq1.location), min_score, min_completion
+            self.course.id, str(self.seq2.usage_key), str(self.seq1.usage_key), min_score, min_completion
         )
-        self.prereq_milestone = gating_api.get_gating_milestone(self.course.id, self.seq1.location, 'fulfills')
+        self.prereq_milestone = gating_api.get_gating_milestone(self.course.id, self.seq1.usage_key, 'fulfills')
 
     def assert_access_to_gated_content(self, user):
         """
@@ -165,7 +165,7 @@ class TestGatedContent(MilestonesTestCaseMixin, SharedModuleStoreTestCase):
         """
         course_grade = CourseGradeFactory().read(user, self.course)
         for prob in [self.gating_prob1, self.gated_prob2, self.prob3]:
-            assert prob.location in course_grade.problem_scores
+            assert prob.usage_key in course_grade.problem_scores
 
         assert course_grade.percent == expected_percent
 

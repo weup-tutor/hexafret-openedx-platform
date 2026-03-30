@@ -42,7 +42,7 @@ def get_open_response_assessment_list(course):
     ora_grading_base_url = getattr(settings, 'ORA_GRADING_MICROFRONTEND_URL', None)
 
     for block in openassessment_blocks:
-        block_id = str(block.location)
+        block_id = str(block.usage_key)
         parent_id = block.parent
 
         # Cache parent lookups to avoid repeated modulestore calls

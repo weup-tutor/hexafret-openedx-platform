@@ -132,7 +132,7 @@ def _create_entrance_exam(request, course_key, entrance_exam_minimum_score_pct=N
         return HttpResponse(status=400)
 
     # Create the entrance exam item (currently it's just a chapter)
-    parent_locator = str(course.location)
+    parent_locator = str(course.usage_key)
     created_block = create_xblock(
         parent_locator=parent_locator,
         user=request.user,
@@ -147,13 +147,13 @@ def _create_entrance_exam(request, course_key, entrance_exam_minimum_score_pct=N
     metadata = {
         'entrance_exam_enabled': True,
         'entrance_exam_minimum_score_pct': entrance_exam_minimum_score_pct,
-        'entrance_exam_id': str(created_block.location),
+        'entrance_exam_id': str(created_block.usage_key),
     }
     CourseMetadata.update_from_dict(metadata, course, request.user)
 
     # Create the entrance exam section item.
     create_xblock(
-        parent_locator=str(created_block.location),
+        parent_locator=str(created_block.usage_key),
         user=request.user,
         category='sequential',
         display_name=_('Entrance Exam - Subsection')
@@ -179,7 +179,7 @@ def _get_entrance_exam(request, course_key):
     try:
         exam_block = modulestore().get_item(exam_key)
         return HttpResponse(  # lint-amnesty, pylint: disable=http-response-with-content-type-json
-            dump_js_escaped_json({'locator': str(exam_block.location)}),
+            dump_js_escaped_json({'locator': str(exam_block.usage_key)}),
             status=200, content_type='application/json')
     except ItemNotFoundError:
         return HttpResponse(status=404)
@@ -262,7 +262,7 @@ def add_entrance_exam_milestone(course_id, x_block):  # lint-amnesty, pylint: di
         )
         milestones_helpers.add_course_content_milestone(
             str(course_id),
-            str(x_block.location),
+            str(x_block.usage_key),
             relationship_types['FULFILLS'],
             milestone
         )

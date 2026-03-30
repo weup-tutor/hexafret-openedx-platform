@@ -329,7 +329,7 @@ class XMLImportingModuleStoreRuntime(XMLParsingModuleStoreRuntime):  # pylint: d
                 for child in block.get_children():
                     # parent is alphabetically least
                     if child.parent is None or child.parent > block.scope_ids.usage_id:
-                        child.parent = block.location
+                        child.parent = block.usage_key
                         child.save()
 
             # After setting up the block, save any changes that we have
@@ -972,7 +972,7 @@ class XMLModuleStore(ModuleStoreReadBase):
         :return: list of course locations
         """
         courses = self.get_courses()
-        return [course.location.course_key for course in courses if course.wiki_slug == wiki_slug]
+        return [course.usage_key.course_key for course in courses if course.wiki_slug == wiki_slug]
 
     def heartbeat(self):
         """
@@ -1051,7 +1051,7 @@ class LibraryXMLModuleStore(XMLModuleStore):
         """
         assert isinstance(library_id, LibraryLocator)
         for library in self.get_courses(**kwargs):
-            if library.location.library_key == library_id:
+            if library.usage_key.library_key == library_id:
                 return library
         return None
 
@@ -1060,7 +1060,7 @@ class LibraryXMLModuleStore(XMLModuleStore):
         """
         Get the Library Key from the Library block.
         """
-        return block.location.library_key
+        return block.usage_key.library_key
 
     def get_orphans(self, course_key, **kwargs):
         """

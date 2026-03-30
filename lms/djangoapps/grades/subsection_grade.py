@@ -24,7 +24,7 @@ class SubsectionGradeBase(metaclass=ABCMeta):
     """
 
     def __init__(self, subsection):
-        self.location = subsection.location
+        self.usage_key = subsection.usage_key
         self.display_name = block_metadata_utils.display_name_with_default(subsection)
         self.url_name = subsection.usage_key.block_id
 
@@ -138,7 +138,7 @@ class ZeroSubsectionGrade(SubsectionGradeBase):
         locations = OrderedDict()  # dict of problem locations to ProblemScore
         for block_key in self.course_data.structure.post_order_traversal(
                 filter_func=possibly_scored,
-                start_node=self.location,
+                start_node=self.usage_key,
         ):
             block = self.course_data.structure[block_key]
             if getattr(block, 'has_score', False):
@@ -270,7 +270,7 @@ class CreateSubsectionGrade(NonZeroSubsectionGrade):
         self.problem_scores = OrderedDict()
         for block_key in course_structure.post_order_traversal(
                 filter_func=possibly_scored,
-                start_node=subsection.location,
+                start_node=subsection.usage_key,
         ):
             problem_score = self._compute_block_score(block_key, course_structure, submissions_scores, csm_scores)
             if problem_score:
@@ -336,7 +336,7 @@ class CreateSubsectionGrade(NonZeroSubsectionGrade):
         """
         return dict(
             user_id=student.id,
-            usage_key=self.location,
+            usage_key=self.usage_key,
             course_version=self.course_version,
             subtree_edited_timestamp=self.subtree_edited_timestamp,
             earned_all=self.all_total.earned,

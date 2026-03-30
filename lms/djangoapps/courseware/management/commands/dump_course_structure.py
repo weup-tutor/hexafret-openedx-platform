@@ -94,8 +94,8 @@ def dump_block(block, destination=None, inherited=False, defaults=False):
 
     filtered_metadata = {k: v for k, v in items.items() if k not in FILTER_LIST}
 
-    destination[str(block.location)] = {
-        'category': block.location.block_type,
+    destination[str(block.usage_key)] = {
+        'category': block.usage_key.block_type,
         'children': [str(child) for child in getattr(block, 'children', [])],
         'metadata': filtered_metadata,
     }
@@ -117,7 +117,7 @@ def dump_block(block, destination=None, inherited=False, defaults=False):
                 return field.values != field.default
 
         inherited_metadata = {field.name: field.read_json(block) for field in block.fields.values() if is_inherited(field)}  # lint-amnesty, pylint: disable=line-too-long
-        destination[str(block.location)]['inherited_metadata'] = inherited_metadata
+        destination[str(block.usage_key)]['inherited_metadata'] = inherited_metadata
 
     for child in block.get_children():
         dump_block(child, destination, inherited, defaults)

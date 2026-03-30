@@ -138,7 +138,7 @@ class TestRescoringTask(TestIntegrationTask):
         expected_subsection_grade = expected_score
 
         course_grade = CourseGradeFactory().read(user, self.course)
-        grade = course_grade.graded_subsections_by_format()['Homework'][self.problem_section.location].graded_total
+        grade = course_grade.graded_subsections_by_format()['Homework'][self.problem_section.usage_key].graded_total
         assert grade.earned == expected_subsection_grade
 
     def submit_rescore_all_student_answers(self, instructor, problem_url_name, only_if_higher=False):
@@ -329,7 +329,7 @@ class TestRescoringTask(TestIntegrationTask):
                                         answer_display="answer",
                                         grader_payload=grader_payload,
                                         num_responses=2)
-        BlockFactory.create(parent_location=self.problem_section.location,
+        BlockFactory.create(parent_location=self.problem_section.usage_key,
                             category="problem",
                             display_name=str(problem_url_name),
                             data=problem_xml)
@@ -377,16 +377,16 @@ class TestRescoringTask(TestIntegrationTask):
                 InstructorTaskModuleTestCase.problem_location(problem_url_name)
             )
             block.data = problem_xml
-            with self.module_store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, block.location.course_key):  # lint-amnesty, pylint: disable=line-too-long
+            with self.module_store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, block.usage_key.course_key):  # lint-amnesty, pylint: disable=line-too-long
                 self.module_store.update_item(block, self.user.id)
-                self.module_store.publish(block.location, self.user.id)
+                self.module_store.publish(block.usage_key, self.user.id)
         else:
             # Use "per-student" rerandomization so that check-problem can be called more than once.
             # Using "always" means we cannot check a problem twice, but we want to call once to get the
             # correct answer, and call a second time with that answer to confirm it's graded as correct.
             # Per-student rerandomization will at least generate different seeds for different users, so
             # we get a little more test coverage.
-            BlockFactory.create(parent_location=self.problem_section.location,
+            BlockFactory.create(parent_location=self.problem_section.usage_key,
                                 category="problem",
                                 display_name=str(problem_url_name),
                                 data=problem_xml,
@@ -507,7 +507,7 @@ class TestResetAttemptsTask(TestIntegrationTask):
 
     def test_reset_non_problem(self):
         """confirm that a non-problem can still be successfully reset"""
-        location = self.problem_section.location
+        location = self.problem_section.usage_key
         instructor_task = self.reset_problem_attempts('instructor', location)
         instructor_task = InstructorTask.objects.get(id=instructor_task.id)
         assert instructor_task.task_state == SUCCESS
@@ -571,7 +571,7 @@ class TestDeleteProblemTask(TestIntegrationTask):
 
     def test_delete_non_problem(self):
         """confirm that a non-problem can still be successfully deleted"""
-        location = self.problem_section.location
+        location = self.problem_section.usage_key
         instructor_task = self.delete_problem_state('instructor', location)
         instructor_task = InstructorTask.objects.get(id=instructor_task.id)
         assert instructor_task.task_state == SUCCESS

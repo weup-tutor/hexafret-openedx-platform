@@ -517,7 +517,7 @@ class SubmissionHistoryView(GradeViewMixin, PaginatedAPIView):
             'data': block.data
         }
         csm = StudentModule.objects.filter(
-            module_state_key=block.location,
+            module_state_key=block.usage_key,
             student=course_enrollment.user,
             course_id=course_enrollment.course_id
         )

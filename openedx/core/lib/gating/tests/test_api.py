@@ -46,48 +46,48 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
 
         # create chapter
         self.chapter1 = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name='untitled chapter 1'
         )
 
         # create sequentials
         self.seq1 = BlockFactory.create(
-            parent_location=self.chapter1.location,
+            parent_location=self.chapter1.usage_key,
             category='sequential',
             display_name='untitled sequential 1'
         )
         self.seq2 = BlockFactory.create(
-            parent_location=self.chapter1.location,
+            parent_location=self.chapter1.usage_key,
             category='sequential',
             display_name='untitled sequential 2'
         )
 
         # create vertical
         self.vertical = BlockFactory.create(
-            parent_location=self.seq1.location,
+            parent_location=self.seq1.usage_key,
             category='vertical',
             display_name='untitled vertical 1'
         )
 
         self.generic_milestone = {
             'name': 'Test generic milestone',
-            'namespace': str(self.seq1.location),
+            'namespace': str(self.seq1.usage_key),
         }
 
     @patch('openedx.core.lib.gating.api.log.warning')
     def test_get_prerequisite_milestone_returns_none(self, mock_log):
         """ Test test_get_prerequisite_milestone_returns_none """
 
-        prereq = gating_api._get_prerequisite_milestone(self.seq1.location)  # pylint: disable=protected-access
+        prereq = gating_api._get_prerequisite_milestone(self.seq1.usage_key)  # pylint: disable=protected-access
         assert prereq is None
         assert mock_log.called
 
     def test_get_prerequisite_milestone_returns_milestone(self):
         """ Test test_get_prerequisite_milestone_returns_milestone """
 
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
-        prereq = gating_api._get_prerequisite_milestone(self.seq1.location)  # pylint: disable=protected-access
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
+        prereq = gating_api._get_prerequisite_milestone(self.seq1.usage_key)  # pylint: disable=protected-access
         assert prereq is not None
 
     @data('', '0', '50', '100')
@@ -106,67 +106,67 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
     def test_find_gating_milestones(self):
         """ Test test_find_gating_milestones """
 
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
-        gating_api.set_required_content(self.course.id, self.seq2.location, self.seq1.location, 100)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
+        gating_api.set_required_content(self.course.id, self.seq2.usage_key, self.seq1.usage_key, 100)
         milestone = milestones_api.add_milestone(self.generic_milestone)
-        milestones_api.add_course_content_milestone(self.course.id, self.seq1.location, 'fulfills', milestone)
+        milestones_api.add_course_content_milestone(self.course.id, self.seq1.usage_key, 'fulfills', milestone)
 
-        assert len(gating_api.find_gating_milestones(self.course.id, self.seq1.location, 'fulfills')) == 1
-        assert len(gating_api.find_gating_milestones(self.course.id, self.seq1.location, 'requires')) == 0
-        assert len(gating_api.find_gating_milestones(self.course.id, self.seq2.location, 'fulfills')) == 0
-        assert len(gating_api.find_gating_milestones(self.course.id, self.seq2.location, 'requires')) == 1
+        assert len(gating_api.find_gating_milestones(self.course.id, self.seq1.usage_key, 'fulfills')) == 1
+        assert len(gating_api.find_gating_milestones(self.course.id, self.seq1.usage_key, 'requires')) == 0
+        assert len(gating_api.find_gating_milestones(self.course.id, self.seq2.usage_key, 'fulfills')) == 0
+        assert len(gating_api.find_gating_milestones(self.course.id, self.seq2.usage_key, 'requires')) == 1
 
     def test_get_gating_milestone_not_none(self):
         """ Test test_get_gating_milestone_not_none """
 
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
-        gating_api.set_required_content(self.course.id, self.seq2.location, self.seq1.location, 100)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
+        gating_api.set_required_content(self.course.id, self.seq2.usage_key, self.seq1.usage_key, 100)
 
-        assert gating_api.get_gating_milestone(self.course.id, self.seq1.location, 'fulfills') is not None
-        assert gating_api.get_gating_milestone(self.course.id, self.seq2.location, 'requires') is not None
+        assert gating_api.get_gating_milestone(self.course.id, self.seq1.usage_key, 'fulfills') is not None
+        assert gating_api.get_gating_milestone(self.course.id, self.seq2.usage_key, 'requires') is not None
 
     def test_get_gating_milestone_is_none(self):
         """ Test test_get_gating_milestone_is_none """
 
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
-        gating_api.set_required_content(self.course.id, self.seq2.location, self.seq1.location, 100)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
+        gating_api.set_required_content(self.course.id, self.seq2.usage_key, self.seq1.usage_key, 100)
 
-        assert gating_api.get_gating_milestone(self.course.id, self.seq1.location, 'requires') is None
-        assert gating_api.get_gating_milestone(self.course.id, self.seq2.location, 'fulfills') is None
+        assert gating_api.get_gating_milestone(self.course.id, self.seq1.usage_key, 'requires') is None
+        assert gating_api.get_gating_milestone(self.course.id, self.seq2.usage_key, 'fulfills') is None
 
     def test_prerequisites(self):
         """ Test test_prerequisites """
 
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
 
         prereqs = gating_api.get_prerequisites(self.course.id)
         assert len(prereqs) == 1
         assert prereqs[0]['block_display_name'] == self.seq1.display_name
-        assert prereqs[0]['block_usage_key'] == str(self.seq1.location)
-        assert gating_api.is_prerequisite(self.course.id, self.seq1.location)
+        assert prereqs[0]['block_usage_key'] == str(self.seq1.usage_key)
+        assert gating_api.is_prerequisite(self.course.id, self.seq1.usage_key)
 
-        gating_api.remove_prerequisite(self.seq1.location)
+        gating_api.remove_prerequisite(self.seq1.usage_key)
 
         assert len(gating_api.get_prerequisites(self.course.id)) == 0
-        assert not gating_api.is_prerequisite(self.course.id, self.seq1.location)
+        assert not gating_api.is_prerequisite(self.course.id, self.seq1.usage_key)
 
     def test_required_content(self):
         """ Test test_required_content """
 
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
-        gating_api.set_required_content(self.course.id, self.seq2.location, self.seq1.location, 100, 100)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
+        gating_api.set_required_content(self.course.id, self.seq2.usage_key, self.seq1.usage_key, 100, 100)
 
         prereq_content_key, min_score, min_completion = gating_api.get_required_content(
-            self.course.id, self.seq2.location
+            self.course.id, self.seq2.usage_key
         )
-        assert prereq_content_key == str(self.seq1.location)
+        assert prereq_content_key == str(self.seq1.usage_key)
         assert min_score == 100
         assert min_completion == 100
 
-        gating_api.set_required_content(self.course.id, self.seq2.location, None, None, None)
+        gating_api.set_required_content(self.course.id, self.seq2.usage_key, None, None, None)
 
         prereq_content_key, min_score, min_completion = gating_api.get_required_content(
-            self.course.id, self.seq2.location
+            self.course.id, self.seq2.usage_key
         )
         assert prereq_content_key is None
         assert min_score is None
@@ -183,12 +183,12 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
         assert gating_api.get_gated_content(self.course, staff) == []
         assert gating_api.get_gated_content(self.course, student) == []
 
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
-        gating_api.set_required_content(self.course.id, self.seq2.location, self.seq1.location, 100)
-        milestone = milestones_api.get_course_content_milestones(self.course.id, self.seq2.location, 'requires')[0]
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
+        gating_api.set_required_content(self.course.id, self.seq2.usage_key, self.seq1.usage_key, 100)
+        milestone = milestones_api.get_course_content_milestones(self.course.id, self.seq2.usage_key, 'requires')[0]
 
         assert gating_api.get_gated_content(self.course, staff) == []
-        assert gating_api.get_gated_content(self.course, student) == [str(self.seq2.location)]
+        assert gating_api.get_gated_content(self.course, student) == [str(self.seq2.usage_key)]
 
         milestones_api.add_user_milestone({'id': student.id}, milestone)
 
@@ -209,14 +209,14 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
         Test if prereq section has any unfulfilled milestones
         """
         student = UserFactory(is_staff=False)
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
         gating_api.set_required_content(
-            self.course.id, self.seq2.location, self.seq1.location, min_score, min_completion
+            self.course.id, self.seq2.usage_key, self.seq1.usage_key, min_score, min_completion
         )
         milestone = milestones_api.add_milestone(self.generic_milestone)
-        milestones_api.add_course_content_milestone(self.course.id, self.seq1.location, 'fulfills', milestone)
+        milestones_api.add_course_content_milestone(self.course.id, self.seq1.usage_key, 'fulfills', milestone)
 
-        assert not gating_api.is_gate_fulfilled(self.course.id, self.seq1.location, student.id)
+        assert not gating_api.is_gate_fulfilled(self.course.id, self.seq1.usage_key, student.id)
 
         # complete the prerequisite to unlock the gated content
         # this call triggers reevaluation of prerequisites fulfilled by the gating block.
@@ -224,10 +224,10 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
             mock_grade.return_value = learner_completion
             lms_gating_api.evaluate_prerequisite(
                 self.course,
-                Mock(location=self.seq1.location, percent_graded=learner_score / 100.0),
+                Mock(location=self.seq1.usage_key, percent_graded=learner_score / 100.0),
                 student,
             )
-            assert gating_api.is_gate_fulfilled(self.course.id, self.seq1.location, student.id) == is_gate_fulfilled
+            assert gating_api.is_gate_fulfilled(self.course.id, self.seq1.usage_key, student.id) == is_gate_fulfilled
 
     @data(
         (1, 1, 100),
@@ -248,21 +248,21 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
         """
         student = UserFactory(is_staff=False)
         problem_block = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category='problem',
             display_name='some problem'
         )
         html_block = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category='html',
             display_name='some html block'
         )
         with patch.object(BlockCompletion, 'get_learning_context_completions') as course_block_completions_mock:
             course_block_completions_mock.return_value = {
-                problem_block.location: user_problem_completion,
-                html_block.location: user_html_completion,
+                problem_block.usage_key: user_problem_completion,
+                html_block.usage_key: user_html_completion,
             }
-            completion_percentage = gating_api.get_subsection_completion_percentage(self.seq1.location, student)
+            completion_percentage = gating_api.get_subsection_completion_percentage(self.seq1.usage_key, student)
             assert completion_percentage == expected_completion_percentage
 
     @data(
@@ -293,16 +293,16 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
         student = UserFactory(is_staff=False)
 
         component = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category=component_type,
             display_name=f'{component_type} block'
         )
 
         with patch.object(BlockCompletion, 'get_learning_context_completions') as course_block_completions_mock:
             course_block_completions_mock.return_value = {
-                component.location: completed,
+                component.usage_key: completed,
             }
-            completion_percentage = gating_api.get_subsection_completion_percentage(self.seq1.location, student)
+            completion_percentage = gating_api.get_subsection_completion_percentage(self.seq1.usage_key, student)
             assert completion_percentage == expected_completion_percentage
 
     @skip_unless_lms
@@ -311,21 +311,21 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
         Test if prereq has been met and force recompute
         """
         student = UserFactory(is_staff=False)
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
-        gating_api.set_required_content(self.course.id, self.seq2.location, self.seq1.location, 100, 0)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
+        gating_api.set_required_content(self.course.id, self.seq2.usage_key, self.seq1.usage_key, 100, 0)
 
         # complete the prerequisite to unlock the gated content
         # this call triggers reevaluation of prerequisites fulfilled by the gating block.
         with patch.object(gating_api, 'get_subsection_grade_percentage') as mock_grade:
             mock_grade.return_value = 75
             # don't force recompute
-            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.location, student.id, False)
+            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.usage_key, student.id, False)
             assert not prereq_met
             assert prereq_meta_info['url'] is None
             assert prereq_meta_info['display_name'] is None
 
             # force recompute
-            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.location, student.id, True)
+            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.usage_key, student.id, True)
             assert not prereq_met
             assert prereq_meta_info['url'] is not None
             assert prereq_meta_info['display_name'] is not None
@@ -334,13 +334,13 @@ class TestGatingApi(ModuleStoreTestCase, MilestonesTestCaseMixin):
             mock_grade.return_value = 100
 
             # don't force recompute
-            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.location, student.id, False)
+            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.usage_key, student.id, False)
             assert not prereq_met
             assert prereq_meta_info['url'] is None
             assert prereq_meta_info['display_name'] is None
 
             # force recompute
-            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.location, student.id, True)
+            prereq_met, prereq_meta_info = gating_api.compute_is_prereq_met(self.seq2.usage_key, student.id, True)
             assert prereq_met
             assert prereq_meta_info['url'] is not None
             assert prereq_meta_info['display_name'] is not None
@@ -355,7 +355,7 @@ class TestGatingGradesIntegration(GradeTestBase):
     @skip_unless_lms
     def test_get_subsection_grade_percentage(self):
         user = self.request.user
-        subsection_key = self.sequence.location
+        subsection_key = self.sequence.usage_key
 
         with mock_get_score(3, 3):
             # this update() call creates a persistent grade
@@ -370,7 +370,7 @@ class TestGatingGradesIntegration(GradeTestBase):
     @skip_unless_lms
     def test_get_subsection_grade_percentage_with_override(self):
         user = self.request.user
-        subsection_key = self.sequence.location
+        subsection_key = self.sequence.usage_key
 
         with mock_get_score(3, 3):
             # this update() call creates a persistent grade

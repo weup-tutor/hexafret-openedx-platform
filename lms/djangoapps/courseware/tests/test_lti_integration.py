@@ -57,7 +57,7 @@ class _TestLTIBase(BaseTestXmodule):
         user_service = self.block.runtime.service(self.block, 'user')
         user_id = str(user_service.get_current_user().opt_attrs.get(ATTR_KEY_ANONYMOUS_USER_ID))
         hostname = settings.LMS_BASE
-        resource_link_id = str(urllib.parse.quote(f'{hostname}-{self.block.location.html_id()}'))
+        resource_link_id = str(urllib.parse.quote(f'{hostname}-{self.block.usage_key.html_id()}'))
 
         sourcedId = "{context}:{resource_link}:{user_id}".format(
             context=urllib.parse.quote(context_id),
@@ -91,7 +91,7 @@ class _TestLTIBase(BaseTestXmodule):
             'display_name': self.block.display_name,
             'input_fields': self.correct_headers,
             'element_class': self.block.category,
-            'element_id': self.block.location.html_id(),
+            'element_id': self.block.usage_key.html_id(),
             'launch_url': 'http://www.example.com',  # default value
             'open_in_a_new_page': True,
             'form_url': self.block.runtime.handler_url(
@@ -169,31 +169,31 @@ class _TestLTIBlockListingBase(SharedModuleStoreTestCase):
         super().setUpClass()
         cls.course = CourseFactory.create(display_name=cls.COURSE_NAME, number=cls.COURSE_SLUG)
         cls.chapter1 = BlockFactory.create(
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             display_name="chapter1",
             category='chapter')
         cls.section1 = BlockFactory.create(
-            parent_location=cls.chapter1.location,
+            parent_location=cls.chapter1.usage_key,
             display_name="section1",
             category='sequential')
         cls.chapter2 = BlockFactory.create(
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             display_name="chapter2",
             category='chapter')
         cls.section2 = BlockFactory.create(
-            parent_location=cls.chapter2.location,
+            parent_location=cls.chapter2.usage_key,
             display_name="section2",
             category='sequential')
 
         # creates one draft and one published lti block, in different sections
         cls.lti_published = BlockFactory.create(
-            parent_location=cls.section1.location,
+            parent_location=cls.section1.usage_key,
             display_name="lti published",
             category="lti",
             location=cls.course.id.make_usage_key('lti', 'lti_published'),
         )
         cls.lti_draft = BlockFactory.create(
-            parent_location=cls.section2.location,
+            parent_location=cls.section2.usage_key,
             display_name="lti draft",
             category="lti",
             location=cls.course.id.make_usage_key('lti', 'lti_draft'),

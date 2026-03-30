@@ -199,7 +199,7 @@ def get_tab_by_locator(tab_list: List[CourseTab], tab_location: Union[str, Usage
     item = modulestore().get_item(tab_location)
     static_tab = StaticTab(
         name=item.display_name,
-        url_slug=item.location.name,
+        url_slug=item.usage_key.name,
     )
     return CourseTabList.get_tab_by_id(tab_list, static_tab.tab_id)
 

@@ -177,13 +177,13 @@ class OutlineFromModuleStoreTestCase(ModuleStoreTestCase):
                 parent=self.draft_course,
                 category='chapter',
                 display_name="Section 2",
-                children=[seq.location]
+                children=[seq.usage_key]
             )
             section_3 = BlockFactory.create(
                 parent=self.draft_course,
                 category='chapter',
                 display_name="Section 3",
-                children=[seq.location]
+                children=[seq.usage_key]
             )
 
         self.store.update_item(section_2, self.user.id)
@@ -291,8 +291,8 @@ class OutlineFromModuleStoreTestCase(ModuleStoreTestCase):
         outline, errs = get_outline_from_modulestore(self.course_key)
         assert len(errs) == 1
 
-        # Strip version information from seq.location before comparison.
-        assert errs[0].usage_key == seq.location.map_into_course(self.course_key)
+        # Strip version information from seq.usage_key before comparison.
+        assert errs[0].usage_key == seq.usage_key.map_into_course(self.course_key)
         assert outline.sections == []
         assert outline.sequences == {}
 
@@ -479,7 +479,7 @@ class OutlineFromModuleStoreTestCase(ModuleStoreTestCase):
         # Recently modified content can have full version information on their
         # CourseKeys. We need to strip that out and have versionless-CourseKeys
         # or they won't be found properly.
-        versionless_usage_key = modulestore_seq.location.map_into_course(self.course_key)
+        versionless_usage_key = modulestore_seq.usage_key.map_into_course(self.course_key)
         outline_seq_data = outline.sequences[versionless_usage_key]
 
         return outline_seq_data, versionless_usage_key
@@ -527,21 +527,21 @@ class OutlineFromModuleStoreTaskTestCase(ModuleStoreTestCase):
             default_store=ModuleStoreEnum.Type.split,
         )
         section = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="chapter",
             display_name="First Section"
         )
         BlockFactory.create(
-            parent_location=section.location,
+            parent_location=section.usage_key,
             category="sequential",
             display_name="First Sequence"
         )
         BlockFactory.create(
-            parent_location=section.location,
+            parent_location=section.usage_key,
             category="sequential",
             display_name="Second Sequence"
         )
-        self.store.publish(course.location, self.user.id)
+        self.store.publish(course.usage_key, self.user.id)
 
         outline = get_course_outline(course_key)
         assert len(outline.sections) == 1

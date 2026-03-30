@@ -133,8 +133,8 @@ class CourseTestCase(ProceduralCourseTestMixin, ModuleStoreTestCase):
         course2_items = self.store.get_items(course2_id)
         self.assertGreater(len(course1_items), 0)  # ensure it found content instead of [] == []
         if len(course1_items) != len(course2_items):
-            course1_block_ids = {item.location.block_id for item in course1_items}
-            course2_block_ids = {item.location.block_id for item in course2_items}
+            course1_block_ids = {item.usage_key.block_id for item in course1_items}
+            course2_block_ids = {item.usage_key.block_id for item in course2_items}
             raise AssertionError(
                 "Course1 extra blocks: {}; course2 extra blocks: {}".format(
                     course1_block_ids - course2_block_ids, course2_block_ids - course1_block_ids
@@ -142,7 +142,7 @@ class CourseTestCase(ProceduralCourseTestMixin, ModuleStoreTestCase):
             )
 
         for course1_item in course1_items:
-            course1_item_loc = course1_item.location
+            course1_item_loc = course1_item.usage_key
             course2_item_loc = course2_id.make_usage_key(course1_item_loc.block_type, course1_item_loc.block_id)
             if course1_item_loc.block_type == 'course':
                 # mongo uses the run as the name, split uses 'course'
@@ -194,7 +194,7 @@ class CourseTestCase(ProceduralCourseTestMixin, ModuleStoreTestCase):
         # assert is here to make sure that the course being tested actually has verticals (units) to check.
         self.assertGreater(len(items), 0, "Course has no verticals (units) to check")
         for block in items:
-            resp = self.client.get_html(get_url('container_handler', block.location))
+            resp = self.client.get_html(get_url('container_handler', block.usage_key))
             self.assertEqual(resp.status_code, 200)
 
     def assertAssetsEqual(self, asset_son, course1_id, course2_id):

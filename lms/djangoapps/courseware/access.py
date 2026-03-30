@@ -208,7 +208,7 @@ def _can_view_courseware_with_prerequisites(user, course):
         user (User): the user whose course access we are checking.
         course (AType): the course for which we are checking access.
             where AType is CourseBlock, CourseOverview, or any other
-            class that represents a course and has the attributes .location
+            class that represents a course and has the attributes .usage_key
             and .id.
     """
 
@@ -704,7 +704,7 @@ def _dispatch(table, action, user, obj):
         debug("%s user %s, object %s, action %s",
               'ALLOWED' if result else 'DENIED',
               user,
-              str(obj.location) if isinstance(obj, XBlock) else str(obj),
+              str(obj.usage_key) if isinstance(obj, XBlock) else str(obj),
               action)
         return result
 
@@ -789,7 +789,7 @@ def _has_instructor_access_to_block(user, block, course_key):
 
     block: something that has a location attribute
     """
-    return _has_instructor_access_to_location(user, block.location, course_key)
+    return _has_instructor_access_to_location(user, block.usage_key, course_key)
 
 
 @function_trace('_has_staff_access_to_block')
@@ -799,7 +799,7 @@ def _has_staff_access_to_block(user, block, course_key):
 
     block: something that has a location attribute
     """
-    return _has_staff_access_to_location(user, block.location, course_key)
+    return _has_staff_access_to_location(user, block.usage_key, course_key)
 
 
 def _visible_to_nonstaff_users(block, display_error_to_user=True):
@@ -828,7 +828,7 @@ def _can_access_block_with_milestones(user, block, course_key):
     """
     if milestones_helpers.get_course_content_milestones(
         course_key,
-        str(block.location),
+        str(block.usage_key),
         'requires',
         user.id
     ):

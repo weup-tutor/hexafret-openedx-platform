@@ -162,7 +162,7 @@ def _get_score_from_submissions(submissions_scores, block):
     Returns the score values from the submissions API if found.
     """
     if submissions_scores:
-        submission_value = submissions_scores.get(str(block.location))
+        submission_value = submissions_scores.get(str(block.usage_key))
         if submission_value:
             first_attempted = submission_value['created_at']
             weighted_earned = submission_value['points_earned']
@@ -187,7 +187,7 @@ def _get_score_from_csm(csm_scores, block, weight):
     # attempted. Even though the CSM persistence for this value is now
     # superfluous, for backward compatibility, we continue to use its value for
     # raw_possible, giving it precedence over the one in the grades data model.
-    score = csm_scores.get(block.location)
+    score = csm_scores.get(block.usage_key)
     has_valid_score = score and score.total is not None
     if has_valid_score:
         if score.correct is not None:

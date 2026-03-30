@@ -74,7 +74,7 @@ class TestTaskExecution(ModuleStoreTestCase):
 
         create_exam(
             course_id=str(self.course.id),
-            content_id=str(self.subsection.location),
+            content_id=str(self.subsection.usage_key),
             exam_name='A Proctored Exam',
             time_limit_mins=10,
             is_proctored=True,
@@ -89,7 +89,7 @@ class TestTaskExecution(ModuleStoreTestCase):
         requirements = get_credit_requirements(self.course.id)
         assert len(requirements) == 2
         assert requirements[1]['namespace'] == 'proctored_exam'
-        assert requirements[1]['name'] == str(self.subsection.location)
+        assert requirements[1]['name'] == str(self.subsection.usage_key)
         assert requirements[1]['display_name'] == 'A Proctored Exam'
         assert requirements[1]['criteria'] == {}
 
@@ -186,7 +186,7 @@ class TestTaskExecution(ModuleStoreTestCase):
         subsection = BlockFactory.create(parent=self.section, category='sequential', display_name='Dummy Subsection')
         create_exam(
             course_id=str(self.course.id),
-            content_id=str(subsection.location),
+            content_id=str(subsection.usage_key),
             exam_name='A Proctored Exam',
             time_limit_mins=10,
             is_proctored=True,
@@ -200,7 +200,7 @@ class TestTaskExecution(ModuleStoreTestCase):
         requirements = get_credit_requirements(self.course.id)
         assert len(requirements) == 2
         assert requirements[1]['namespace'] == 'proctored_exam'
-        assert requirements[1]['name'] == str(subsection.location)
+        assert requirements[1]['name'] == str(subsection.usage_key)
         assert requirements[1]['display_name'] == 'A Proctored Exam'
         assert requirements[1]['criteria'] == {}
 

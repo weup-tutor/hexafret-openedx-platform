@@ -218,7 +218,7 @@ class UserPartitionTransformerTestCase(UserPartitionTestMixin, CourseStructureTe
 
         trans_block_structure = get_course_blocks(
             self.user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
         self.assertSetEqual(
@@ -245,7 +245,7 @@ class UserPartitionTransformerTestCase(UserPartitionTestMixin, CourseStructureTe
         ):
             trans_block_structure = get_course_blocks(
                 self.user,
-                self.course.location,
+                self.course.usage_key,
                 self.transformers,
             )
             xblocks_denial_reason = [trans_block_structure.get_xblock_field(b, 'authorization_denial_reason')
@@ -264,7 +264,7 @@ class UserPartitionTransformerTestCase(UserPartitionTestMixin, CourseStructureTe
 
         trans_block_structure = get_course_blocks(
             self.user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
 

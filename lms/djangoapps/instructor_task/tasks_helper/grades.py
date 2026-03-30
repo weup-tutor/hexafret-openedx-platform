@@ -139,7 +139,7 @@ class _CourseGradeReportContext:
                     subsection_index=subsection_index,
                     subsection_name=subsection.display_name,
                 )
-                graded_subsections_map[subsection.location] = header_name
+                graded_subsections_map[subsection.usage_key] = header_name
 
             average_header = f"{assignment_type_name}"
 
@@ -221,7 +221,7 @@ class _ProblemGradeReportContext:
                         subsection_index=subsection_index,
                         subsection_name=subsection_info['subsection_block'].display_name,
                     )
-                    scorable_blocks_map[scorable_block.location] = [header_name + " (Earned)",
+                    scorable_blocks_map[scorable_block.usage_key] = [header_name + " (Earned)",
                                                                     header_name + " (Possible)"]
         return scorable_blocks_map
 

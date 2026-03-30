@@ -135,14 +135,14 @@ class CoursewareContextTestCase(ModuleStoreTestCase):
         super().setUp()
         self.course = CourseFactory.create(org="TestX", number="101", display_name="Test Course")
         self.discussion1 = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id="discussion1",
             discussion_category="Chapter",
             discussion_target="Discussion 1"
         )
         self.discussion2 = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id="discussion2",
             discussion_category="Chapter / Section / Subsection",
@@ -169,7 +169,7 @@ class CoursewareContextTestCase(ModuleStoreTestCase):
             """Asserts that the given thread has the expected set of properties"""
             assert set(thread.keys()) == {'commentable_id', 'courseware_url', 'courseware_title'}
             assert thread.get('courseware_url') == reverse('jump_to', kwargs={'course_id': str(self.course.id),
-                                                                              'location': str(discussion.location)})
+                                                                              'location': str(discussion.usage_key)})
             assert thread.get('courseware_title') == expected_title
 
         assertThreadCorrect(threads[0], self.discussion1, "Chapter / Discussion 1")
@@ -181,7 +181,7 @@ class CoursewareContextTestCase(ModuleStoreTestCase):
         the divider " / " is not rendered on a post or inline discussion topic label.
         """
         discussion = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id="discussion",
             discussion_category="Chapter",
@@ -198,10 +198,10 @@ class CoursewareContextTestCase(ModuleStoreTestCase):
         course = CourseFactory.create()
 
         # Create a discussion xblock.
-        test_discussion = self.store.create_child(self.user.id, course.location, 'discussion', 'test_discussion')
+        test_discussion = self.store.create_child(self.user.id, course.usage_key, 'discussion', 'test_discussion')
 
         # Assert that created discussion xblock is not an orphan.
-        assert test_discussion.location not in self.store.get_orphans(course.id)
+        assert test_discussion.usage_key not in self.store.get_orphans(course.id)
 
         # Assert that there is only one discussion xblock in the course at the moment.
         assert len(get_accessible_discussion_xblocks(course, self.user)) == 1
@@ -229,21 +229,21 @@ class CachedDiscussionIdMapTestCase(ModuleStoreTestCase):
 
         self.course = CourseFactory.create(org='TestX', number='101', display_name='Test Course')
         self.discussion = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='test_discussion_id',
             discussion_category='Chapter',
             discussion_target='Discussion 1'
         )
         self.discussion2 = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='test_discussion_id_2',
             discussion_category='Chapter 2',
             discussion_target='Discussion 2'
         )
         self.private_discussion = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='private_discussion_id',
             discussion_category='Chapter 3',
@@ -252,7 +252,7 @@ class CachedDiscussionIdMapTestCase(ModuleStoreTestCase):
         )
         RequestCache.clear_all_namespaces()  # clear the cache before the last course publish
         self.bad_discussion = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='bad_discussion_id',
             discussion_category=None,
@@ -261,7 +261,7 @@ class CachedDiscussionIdMapTestCase(ModuleStoreTestCase):
 
     def test_cache_returns_correct_key(self):
         usage_key = utils.get_cached_discussion_key(self.course.id, 'test_discussion_id')
-        assert usage_key == self.discussion.location
+        assert usage_key == self.discussion.usage_key
 
     def test_cache_returns_none_if_id_is_not_present(self):
         usage_key = utils.get_cached_discussion_key(self.course.id, 'bogus_id')
@@ -293,9 +293,9 @@ class CachedDiscussionIdMapTestCase(ModuleStoreTestCase):
         )
         discussion1 = metadata[self.discussion.discussion_id]
         discussion2 = metadata[self.discussion2.discussion_id]
-        assert discussion1['location'] == self.discussion.location
+        assert discussion1['location'] == self.discussion.usage_key
         assert discussion1['title'] == 'Chapter / Discussion 1'
-        assert discussion2['location'] == self.discussion2.location
+        assert discussion2['location'] == self.discussion2.usage_key
         assert discussion2['title'] == 'Chapter 2 / Discussion 2'
 
     def test_get_discussion_id_map_from_cache(self):
@@ -379,7 +379,7 @@ class CategoryMapTestCase(CategoryMapTestMixin, ModuleStoreTestCase):
     def create_discussion(self, discussion_category, discussion_target, **kwargs):
         self.discussion_num += 1
         return BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id=f"discussion{self.discussion_num}",
             discussion_category=discussion_category,

@@ -88,7 +88,7 @@ class GradesAccessIntegrationTest(ProblemSubmissionTestMixin, SharedModuleStoreT
         self.submit_question_answer('p2', {'2_1': 'choice_choice_2'})
 
         # check initial subsection grade
-        course_structure = get_course_blocks(self.request.user, self.course.location)
+        course_structure = get_course_blocks(self.request.user, self.course.usage_key)
         subsection_grade_factory = SubsectionGradeFactory(self.request.user, self.course, course_structure)
         grade = subsection_grade_factory.create(self.sequence, read_only=True)
         assert grade.graded_total.earned == 4.0
@@ -96,14 +96,14 @@ class GradesAccessIntegrationTest(ProblemSubmissionTestMixin, SharedModuleStoreT
 
         # set a block in the subsection to be visible to staff only
         with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred):
-            problem_2 = self.store.get_item(self.problem_2.location)
+            problem_2 = self.store.get_item(self.problem_2.usage_key)
             problem_2.visible_to_staff_only = True
             self.store.update_item(problem_2, self.instructor.id)
-            self.store.publish(self.course.location, self.instructor.id)
-        course_structure = get_course_blocks(self.student, self.course.location)
+            self.store.publish(self.course.usage_key, self.instructor.id)
+        course_structure = get_course_blocks(self.student, self.course.usage_key)
 
         # ensure that problem_2 is not accessible for the student
-        assert problem_2.location not in course_structure
+        assert problem_2.usage_key not in course_structure
 
         # make sure we can still get the subsection grade
         subsection_grade_factory = SubsectionGradeFactory(self.student, self.course, course_structure)

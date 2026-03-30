@@ -122,7 +122,7 @@ def topic_name_to_id(course, name):
     course and url_name).
     """
     return "{course}_{run}_{name}".format(
-        course=course.location.course,
+        course=course.usage_key.course,
         run=course.url_name,
         name=name
     )

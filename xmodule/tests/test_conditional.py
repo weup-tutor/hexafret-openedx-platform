@@ -83,7 +83,7 @@ class ConditionalFactory:
             )
         else:
             source_block = Mock(name='source_block')
-            source_block.location = source_location
+            source_block.usage_key = source_location
 
         source_block.visible_to_staff_only = source_visible_to_staff_only
         source_block.runtime = system
@@ -96,7 +96,7 @@ class ConditionalFactory:
         child_block.student_view = child_block._xmodule.student_view  # lint-amnesty, pylint: disable=protected-access
         child_block.runtime = system
         child_block.render = lambda view, context=None: system.render(child_block, view, context)
-        child_block.location = source_location.replace(category='html', name='child')
+        child_block.usage_key = source_location.replace(category='html', name='child')
 
         def visible_to_nonstaff_users(desc):
             """
@@ -107,7 +107,7 @@ class ConditionalFactory:
         def load_item(usage_id, for_parent=None):  # pylint: disable=unused-argument
             """Test-only implementation of load_item that simply returns static xblocks."""
             return {
-                child_block.location: child_block,
+                child_block.usage_key: child_block,
                 source_location: source_block
             }.get(usage_id)
 
@@ -121,7 +121,7 @@ class ConditionalFactory:
             'conditional_attr': 'attempted',
             'conditional_value': 'true',
             'xml_attributes': {'attempted': 'true'},
-            'children': [child_block.location],
+            'children': [child_block.usage_key],
         })
 
         cond_block = ConditionalBlock(
@@ -291,7 +291,7 @@ class ConditionalBlockXmlTest(unittest.TestCase):
             dummy_scope_ids,
         )
 
-        new_run = conditional.location.course_key.run  # lint-amnesty, pylint: disable=unused-variable
+        new_run = conditional.usage_key.course_key.run  # lint-amnesty, pylint: disable=unused-variable
         assert conditional.sources_list[0] == BlockUsageLocator.from_string(conditional.xml_attributes['sources'])\
             .replace(run=dummy_location.course_key.run)
 

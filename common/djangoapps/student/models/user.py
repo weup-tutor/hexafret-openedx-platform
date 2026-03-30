@@ -1183,7 +1183,7 @@ def user_info(email):  # lint-amnesty, pylint: disable=missing-function-docstrin
     print("Username", user.username)
     print("E-mail", user.email)
     print("Name", u_prof.name)
-    print("Location", u_prof.location)
+    print("Location", u_prof.usage_key)
     print("Language", u_prof.language)
     return user, u_prof
 

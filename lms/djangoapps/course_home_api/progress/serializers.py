@@ -49,7 +49,7 @@ class SubsectionScoresSerializer(ReadOnlySerializer):
             }
 
     def get_block_key(self, subsection):
-        return str(subsection.location)
+        return str(subsection.usage_key)
 
     def get_problem_scores(self, subsection):
         """Problem scores for this subsection"""
@@ -72,7 +72,7 @@ class SubsectionScoresSerializer(ReadOnlySerializer):
                 and datetime.now(UTC) > hide_url_date):
             return None
 
-        relative_path = reverse('jump_to', args=[self.context['course_key'], subsection.location])
+        relative_path = reverse('jump_to', args=[self.context['course_key'], subsection.usage_key])
         request = self.context['request']
         return request.build_absolute_uri(relative_path)
 
@@ -81,7 +81,7 @@ class SubsectionScoresSerializer(ReadOnlySerializer):
 
     def get_learner_has_access(self, subsection):
         course_blocks = self.context['course_blocks']
-        return not course_blocks.get_xblock_field(subsection.location, 'contains_gated_content', False)
+        return not course_blocks.get_xblock_field(subsection.usage_key, 'contains_gated_content', False)
 
 
 class SectionScoresSerializer(ReadOnlySerializer):

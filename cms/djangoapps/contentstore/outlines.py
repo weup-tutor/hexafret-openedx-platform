@@ -51,12 +51,12 @@ def _error_for_not_section(not_section):
     """
     return ContentErrorData(
         message=(
-            f'<course> contains a <{not_section.location.block_type}> tag with '
-            f'url_name="{not_section.location.block_id}" and '
+            f'<course> contains a <{not_section.usage_key.block_type}> tag with '
+            f'url_name="{not_section.usage_key.block_id}" and '
             f'display_name="{getattr(not_section, "display_name", "")}". '
             f'Expected <chapter> tag instead.'
         ),
-        usage_key=_remove_version_info(not_section.location),
+        usage_key=_remove_version_info(not_section.usage_key),
     )
 
 
@@ -68,14 +68,14 @@ def _error_for_not_sequence(section, not_sequence):
     """
     return ContentErrorData(
         message=(
-            f'<chapter> with url_name="{section.location.block_id}" and '
+            f'<chapter> with url_name="{section.usage_key.block_id}" and '
             f'display_name="{section.display_name}" contains a '
-            f'<{not_sequence.location.block_type}> tag with '
-            f'url_name="{not_sequence.location.block_id}" and '
+            f'<{not_sequence.usage_key.block_type}> tag with '
+            f'url_name="{not_sequence.usage_key.block_id}" and '
             f'display_name="{getattr(not_sequence, "display_name", "")}". '
             f'Expected a <sequential> tag.'
         ),
-        usage_key=_remove_version_info(not_sequence.location),
+        usage_key=_remove_version_info(not_sequence.usage_key),
     )
 
 
@@ -88,18 +88,18 @@ def _error_for_duplicate_child(section, duplicate_child, original_section):
     """
     return ContentErrorData(
         message=(
-            f'<chapter> with url_name="{section.location.block_id}" and '
+            f'<chapter> with url_name="{section.usage_key.block_id}" and '
             f'display_name="{section.display_name}" contains a '
-            f'<{duplicate_child.location.block_type}> tag with '
-            f'url_name="{duplicate_child.location.block_id}" and '
+            f'<{duplicate_child.usage_key.block_type}> tag with '
+            f'url_name="{duplicate_child.usage_key.block_id}" and '
             f'display_name="{getattr(duplicate_child, "display_name", "")}" '
             f'that is defined in another section with '
-            f'url_name="{original_section.location.block_id}" and '
+            f'url_name="{original_section.usage_key.block_id}" and '
             f'display_name="{original_section.display_name}". Expected a '
             f'unique <sequential> tag instead.'
 
         ),
-        usage_key=_remove_version_info(duplicate_child.location),
+        usage_key=_remove_version_info(duplicate_child.usage_key),
     )
 
 
@@ -234,12 +234,12 @@ def _make_section_data(section, unique_sequences):
     section_errors = []
 
     # First check if it's not a section at all, and short circuit if it isn't.
-    if section.location.block_type != 'chapter':
+    if section.usage_key.block_type != 'chapter':
         section_errors.append(_error_for_not_section(section))
         return (None, section_errors, unique_sequences)
 
     section_user_partition_groups, error = _make_user_partition_groups(
-        section.location, section.group_access
+        section.usage_key, section.group_access
     )
     # Invalid user partition errors aren't fatal. Just log and continue on.
     if error:
@@ -249,21 +249,21 @@ def _make_section_data(section, unique_sequences):
     sequences_data = []
 
     for sequence in section.get_children():
-        if sequence.location.block_type not in valid_sequence_tags:
+        if sequence.usage_key.block_type not in valid_sequence_tags:
             section_errors.append(_error_for_not_sequence(section, sequence))
             continue
         # We need to check if there are duplicate sequences. If there are
         # duplicate sequences the course outline generation will fail. We ignore
         # the duplicated sequences, so they will not be sent to
         # learning_sequences.
-        if sequence.location in unique_sequences:
-            original_section = unique_sequences[sequence.location]
+        if sequence.usage_key in unique_sequences:
+            original_section = unique_sequences[sequence.usage_key]
             section_errors.append(_error_for_duplicate_child(section, sequence, original_section))
             continue
         else:
-            unique_sequences[sequence.location] = section
+            unique_sequences[sequence.usage_key] = section
         seq_user_partition_groups, error = _make_user_partition_groups(
-            sequence.location, sequence.group_access
+            sequence.usage_key, sequence.group_access
         )
         if error:
             section_errors.append(error)
@@ -279,19 +279,19 @@ def _make_section_data(section, unique_sequences):
             # no conflicting value set at the Sequence level.
             if user_partition_id not in seq_user_partition_groups:
                 section_errors.append(
-                    _make_bubbled_up_error(sequence.location, user_partition_id, group_ids)
+                    _make_bubbled_up_error(sequence.usage_key, user_partition_id, group_ids)
                 )
                 seq_user_partition_groups[user_partition_id] = group_ids
             else:
                 section_errors.append(
                     _make_not_bubbled_up_error(
-                        sequence.location, sequence.group_access, user_partition_id, group_ids
+                        sequence.usage_key, sequence.group_access, user_partition_id, group_ids
                     )
                 )
 
         sequences_data.append(
             CourseLearningSequenceData(
-                usage_key=_remove_version_info(sequence.location),
+                usage_key=_remove_version_info(sequence.usage_key),
                 title=sequence.display_name_with_default,
                 inaccessible_after_due=sequence.hide_after_due,
                 exam=ExamData(
@@ -308,7 +308,7 @@ def _make_section_data(section, unique_sequences):
         )
 
     section_data = CourseSectionData(
-        usage_key=_remove_version_info(section.location),
+        usage_key=_remove_version_info(section.usage_key),
         title=section.display_name_with_default,
         sequences=sequences_data,
         visibility=VisibilityData(

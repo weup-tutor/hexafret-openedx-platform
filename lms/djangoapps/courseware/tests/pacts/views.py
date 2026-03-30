@@ -38,12 +38,12 @@ class ProviderState(ModuleStoreIsolationMixin):
         )
 
         section = BlockFactory.create(
-            parent_location=demo_course.location,
+            parent_location=demo_course.usage_key,
             category="chapter",
         )
 
         BlockFactory.create(
-            parent_location=section.location,
+            parent_location=section.usage_key,
             category="sequential",
             display_name="basic_questions",
         )

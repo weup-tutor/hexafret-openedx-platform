@@ -23,9 +23,9 @@ class BaseCourseUpdatesTestCase(SharedModuleStoreTestCase):
                 cls.course = CourseFactory.create()
                 with cls.store.bulk_operations(cls.course.id):
                     # Create a basic course structure
-                    chapter = BlockFactory.create(category='chapter', parent_location=cls.course.location)
-                    section = BlockFactory.create(category='sequential', parent_location=chapter.location)
-                    BlockFactory.create(category='vertical', parent_location=section.location)
+                    chapter = BlockFactory.create(category='chapter', parent_location=cls.course.usage_key)
+                    section = BlockFactory.create(category='sequential', parent_location=chapter.usage_key)
+                    BlockFactory.create(category='vertical', parent_location=section.usage_key)
 
     @classmethod
     def setUpTestData(cls):
@@ -49,7 +49,7 @@ class BaseCourseUpdatesTestCase(SharedModuleStoreTestCase):
         updates_usage_key = get_course_info_usage_key(course, 'updates')
         try:
             course_updates = modulestore().get_item(updates_usage_key)
-            modulestore().delete_item(course_updates.location, user.id)
+            modulestore().delete_item(course_updates.usage_key, user.id)
         except (ItemNotFoundError, ValueError):
             pass
 

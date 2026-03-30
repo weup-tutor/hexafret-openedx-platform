@@ -43,7 +43,7 @@ class SubsectionGradeFactory:
         grade currently exists.
         """
         self._log_event(
-            log.debug, f"create, read_only: {read_only}, subsection: {subsection.location}", subsection,
+            log.debug, f"create, read_only: {read_only}, subsection: {subsection.usage_key}", subsection,
         )
 
         subsection_grade = self._get_bulk_cached_grade(subsection)
@@ -55,10 +55,10 @@ class SubsectionGradeFactory:
                     subsection, self.course_data.structure, self._submissions_scores, self._csm_scores,
                 )
                 if read_only:
-                    self._unsaved_subsection_grades[subsection_grade.location] = subsection_grade
+                    self._unsaved_subsection_grades[subsection_grade.usage_key] = subsection_grade
                 else:
                     grade_model = subsection_grade.update_or_create_model(self.student)
-                    self._update_saved_subsection_grade(subsection.location, grade_model)
+                    self._update_saved_subsection_grade(subsection.usage_key, grade_model)
         return subsection_grade
 
     def bulk_create_unsaved(self):
@@ -74,7 +74,7 @@ class SubsectionGradeFactory:
         """
         Updates the SubsectionGrade object for the student and subsection.
         """
-        self._log_event(log.debug, f"update, subsection: {subsection.location}", subsection)
+        self._log_event(log.debug, f"update, subsection: {subsection.usage_key}", subsection)
 
         calculated_grade = CreateSubsectionGrade(
             subsection, self.course_data.structure, self._submissions_scores, self._csm_scores,
@@ -83,7 +83,7 @@ class SubsectionGradeFactory:
         if persist_grade:
             if only_if_higher:
                 try:
-                    grade_model = PersistentSubsectionGrade.read_grade(self.student.id, subsection.location)
+                    grade_model = PersistentSubsectionGrade.read_grade(self.student.id, subsection.usage_key)
                 except PersistentSubsectionGrade.DoesNotExist:
                     pass
                 else:
@@ -102,14 +102,14 @@ class SubsectionGradeFactory:
                 score_deleted,
                 force_update_subsections
             )
-            self._update_saved_subsection_grade(subsection.location, grade_model)
+            self._update_saved_subsection_grade(subsection.usage_key, grade_model)
 
             if settings.FEATURES.get('ENABLE_COURSE_ASSESSMENT_GRADE_CHANGE_SIGNAL'):
                 COURSE_ASSESSMENT_GRADE_CHANGED.send(
                     sender=self,
                     course_id=self.course_data.course_key,
                     user=self.student,
-                    subsection_id=calculated_grade.location,
+                    subsection_id=calculated_grade.usage_key,
                     subsection_grade=calculated_grade.graded_total.earned
                 )
 
@@ -141,7 +141,7 @@ class SubsectionGradeFactory:
         Returns None if not found.
         """
         saved_subsection_grades = self._get_bulk_cached_subsection_grades()
-        grade = saved_subsection_grades.get(subsection.location)
+        grade = saved_subsection_grades.get(subsection.usage_key)
         if grade:
             return ReadSubsectionGrade(subsection, grade, self)
 

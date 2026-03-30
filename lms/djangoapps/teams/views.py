@@ -906,7 +906,7 @@ class TeamsAssignmentsView(GenericAPIView):
         # Serialize info for display
         assignments = [{
             'display_name': self._display_name_for_ora_block(block),
-            'location': self._jump_location_for_block(course_id, block.location)
+            'location': self._jump_location_for_block(course_id, block.usage_key)
         } for block in teamset_ora_blocks]
 
         return Response(assignments)

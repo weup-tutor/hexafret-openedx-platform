@@ -334,7 +334,7 @@ class CourseGradingView(BaseCourseView):
                 'assignment_type': subsection.format,
                 'graded': subsection.graded,
                 'short_label': short_label,
-                'module_id': str(subsection.location),
+                'module_id': str(subsection.usage_key),
                 'display_name': subsection.display_name,
             })
         return subsections
@@ -450,7 +450,7 @@ class GradebookView(GradeViewMixin, PaginatedAPIView):
         default_labeler = get_default_short_labeler(course)
 
         for subsection in graded_subsections:
-            subsection_grade = course_grade.subsection_grade(subsection.location)
+            subsection_grade = course_grade.subsection_grade(subsection.usage_key)
             short_label = default_labeler(subsection_grade.format)
 
             attempted = False
@@ -479,7 +479,7 @@ class GradebookView(GradeViewMixin, PaginatedAPIView):
                 'attempted': attempted,
                 'category': subsection_grade.format,
                 'label': short_label,
-                'module_id': str(subsection_grade.location),
+                'module_id': str(subsection_grade.usage_key),
                 'percent': subsection_grade.percent_graded,
                 'score_earned': score_earned,
                 'score_possible': score_possible,

@@ -38,7 +38,7 @@ class CourseCommonSerializerV2(serializers.Serializer):
 
     def get_lms_link(self, obj):
         """Get LMS link for course."""
-        return get_lms_link_for_item(obj.location)
+        return get_lms_link_for_item(obj.usage_key)
 
     def get_cms_link(self, obj):
         """Get CMS link for course."""

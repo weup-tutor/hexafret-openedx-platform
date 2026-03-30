@@ -62,4 +62,4 @@ class Command(BaseCommand):
             tarball.file.seek(0)
             with open(target, 'wb') as f:
                 shutil.copyfileobj(tarball.file, f)
-            print(f'Library "{library.location.library_key}" exported to "{target}"')
+            print(f'Library "{library.usage_key.library_key}" exported to "{target}"')

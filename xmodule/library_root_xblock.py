@@ -89,7 +89,7 @@ class LibraryRoot(XBlock):
             child = self.runtime.get_block(child_key)
             child_view_name = StudioEditableBlock.get_preview_view_name(child)
 
-            if str(child.location) == force_render:
+            if str(child.usage_key) == force_render:
                 child_context['show_preview'] = True
 
             if child_context['show_preview']:
@@ -99,7 +99,7 @@ class LibraryRoot(XBlock):
             fragment.add_fragment_resources(rendered_child)
 
             contents.append({
-                'id': str(child.location),
+                'id': str(child.usage_key),
                 'content': rendered_child.content,
             })
 

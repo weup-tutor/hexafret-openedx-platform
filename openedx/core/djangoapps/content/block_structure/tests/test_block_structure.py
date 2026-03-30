@@ -125,8 +125,8 @@ class TestBlockStructureData(TestCase, ChildrenMapTestMixin):
         # add each block
         block_structure = BlockStructureModulestoreData(root_block_usage_key=0)
         for block in blocks:
-            block_structure._add_xblock(block.location, block)
-            block_structure._get_or_create_block(block.location)
+            block_structure._add_xblock(block.usage_key, block)
+            block_structure._get_or_create_block(block.usage_key)
 
         # request fields
         fields = ["field1", "field2", "field3"]
@@ -134,7 +134,7 @@ class TestBlockStructureData(TestCase, ChildrenMapTestMixin):
 
         # verify fields have not been collected yet
         for block in blocks:
-            bs_block = block_structure[block.location]
+            bs_block = block_structure[block.usage_key]
             for field in fields:
                 assert getattr(bs_block, field, None) is None
 
@@ -143,7 +143,7 @@ class TestBlockStructureData(TestCase, ChildrenMapTestMixin):
 
         # verify values of collected fields
         for block in blocks:
-            bs_block = block_structure[block.location]
+            bs_block = block_structure[block.usage_key]
             for field in fields:
                 assert getattr(bs_block, field, None) == block.field_map.get(field)
 
@@ -159,8 +159,8 @@ class TestBlockStructureData(TestCase, ChildrenMapTestMixin):
 
         # add each block
         block_structure = BlockStructureModulestoreData(root_block_usage_key=0)
-        block_structure._add_xblock(block.location, block)
-        block_structure._get_or_create_block(block.location)
+        block_structure._add_xblock(block.usage_key, block)
+        block_structure._get_or_create_block(block.usage_key)
 
         fields = list(attribute.keys())
         block_structure.request_xblock_fields(*fields)
@@ -169,16 +169,16 @@ class TestBlockStructureData(TestCase, ChildrenMapTestMixin):
         block_structure._collect_requested_xblock_fields()
 
         # verify values of collected fields
-        bs_block = block_structure[block.location]
+        bs_block = block_structure[block.usage_key]
         for field in fields:
             assert getattr(bs_block, field, None) == block.field_map.get(field)
 
         block_structure.override_xblock_field(
-            block.location,
+            block.usage_key,
             "due",
             override_due_date
         )
-        assert block_structure.get_xblock_field(block.location, 'due', None) == override_due_date
+        assert block_structure.get_xblock_field(block.usage_key, 'due', None) == override_due_date
 
     @ddt.data(
         *itertools.product(

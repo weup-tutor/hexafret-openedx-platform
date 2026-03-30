@@ -321,6 +321,22 @@ class XModuleMixin(XModuleFields, XBlock):  # pylint: disable=too-many-public-me
         return self.context_key
 
     @property
+    def usage_key(self):
+        """
+        Override :class:`XBlock` to expose the same getter as the base class and to allow
+        setting the usage id (same as legacy ``location`` assignment).
+        """
+        return self.scope_ids.usage_id
+
+    @usage_key.setter
+    def usage_key(self, value):
+        assert isinstance(value, UsageKey)
+        self.scope_ids = self.scope_ids._replace(
+            def_id=value,  # Note: assigning a UsageKey as def_id is OK in old mongo / import system but wrong in split
+            usage_id=value,
+        )
+
+    @property
     def category(self):
         """
         Return the block type, formerly known as "category".
@@ -340,11 +356,7 @@ class XModuleMixin(XModuleFields, XBlock):  # pylint: disable=too-many-public-me
 
     @location.setter
     def location(self, value):
-        assert isinstance(value, UsageKey)
-        self.scope_ids = self.scope_ids._replace(
-            def_id=value,  # Note: assigning a UsageKey as def_id is OK in old mongo / import system but wrong in split
-            usage_id=value,
-        )
+        self.usage_key = value
 
     @property
     def url_name(self):
@@ -420,7 +432,7 @@ class XModuleMixin(XModuleFields, XBlock):  # pylint: disable=too-many-public-me
                 try:
                     result[field.name] = field.read_json(self)
                 except TypeError as exception:
-                    exception_message = f"{exception}, Block-location:{self.location}, Field-name:{field.name}"
+                    exception_message = f"{exception}, Block-location:{self.usage_key}, Field-name:{field.name}"
                     raise TypeError(exception_message) from exception
         return result
 
@@ -1023,7 +1035,7 @@ class _MetricsMixin:
                 duration,
                 block.__class__.__name__,
                 view_name,
-                getattr(block, "location", ""),
+                getattr(block, "usage_key", ""),
             )
 
     def handle(self, block, handler_name, request, suffix=""):
@@ -1039,7 +1051,7 @@ class _MetricsMixin:
                 duration,
                 block.__class__.__name__,
                 handler_name,
-                getattr(block, "location", ""),
+                getattr(block, "usage_key", ""),
             )
 
 

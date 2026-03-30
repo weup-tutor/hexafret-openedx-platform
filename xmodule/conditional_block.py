@@ -180,7 +180,7 @@ class ConditionalBlock(
                     # for old-style course locators. However, this is the implementation of
                     # CourseLocator.make_usage_key_from_deprecated_string, which was previously
                     # being called in this location.
-                    BlockUsageLocator.from_string(item).replace(run=self.location.course_key.run)
+                    BlockUsageLocator.from_string(item).replace(run=self.usage_key.course_key.run)
                     for item in ConditionalBlock.parse_sources(self.xml_attributes)
                 ]
 
@@ -222,9 +222,9 @@ class ConditionalBlock(
         return fragment
 
     def get_html(self):
-        required_html_ids = [block.location.html_id() for block in self.get_required_blocks]
+        required_html_ids = [block.usage_key.html_id() for block in self.get_required_blocks]
         return self.runtime.service(self, 'mako').render_lms_template('conditional_ajax.html', {
-            'element_id': self.location.html_id(),
+            'element_id': self.usage_key.html_id(),
             'ajax_url': self.ajax_url,
             'depends': ';'.join(required_html_ids)
         })
@@ -235,7 +235,7 @@ class ConditionalBlock(
         """
         fragment = Fragment()
         root_xblock = context.get('root_xblock')
-        is_root = root_xblock and root_xblock.location == self.location
+        is_root = root_xblock and root_xblock.usage_key == self.usage_key
         if is_root:
             # User has clicked the "View" link. Show a preview of all possible children:
             self.render_children(context, fragment, can_reorder=True, can_add=True)
@@ -350,7 +350,7 @@ class ConditionalBlock(
     def definition_to_xml(self, resource_fs):
         xml_object = etree.Element(self._tag_name)
         for child in self.get_children():
-            if child.location not in self.show_tag_list:
+            if child.usage_key not in self.show_tag_list:
                 self.runtime.add_block_as_child_node(child, xml_object)
 
         if self.show_tag_list:
@@ -369,7 +369,7 @@ class ConditionalBlock(
     def validate(self):
         validation = super().validate()
         if not self.sources_list:
-            conditional_validation = StudioValidation(self.location)
+            conditional_validation = StudioValidation(self.usage_key)
             conditional_validation.add(
                 StudioValidationMessage(
                     StudioValidationMessage.NOT_CONFIGURED,

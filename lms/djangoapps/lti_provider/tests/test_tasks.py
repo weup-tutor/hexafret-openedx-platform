@@ -98,7 +98,7 @@ class SendCompositeOutcomeTest(BaseOutcomeTest):
     def setUp(self):
         super().setUp()
         self.block = MagicMock()
-        self.block.location = BlockUsageLocator(
+        self.block.usage_key = BlockUsageLocator(
             course_key=self.course_key,
             block_type='problem',
             block_id='problem',

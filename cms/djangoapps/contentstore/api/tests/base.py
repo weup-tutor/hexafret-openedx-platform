@@ -43,44 +43,44 @@ class BaseCourseViewTest(SharedModuleStoreTestCase, APITestCase):
         cls.store.update_item(course, cls.staff.id)
 
         cls.section = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="chapter",
         )
         cls.subsection1 = BlockFactory.create(
-            parent_location=cls.section.location,
+            parent_location=cls.section.usage_key,
             category="sequential",
         )
         unit1 = BlockFactory.create(
-            parent_location=cls.subsection1.location,
+            parent_location=cls.subsection1.usage_key,
             category="vertical",
         )
         BlockFactory.create(
-            parent_location=unit1.location,
+            parent_location=unit1.usage_key,
             category="video",
         )
         BlockFactory.create(
-            parent_location=unit1.location,
+            parent_location=unit1.usage_key,
             category="problem",
         )
 
         cls.subsection2 = BlockFactory.create(
-            parent_location=cls.section.location,
+            parent_location=cls.section.usage_key,
             category="sequential",
         )
         unit2 = BlockFactory.create(
-            parent_location=cls.subsection2.location,
+            parent_location=cls.subsection2.usage_key,
             category="vertical",
         )
         unit3 = BlockFactory.create(
-            parent_location=cls.subsection2.location,
+            parent_location=cls.subsection2.usage_key,
             category="vertical",
         )
         BlockFactory.create(
-            parent_location=unit3.location,
+            parent_location=unit3.usage_key,
             category="video",
         )
         BlockFactory.create(
-            parent_location=unit3.location,
+            parent_location=unit3.usage_key,
             category="video",
         )
 

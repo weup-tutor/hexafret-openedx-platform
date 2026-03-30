@@ -234,14 +234,14 @@ class CommonMixedModuleStoreSetup(CourseComparisonTest, OpenEdxEventsTestMixin):
         with self.store.bulk_operations(course_key):
             self.course = self.store.create_course(course_key.org, course_key.course, course_key.run, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
             if isinstance(self.course.id, CourseLocator):
-                self.course_locations[self.MONGO_COURSEID] = self.course.location
+                self.course_locations[self.MONGO_COURSEID] = self.course.usage_key
             else:
                 assert self.course.id == course_key
 
             # create chapter
-            chapter = self.store.create_child(self.user_id, self.course.location, 'chapter',
+            chapter = self.store.create_child(self.user_id, self.course.usage_key, 'chapter',
                                               block_id='Overview', asides=asides)
-            self.writable_chapter_location = chapter.location
+            self.writable_chapter_location = chapter.usage_key
 
     def _create_block_hierarchy(self):
         """
@@ -295,13 +295,13 @@ class CommonMixedModuleStoreSetup(CourseComparisonTest, OpenEdxEventsTestMixin):
             recursive function that creates the given block and its descendants
             """
             block = self.store.create_child(
-                self.user_id, parent.location,
+                self.user_id, parent.usage_key,
                 block_info.category, block_id=block_info.display_name,
                 fields={'display_name': block_info.display_name},
             )
             for tree in block_info.sub_tree:
                 create_sub_tree(block, tree)
-            setattr(self, block_info.field_name, block.location)
+            setattr(self, block_info.field_name, block.usage_key)
 
         with self.store.bulk_operations(self.course.id):
             for tree in trees:
@@ -526,7 +526,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             assert block.course_version == course_version
             # ensure that when the block is retrieved from the runtime cache,
             # the course version is still present
-            cached_block = course.runtime.get_block(block.location)
+            cached_block = course.runtime.get_block(block.usage_key)
             assert cached_block.course_version == block.course_version
 
     @ddt.data((ModuleStoreEnum.Type.split, 2, False))
@@ -556,9 +556,9 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
 
         items = self.store.get_items(course_key)
         # Check items found are either course or about type
-        assert {'course', 'about'}.issubset({item.location.block_type for item in items})  # pylint: disable=line-too-long
+        assert {'course', 'about'}.issubset({item.usage_key.block_type for item in items})  # pylint: disable=line-too-long
         # Assert that about is a detached category found in get_items
-        assert [item.location.block_type for item in items if item.location.block_type == 'about'][0]\
+        assert [item.usage_key.block_type for item in items if item.usage_key.block_type == 'about'][0]\
             in DETACHED_XBLOCK_TYPES
         assert len(items) == 2
 
@@ -577,16 +577,16 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
 
         # Check now `get_items` retrieves an extra item added above which is an orphan.
         items = self.store.get_items(course_key)
-        assert orphan in [item.location for item in items]
+        assert orphan in [item.usage_key for item in items]
         assert len(items) == 3
 
         # Check now `get_items` with `include_orphans` kwarg does not retrieves an orphan block.
         items_in_tree = self.store.get_items(course_key, include_orphans=False)
 
         # Check that course and about blocks are found in get_items
-        assert {'course', 'about'}.issubset({item.location.block_type for item in items_in_tree})
+        assert {'course', 'about'}.issubset({item.usage_key.block_type for item in items_in_tree})
         # Check orphan is found or not - this is based on mongo/split modulestore. It should be found in mongo.
-        assert (orphan in [item.location for item in items_in_tree]) == orphan_in_items
+        assert (orphan in [item.usage_key for item in items_in_tree]) == orphan_in_items
         assert len(items_in_tree) == expected_items_in_tree
 
     # split:
@@ -653,18 +653,18 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         assert self.store.has_changes(xblock)
 
         # Publish and verify that there are no unpublished changes
-        newXBlock = self.store.publish(xblock.location, self.user_id)
+        newXBlock = self.store.publish(xblock.usage_key, self.user_id)
         assert not self.store.has_changes(newXBlock)
 
         # Change the component, then check that there now are changes
-        component = self.store.get_item(xblock.location)
+        component = self.store.get_item(xblock.usage_key)
         component.display_name = 'Changed Display Name'
 
         component = self.store.update_item(component, self.user_id)
         assert self.store.has_changes(component)
 
         # Publish and verify again
-        component = self.store.publish(component.location, self.user_id)
+        component = self.store.publish(component.usage_key, self.user_id)
         assert not self.store.has_changes(component)
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -688,15 +688,15 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         assert self.store.has_changes(xblock)
 
         # Publish and verify that there are no unpublished changes
-        component = self.store.publish(xblock.location, self.user_id)
+        component = self.store.publish(xblock.usage_key, self.user_id)
         assert not self.store.has_changes(component)
 
-        self.store.revert_to_published(component.location, self.user_id)
-        component = self.store.get_item(component.location)
+        self.store.revert_to_published(component.usage_key, self.user_id)
+        component = self.store.get_item(component.usage_key)
         assert not self.store.has_changes(component)
 
         # Publish and verify again
-        component = self.store.publish(component.location, self.user_id)
+        component = self.store.publish(component.usage_key, self.user_id)
         assert not self.store.has_changes(component)
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -720,16 +720,16 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         assert self.store.has_changes(xblock)
 
         # Publish and verify that there are no unpublished changes
-        component = self.store.publish(xblock.location, self.user_id)
+        component = self.store.publish(xblock.usage_key, self.user_id)
         assert not self.store.has_changes(component)
 
         # Discard changes and verify that there are no changes
-        self.store.revert_to_published(component.location, self.user_id)
-        component = self.store.get_item(component.location)
+        self.store.revert_to_published(component.usage_key, self.user_id)
+        component = self.store.get_item(component.usage_key)
         assert not self.store.has_changes(component)
 
         # Change the component, then check that there now are changes
-        component = self.store.get_item(component.location)
+        component = self.store.get_item(component.usage_key)
         component.display_name = 'Changed Display Name'
         self.store.update_item(component, self.user_id)
 
@@ -755,29 +755,29 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         )
         component = self.store.create_child(
             self.user_id,
-            vertical.location,
+            vertical.usage_key,
             'html',
             block_id='html_component'
         )
 
         # publish vertical changes
-        self.store.publish(vertical.location, self.user_id)
-        assert not self._has_changes(vertical.location)
+        self.store.publish(vertical.usage_key, self.user_id)
+        assert not self._has_changes(vertical.usage_key)
 
         # Change a component, then check that there now are changes
-        component = self.store.get_item(component.location)
+        component = self.store.get_item(component.usage_key)
         component.display_name = 'Changed Display Name'
         self.store.update_item(component, self.user_id)
-        assert self._has_changes(vertical.location)
+        assert self._has_changes(vertical.usage_key)
 
         # Discard changes and verify that there are no changes
-        self.store.revert_to_published(vertical.location, self.user_id)
-        assert not self._has_changes(vertical.location)
+        self.store.revert_to_published(vertical.usage_key, self.user_id)
+        assert not self._has_changes(vertical.usage_key)
 
         # Delete the component and verify that the unit has changes
-        self.store.delete_item(component.location, self.user_id)
-        vertical = self.store.get_item(vertical.location)
-        assert self._has_changes(vertical.location)
+        self.store.delete_item(component.usage_key, self.user_id)
+        vertical = self.store.get_item(vertical.usage_key)
+        assert self._has_changes(vertical.usage_key)
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_publish_automatically_after_delete_unit(self, default_ms):
@@ -789,16 +789,16 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         test_course = self.store.create_course('test_org', 'test_course', 'test_run', self.user_id)
 
         # create sequential and vertical to test against
-        sequential = self.store.create_child(self.user_id, test_course.location, 'sequential', 'test_sequential')
-        vertical = self.store.create_child(self.user_id, sequential.location, 'vertical', 'test_vertical')
+        sequential = self.store.create_child(self.user_id, test_course.usage_key, 'sequential', 'test_sequential')
+        vertical = self.store.create_child(self.user_id, sequential.usage_key, 'vertical', 'test_vertical')
 
         # publish sequential changes
-        self.store.publish(sequential.location, self.user_id)
-        assert not self._has_changes(sequential.location)
+        self.store.publish(sequential.usage_key, self.user_id)
+        assert not self._has_changes(sequential.usage_key)
 
         # delete vertical and check sequential has no changes
-        self.store.delete_item(vertical.location, self.user_id)
-        assert not self._has_changes(sequential.location)
+        self.store.delete_item(vertical.usage_key, self.user_id)
+        assert not self._has_changes(sequential.usage_key)
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_course_create_event(self, default_ms):
@@ -839,14 +839,14 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         test_course = self.store.create_course('test_org', 'test_course', 'test_run', self.user_id)
 
         # create sequential to test against
-        sequential = self.store.create_child(self.user_id, test_course.location, 'sequential', 'test_sequential')
+        sequential = self.store.create_child(self.user_id, test_course.usage_key, 'sequential', 'test_sequential')
 
         event_receiver.assert_called()
 
         assert event_receiver.call_args.kwargs['signal'] == XBLOCK_CREATED
-        assert event_receiver.call_args.kwargs['xblock_info'].usage_key == sequential.location
-        assert event_receiver.call_args.kwargs['xblock_info'].block_type == sequential.location.block_type
-        assert event_receiver.call_args.kwargs['xblock_info'].version.for_branch(None) == sequential.location
+        assert event_receiver.call_args.kwargs['xblock_info'].usage_key == sequential.usage_key
+        assert event_receiver.call_args.kwargs['xblock_info'].block_type == sequential.usage_key.block_type
+        assert event_receiver.call_args.kwargs['xblock_info'].version.for_branch(None) == sequential.usage_key
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_xblock_update_event(self, default_ms):
@@ -861,7 +861,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         test_course = self.store.create_course('test_org', 'test_course', 'test_run', self.user_id)
 
         # create sequential to test against
-        sequential = self.store.create_child(self.user_id, test_course.location, 'sequential', 'test_sequential')
+        sequential = self.store.create_child(self.user_id, test_course.usage_key, 'sequential', 'test_sequential')
 
         # Change the xblock
         sequential.display_name = 'Updated Display Name'
@@ -870,9 +870,9 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         event_receiver.assert_called()
 
         assert event_receiver.call_args.kwargs['signal'] == XBLOCK_UPDATED
-        assert event_receiver.call_args.kwargs['xblock_info'].usage_key == sequential.location
-        assert event_receiver.call_args.kwargs['xblock_info'].block_type == sequential.location.block_type
-        assert event_receiver.call_args.kwargs['xblock_info'].version.for_branch(None) == sequential.location
+        assert event_receiver.call_args.kwargs['xblock_info'].usage_key == sequential.usage_key
+        assert event_receiver.call_args.kwargs['xblock_info'].block_type == sequential.usage_key.block_type
+        assert event_receiver.call_args.kwargs['xblock_info'].version.for_branch(None) == sequential.usage_key
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_xblock_publish_event(self, default_ms):
@@ -886,11 +886,11 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         test_course = self.store.create_course('test_org', 'test_course', 'test_run', self.user_id)
 
         # create sequential and vertical to test against
-        sequential = self.store.create_child(self.user_id, test_course.location, 'sequential', 'test_sequential')
-        self.store.create_child(self.user_id, sequential.location, 'vertical', 'test_vertical')
+        sequential = self.store.create_child(self.user_id, test_course.usage_key, 'sequential', 'test_sequential')
+        self.store.create_child(self.user_id, sequential.usage_key, 'vertical', 'test_vertical')
 
         # publish sequential changes
-        self.store.publish(sequential.location, self.user_id)
+        self.store.publish(sequential.usage_key, self.user_id)
 
         event_receiver.assert_called()
         assert_dict_contains_subset(
@@ -899,8 +899,8 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
                 "signal": XBLOCK_PUBLISHED,
                 "sender": None,
                 "xblock_info": XBlockData(
-                    usage_key=sequential.location,
-                    block_type=sequential.location.block_type,
+                    usage_key=sequential.usage_key,
+                    block_type=sequential.usage_key.block_type,
                 ),
             },
             event_receiver.call_args.kwargs,
@@ -918,14 +918,14 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         test_course = self.store.create_course('test_org', 'test_course', 'test_run', self.user_id)
 
         # create sequential and vertical to test against
-        sequential = self.store.create_child(self.user_id, test_course.location, 'sequential', 'test_sequential')
-        vertical = self.store.create_child(self.user_id, sequential.location, 'vertical', 'test_vertical')
+        sequential = self.store.create_child(self.user_id, test_course.usage_key, 'sequential', 'test_sequential')
+        vertical = self.store.create_child(self.user_id, sequential.usage_key, 'vertical', 'test_vertical')
 
         # publish sequential changes
-        self.store.publish(sequential.location, self.user_id)
+        self.store.publish(sequential.usage_key, self.user_id)
 
         # delete vertical
-        self.store.delete_item(vertical.location, self.user_id)
+        self.store.delete_item(vertical.usage_key, self.user_id)
 
         event_receiver.assert_called()
         assert_dict_contains_subset(
@@ -934,8 +934,8 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
                 "signal": XBLOCK_DELETED,
                 "sender": None,
                 "xblock_info": XBlockData(
-                    usage_key=vertical.location,
-                    block_type=vertical.location.block_type,
+                    usage_key=vertical.usage_key,
+                    block_type=vertical.usage_key.block_type,
                 ),
             },
             event_receiver.call_args.kwargs,
@@ -1078,23 +1078,23 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         )
         child = self.store.create_child(
             self.user_id,
-            parent.location,
+            parent.usage_key,
             'html',
             block_id='child',
         )
-        self.store.publish(parent.location, self.user_id)
+        self.store.publish(parent.usage_key, self.user_id)
 
         # Verify that there are no changes
-        assert not self._has_changes(parent.location)
-        assert not self._has_changes(child.location)
+        assert not self._has_changes(parent.usage_key)
+        assert not self._has_changes(child.usage_key)
 
         # Change the child
         child.display_name = 'Changed Display Name'
         self.store.update_item(child, user_id=self.user_id)
 
         # Verify that both parent and child have changes
-        assert self._has_changes(parent.location)
-        assert self._has_changes(child.location)
+        assert self._has_changes(parent.usage_key)
+        assert self._has_changes(child.usage_key)
 
     @ddt.data(*itertools.product(
         (ModuleStoreEnum.Type.split,),
@@ -1165,17 +1165,17 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         )
         private_leaf = self.store.create_child(
             # don't use course_location as it may not be the repr
-            self.user_id, private_vert.location, 'html', block_id='private_leaf'
+            self.user_id, private_vert.usage_key, 'html', block_id='private_leaf'
         )
 
         # verify pre delete state (just to verify that the test is valid)
-        if hasattr(private_vert.location, 'version_guid'):
+        if hasattr(private_vert.usage_key, 'version_guid'):
             # change to the HEAD version
-            vert_loc = private_vert.location.for_version(private_leaf.location.version_guid)
+            vert_loc = private_vert.usage_key.for_version(private_leaf.usage_key.version_guid)
         else:
-            vert_loc = private_vert.location
+            vert_loc = private_vert.usage_key
         assert self.store.has_item(vert_loc)
-        assert self.store.has_item(private_leaf.location)
+        assert self.store.has_item(private_leaf.usage_key)
         course = self.store.get_course(self.course_locations[self.MONGO_COURSEID].course_key, 0)
         assert vert_loc in course.children
 
@@ -1183,13 +1183,13 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         with check_mongo_calls(max_find, max_send), self.assertNumQueries(num_mysql):
             self.store.delete_item(vert_loc, self.user_id)
         course = self.store.get_course(self.course_locations[self.MONGO_COURSEID].course_key, 0)
-        if hasattr(private_vert.location, 'version_guid'):
+        if hasattr(private_vert.usage_key, 'version_guid'):
             # change to the HEAD version
-            vert_loc = private_vert.location.for_version(course.location.version_guid)
-            leaf_loc = private_leaf.location.for_version(course.location.version_guid)
+            vert_loc = private_vert.usage_key.for_version(course.usage_key.version_guid)
+            leaf_loc = private_leaf.usage_key.for_version(course.usage_key.version_guid)
         else:
-            vert_loc = private_vert.location
-            leaf_loc = private_leaf.location
+            vert_loc = private_vert.usage_key
+            leaf_loc = private_leaf.usage_key
         assert not self.store.has_item(vert_loc)
         assert not self.store.has_item(leaf_loc)
         assert vert_loc not in course.children
@@ -1214,23 +1214,23 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             self.user_id, self.course_locations[self.MONGO_COURSEID], 'vertical', block_id='publish'
         )
         private_leaf = self.store.create_child(
-            self.user_id, private_vert.location, 'html', block_id='bug_leaf'
+            self.user_id, private_vert.usage_key, 'html', block_id='bug_leaf'
         )
 
         # verify that an error is raised when the revision is not valid
         with pytest.raises(UnsupportedRevisionError):
             self.store.delete_item(
-                private_leaf.location,
+                private_leaf.usage_key,
                 self.user_id,
                 revision=ModuleStoreEnum.RevisionOption.draft_preferred
             )
 
-        self.store.publish(private_vert.location, self.user_id)
+        self.store.publish(private_vert.usage_key, self.user_id)
         private_leaf.display_name = 'change me'
         private_leaf = self.store.update_item(private_leaf, self.user_id)
         # test succeeds if delete succeeds w/o error
         with check_mongo_calls(max_find, max_send), self.assertNumQueries(num_mysql):
-            self.store.delete_item(private_leaf.location, self.user_id)
+            self.store.delete_item(private_leaf.usage_key, self.user_id)
 
     # Split:
     #   mysql: 3 selects on SplitModulestoreCourseIndex - 1 to get all courses, 2 to get specific course (this query is
@@ -1244,7 +1244,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # we should have one course across all stores
         with check_mongo_calls(max_find, max_send), self.assertNumQueries(num_mysql):
             courses = self.store.get_courses()
-            course_ids = [course.location for course in courses]
+            course_ids = [course.usage_key for course in courses]
             assert len(courses) == 1, f'Not one course: {course_ids}'
             assert self.course_locations[self.MONGO_COURSEID] in course_ids
 
@@ -1267,7 +1267,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # create a static tab of the course
         self.store.create_child(
             self.user_id,
-            self.course.location,
+            self.course.usage_key,
             'static_tab'
         )
 
@@ -1298,16 +1298,16 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self.initdb(default_ms)
         with self.store.default_store(ModuleStoreEnum.Type.split):  # The CMS also wraps create_library like this
             library = self.store.create_library("org", "lib", self.user_id, {"display_name": "Test Library"})
-        library_key = library.location.library_key
+        library_key = library.usage_key.library_key
         assert isinstance(library_key, LibraryLocator)
         # Now load with get_library and make sure it works:
         library = self.store.get_library(library_key)
-        assert library.location.library_key == library_key
+        assert library.usage_key.library_key == library_key
 
         # Clear the mappings so we can test get_library code path without mapping set:
         self.store.mappings.clear()
         library = self.store.get_library(library_key)
-        assert library.location.library_key == library_key
+        assert library.usage_key.library_key == library_key
 
     # notice this doesn't test getting a public item via draft_preferred which draft would have 2 hits (split
     # still only 2)
@@ -1348,7 +1348,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             old_parent = self.store.get_item(old_parent_location)
             expected_parent = self.store.get_item(expected_parent_location)
 
-            assert expected_parent_location == source_item.get_parent().location
+            assert expected_parent_location == source_item.get_parent().usage_key
 
             # If an item is reverted, it means it's actual parent was the one that is the current parent now
             # i.e expected_parent_location otherwise old_parent_location.
@@ -1356,9 +1356,9 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
 
             # Check parent locations wrt branches
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred):
-                assert expected_parent_location == self.store.get_item(item_location).get_parent().location
+                assert expected_parent_location == self.store.get_item(item_location).get_parent().usage_key
             with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-                assert published_parent_location == self.store.get_item(item_location).get_parent().location
+                assert published_parent_location == self.store.get_item(item_location).get_parent().usage_key
 
             # Make location specific to published branch for verify_get_parent_locations_results call.
             published_parent_location = published_parent_location.for_branch(ModuleStoreEnum.BranchName.published)
@@ -1387,7 +1387,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self._create_block_hierarchy()
 
         # Publish the course.
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         # Move child problem_x1a_1 to vertical_y1a.
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
@@ -1414,7 +1414,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self._create_block_hierarchy()
 
         # Publish the course
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         # Move child problem_x1a_1 to vertical_y1a.
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
@@ -1451,7 +1451,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self._create_block_hierarchy()
 
         # Publish the course
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         # Move child problem_x1a_1 to vertical_y1a.
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
@@ -1492,7 +1492,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self._create_block_hierarchy()
 
         # Publish the course
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         # Move child problem_x1a_1 to vertical_y1a.
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
@@ -1541,7 +1541,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self._create_block_hierarchy()
 
         # Publish the course.
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         # Move child problem_x1a_1 to vertical_y1a.
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
@@ -1590,7 +1590,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         problem_item2 = self.store.create_child(self.user_id, self.vertical_x1a, 'problem', 'Problem_Item2')  # lint-amnesty, pylint: disable=no-member
 
         # Publish the course.
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
         new_parent_location = self.vertical_y1a  # lint-amnesty, pylint: disable=no-member
@@ -1609,9 +1609,9 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         )
 
         # Check that problem_item2 is still present in vertical_x1a
-        problem_item2 = self.store.get_item(problem_item2.location)
+        problem_item2 = self.store.get_item(problem_item2.usage_key)
         assert problem_item2.parent == self.vertical_x1a  # lint-amnesty, pylint: disable=no-member
-        assert problem_item2.location in problem_item2.get_parent().children
+        assert problem_item2.usage_key in problem_item2.get_parent().children
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_move_1_moved_1_edited(self, store_type):
@@ -1628,13 +1628,13 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         orig_display_name = problem_item2.display_name
 
         # Publish the course.
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         # Edit problem_item2.
         problem_item2.display_name = 'updated'
         self.store.update_item(problem_item2, self.user_id)
 
-        updated_problem2 = self.store.get_item(problem_item2.location)
+        updated_problem2 = self.store.get_item(problem_item2.usage_key)
         assert updated_problem2.display_name == 'updated'
 
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
@@ -1657,7 +1657,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self.store.revert_to_published(old_parent_location, self.user_id)
 
         # Check that problem_item2 has the original name back.
-        reverted_problem2 = self.store.get_item(problem_item2.location)
+        reverted_problem2 = self.store.get_item(problem_item2.usage_key)
         assert orig_display_name == reverted_problem2.display_name
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -1675,10 +1675,10 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         orig_display_name = problem_item2.display_name  # lint-amnesty, pylint: disable=unused-variable
 
         # Publish the course.
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         # Now delete other problem problem_item2.
-        self.store.delete_item(problem_item2.location, self.user_id)
+        self.store.delete_item(problem_item2.usage_key, self.user_id)
 
         # Move child problem_x1a_1 to vertical_y1a.
         item_location = self.problem_x1a_1  # lint-amnesty, pylint: disable=no-member
@@ -1701,9 +1701,9 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self.store.revert_to_published(old_parent_location, self.user_id)
 
         # Check that problem_item2 is also back in vertical_x1a
-        problem_item2 = self.store.get_item(problem_item2.location)
+        problem_item2 = self.store.get_item(problem_item2.usage_key)
         assert problem_item2.parent == self.vertical_x1a  # lint-amnesty, pylint: disable=no-member
-        assert problem_item2.location in problem_item2.get_parent().children
+        assert problem_item2.usage_key in problem_item2.get_parent().children
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_get_parent_locations_moved_child(self, default_ms):
@@ -1711,7 +1711,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self._create_block_hierarchy()
 
         # publish the course
-        self.course = self.store.publish(self.course.location, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
+        self.course = self.store.publish(self.course.usage_key, self.user_id)  # lint-amnesty, pylint: disable=attribute-defined-outside-init
 
         with self.store.bulk_operations(self.course.id):
             # make drafts of verticals
@@ -1726,9 +1726,9 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred):
                 old_parent = self.store.get_item(child_to_move_location).get_parent()
 
-            assert old_parent_location == old_parent.location
+            assert old_parent_location == old_parent.usage_key
 
-            child_to_move_contextualized = child_to_move_location.map_into_course(old_parent.location.course_key)
+            child_to_move_contextualized = child_to_move_location.map_into_course(old_parent.usage_key.course_key)
             old_parent.children.remove(child_to_move_contextualized)
             self.store.update_item(old_parent, self.user_id)
 
@@ -1737,9 +1737,9 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             self.store.update_item(new_parent, self.user_id)
 
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred):
-                assert new_parent_location == self.store.get_item(child_to_move_location).get_parent().location
+                assert new_parent_location == self.store.get_item(child_to_move_location).get_parent().usage_key
             with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-                assert old_parent_location == self.store.get_item(child_to_move_location).get_parent().location
+                assert old_parent_location == self.store.get_item(child_to_move_location).get_parent().usage_key
             old_parent_published_location = old_parent_location.for_branch(ModuleStoreEnum.BranchName.published)
             self.verify_get_parent_locations_results([
                 (child_to_move_location, new_parent_location, None),
@@ -1748,7 +1748,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             ])
 
         # publish the course again
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
         new_parent_published_location = new_parent_location.for_branch(ModuleStoreEnum.BranchName.published)
         self.verify_get_parent_locations_results([
             (child_to_move_location, new_parent_location, None),
@@ -1825,7 +1825,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         vertical = self.store.get_item(self.vertical_x1a)  # lint-amnesty, pylint: disable=no-member
         vertical_children_num = len(vertical.children)
 
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
         assert not self._has_changes(self.vertical_x1a)  # lint-amnesty, pylint: disable=no-member
 
         # delete leaf problem (will make parent vertical a draft)
@@ -1853,7 +1853,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         """
         self.initdb(default_ms)
         self._create_block_hierarchy()
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
 
         problem = self.store.get_item(self.problem_x1a_1)  # lint-amnesty, pylint: disable=no-member
         orig_display_name = problem.display_name
@@ -1873,7 +1873,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         """
         self.initdb(default_ms)
         self._create_block_hierarchy()
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
 
         orig_vertical = self.store.get_item(self.vertical_x1a)  # lint-amnesty, pylint: disable=no-member
         self.store.revert_to_published(self.vertical_x1a, self.user_id)  # lint-amnesty, pylint: disable=no-member
@@ -1911,7 +1911,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # Set up test course.
         self.initdb(ModuleStoreEnum.Type.split)  # Old Mongo does not support this operation.
         self._create_block_hierarchy()
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
 
         # Get children of a vertical as a set.
         # We will use this set as a basis for content comparision in this test.
@@ -1920,14 +1920,14 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
 
         # Find the version_guid of our course by diving into Split Mongo.
         split = self._get_split_modulestore()
-        course_index = split.get_course_index(self.course.location.course_key)
+        course_index = split.get_course_index(self.course.usage_key.course_key)
         log.warning(f"Banana course index: {course_index}")
         original_version_guid = course_index["versions"]["published-branch"]
 
         # Reset course to currently-published version.
         # This should be a no-op.
         self.store.reset_course_to_version(
-            self.course.location.course_key,
+            self.course.usage_key.course_key,
             original_version_guid,
             self.user_id,
         )
@@ -1937,7 +1937,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # Delete a problem from the vertical and publish.
         # Vertical should have one less problem than before.
         self.store.delete_item(self.problem_x1a_1, self.user_id)  # lint-amnesty, pylint: disable=no-member
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
         modified_vertical = self.store.get_item(self.vertical_x1a)  # lint-amnesty, pylint: disable=no-member
         assert set(modified_vertical.children) == (
             original_vertical_children - {self.problem_x1a_1}  # lint-amnesty, pylint: disable=no-member
@@ -1952,14 +1952,14 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             'problem',
             block_id='new_child1',
         )
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
         self.store.create_child(
             self.user_id,
             self.vertical_x1a,  # lint-amnesty, pylint: disable=no-member
             'problem',
             block_id='new_child2',
         )
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
 
         # Add another child, but don't publish.
         # We want to make sure that this works with a dirty draft branch.
@@ -1973,7 +1973,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # Reset course to original version.
         # The restored vertical should have the same children as it did originally.
         self.store.reset_course_to_version(
-            self.course.location.course_key,
+            self.course.usage_key.course_key,
             original_version_guid,
             self.user_id,
         )
@@ -2039,7 +2039,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self.initdb(default_ms)
         block = self.store.create_item(
             self.user_id,
-            self.course.location.course_key,
+            self.course.usage_key.course_key,
             'problem'
         )
         assert self.user_id == block.edited_by
@@ -2050,7 +2050,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self.initdb(default_ms)
         block = self.store.create_item(
             self.user_id,
-            self.course.location.course_key,
+            self.course.usage_key.course_key,
             'problem'
         )
         assert self.user_id == block.subtree_edited_by
@@ -2092,7 +2092,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         self._create_block_hierarchy()
 
         # publish
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
         published_xblock = self.store.get_item(
             self.vertical_x1a,  # lint-amnesty, pylint: disable=no-member
             revision=ModuleStoreEnum.RevisionOption.published_only
@@ -2128,7 +2128,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
 
         # start off as Private
         item = self.store.create_child(self.user_id, self.writable_chapter_location, 'problem', 'test_compute_publish_state')  # lint-amnesty, pylint: disable=line-too-long
-        item_location = item.location
+        item_location = item.usage_key
         with self.assertNumQueries(mysql_queries), check_mongo_calls(max_find, max_send):
             assert not self.store.has_published_version(item)
 
@@ -2185,19 +2185,19 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
             # Create a dummy vertical & html to test against
             component = self.store.create_child(
                 self.user_id,
-                test_course.location,
+                test_course.usage_key,
                 'vertical',
                 block_id='test_vertical'
             )
             child = self.store.create_child(
                 self.user_id,
-                component.location,
+                component.usage_key,
                 'html',
                 block_id='test_html'
             )
             sibling = self.store.create_child(
                 self.user_id,
-                component.location,
+                component.usage_key,
                 'html',
                 block_id='test_html_no_change'
             )
@@ -2205,7 +2205,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         after_create = datetime.datetime.now(ZoneInfo("UTC"))
         # Verify that all nodes were last edited in the past by create_user
         for block in [component, child, sibling]:
-            check_node(block.location, None, after_create, self.user_id, None, after_create, self.user_id)
+            check_node(block.usage_key, None, after_create, self.user_id, None, after_create, self.user_id)
 
         # Change the component, then check that there now are changes
         component.display_name = 'Changed Display Name'
@@ -2214,25 +2214,25 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         with self.store.bulk_operations(test_course.id):  # TNL-764 bulk ops disabled ancestor updates
             component = self.store.update_item(component, editing_user)
         after_edit = datetime.datetime.now(ZoneInfo("UTC"))
-        check_node(component.location, after_create, after_edit, editing_user, after_create, after_edit, editing_user)
+        check_node(component.usage_key, after_create, after_edit, editing_user, after_create, after_edit, editing_user)
         # but child didn't change
-        check_node(child.location, None, after_create, self.user_id, None, after_create, self.user_id)
+        check_node(child.usage_key, None, after_create, self.user_id, None, after_create, self.user_id)
 
         # Change the child
-        child = self.store.get_item(child.location)
+        child = self.store.get_item(child.usage_key)
         child.display_name = 'Changed Display Name'
         self.store.update_item(child, user_id=editing_user)
 
         after_edit = datetime.datetime.now(ZoneInfo("UTC"))
 
         # Verify that child was last edited between after_create and after_edit by edit_user
-        check_node(child.location, after_create, after_edit, editing_user, after_create, after_edit, editing_user)
+        check_node(child.usage_key, after_create, after_edit, editing_user, after_create, after_edit, editing_user)
 
         # Verify that ancestors edit info is unchanged, but their subtree edit info matches child
-        check_node(test_course.location, None, after_create, self.user_id, after_create, after_edit, editing_user)
+        check_node(test_course.usage_key, None, after_create, self.user_id, after_create, after_edit, editing_user)
 
         # Verify that others have unchanged edit info
-        check_node(sibling.location, None, after_create, self.user_id, None, after_create, self.user_id)
+        check_node(sibling.usage_key, None, after_create, self.user_id, None, after_create, self.user_id)
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_update_edit_info(self, default_ms):
@@ -2246,7 +2246,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # Create a dummy component to test against
         component = self.store.create_child(
             self.user_id,
-            test_course.location,
+            test_course.usage_key,
             'vertical',
         )
 
@@ -2258,7 +2258,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # Change the component
         component.display_name = 'Changed'
         self.store.update_item(component, edit_user)
-        updated_component = self.store.get_item(component.location)
+        updated_component = self.store.get_item(component.usage_key)
 
         # Verify the ordering of edit times and that dummy_user made the edit
         assert old_edited_on < updated_component.edited_on
@@ -2278,14 +2278,14 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # Create a dummy component to test against
         component = self.store.create_child(
             self.user_id,
-            test_course.location,
+            test_course.usage_key,
             'vertical',
         )
 
         # Store the current time, then publish
         old_time = datetime.datetime.now(ZoneInfo("UTC"))
-        self.store.publish(component.location, publish_user)
-        updated_component = self.store.get_item(component.location)
+        self.store.publish(component.usage_key, publish_user)
+        updated_component = self.store.get_item(component.usage_key)
 
         # Verify the time order and that publish_user caused publication
         assert old_time <= updated_component.published_on
@@ -2294,7 +2294,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         # Verify that changing the item doesn't unset the published info
         updated_component.display_name = 'changed'
         self.store.update_item(updated_component, self.user_id)
-        updated_component = self.store.get_item(updated_component.location)
+        updated_component = self.store.get_item(updated_component.usage_key)
         assert old_time <= updated_component.published_on
         assert updated_component.published_by == publish_user
 
@@ -2316,17 +2316,17 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         test_course_key = test_course.id
 
         # test create_item of direct-only category to make sure we are autopublishing
-        chapter = self.store.create_child(self.user_id, test_course.location, 'chapter', 'Overview')
+        chapter = self.store.create_child(self.user_id, test_course.usage_key, 'chapter', 'Overview')
         with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-            assert chapter.location in self.store.get_item(test_course.location).children
+            assert chapter.usage_key in self.store.get_item(test_course.usage_key).children
         assert self.store.has_published_version(chapter)
 
-        chapter_location = chapter.location
+        chapter_location = chapter.usage_key
 
         # test create_child of direct-only category to make sure we are autopublishing
         sequential = self.store.create_child(self.user_id, chapter_location, 'sequential', 'Sequence')
         with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-            assert sequential.location in self.store.get_item(chapter_location).children
+            assert sequential.usage_key in self.store.get_item(chapter_location).children
         assert self.store.has_published_version(sequential)
 
         # test update_item of direct-only category to make sure we are autopublishing
@@ -2335,10 +2335,10 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         assert self.store.has_published_version(sequential)
 
         # test delete_item of direct-only category to make sure we are autopublishing
-        self.store.delete_item(sequential.location, self.user_id, revision=ModuleStoreEnum.RevisionOption.all)
+        self.store.delete_item(sequential.usage_key, self.user_id, revision=ModuleStoreEnum.RevisionOption.all)
         with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-            assert sequential.location not in self.store.get_item(chapter_location).children
-        chapter = self.store.get_item(chapter.location.for_branch(None))
+            assert sequential.usage_key not in self.store.get_item(chapter_location).children
+        chapter = self.store.get_item(chapter.usage_key.for_branch(None))
         assert self.store.has_published_version(chapter)
 
         # test create_child of NOT direct-only category to make sure we aren't autopublishing
@@ -2355,8 +2355,8 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         assert not self.store.has_published_version(problem_item)
 
         # test delete_item of NOT direct-only category to make sure we aren't autopublishing
-        self.store.delete_item(problem_child.location, self.user_id)
-        chapter = self.store.get_item(chapter.location.for_branch(None))
+        self.store.delete_item(problem_child.usage_key, self.user_id)
+        chapter = self.store.get_item(chapter.usage_key.for_branch(None))
         assert self.store.has_published_version(chapter)
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -2644,7 +2644,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
                     signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
                     signal_handler.reset_mock()
-                    self.store.publish(block.location, self.user_id)
+                    self.store.publish(block.usage_key, self.user_id)
                     signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -2740,30 +2740,30 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
                 signal_handler.reset_mock()
-                subsection = self.store.create_child(self.user_id, section.location, 'sequential')
+                subsection = self.store.create_child(self.user_id, section.usage_key, 'sequential')
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
                 # 'units' and 'blocks' are draftable types
                 signal_handler.reset_mock()
-                unit = self.store.create_child(self.user_id, subsection.location, 'vertical')
+                unit = self.store.create_child(self.user_id, subsection.usage_key, 'vertical')
                 signal_handler.send.assert_not_called()
 
-                block = self.store.create_child(self.user_id, unit.location, 'problem')
+                block = self.store.create_child(self.user_id, unit.usage_key, 'problem')
                 signal_handler.send.assert_not_called()
 
                 self.store.update_item(block, self.user_id)
                 signal_handler.send.assert_not_called()
 
                 signal_handler.reset_mock()
-                self.store.publish(unit.location, self.user_id)
+                self.store.publish(unit.usage_key, self.user_id)
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
                 signal_handler.reset_mock()
-                self.store.unpublish(unit.location, self.user_id)
+                self.store.unpublish(unit.usage_key, self.user_id)
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
                 signal_handler.reset_mock()
-                self.store.delete_item(unit.location, self.user_id)
+                self.store.delete_item(unit.usage_key, self.user_id)
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -2803,7 +2803,7 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
                         self.store.update_item(block, self.user_id)
                         signal_handler.send.assert_not_called()
 
-                        self.store.publish(block.location, self.user_id)
+                        self.store.publish(block.usage_key, self.user_id)
                         signal_handler.send.assert_not_called()
 
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
@@ -2840,20 +2840,20 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
                     section = self.store.create_item(self.user_id, course_key, 'chapter')
                     signal_handler.send.assert_not_called()
 
-                    subsection = self.store.create_child(self.user_id, section.location, 'sequential')
+                    subsection = self.store.create_child(self.user_id, section.usage_key, 'sequential')
                     signal_handler.send.assert_not_called()
 
                     # 'units' and 'blocks' are draftable types
-                    unit = self.store.create_child(self.user_id, subsection.location, 'vertical')
+                    unit = self.store.create_child(self.user_id, subsection.usage_key, 'vertical')
                     signal_handler.send.assert_not_called()
 
-                    block = self.store.create_child(self.user_id, unit.location, 'problem')
+                    block = self.store.create_child(self.user_id, unit.usage_key, 'problem')
                     signal_handler.send.assert_not_called()
 
                     self.store.update_item(block, self.user_id)
                     signal_handler.send.assert_not_called()
 
-                    self.store.publish(unit.location, self.user_id)
+                    self.store.publish(unit.usage_key, self.user_id)
                     signal_handler.send.assert_not_called()
 
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
@@ -2861,11 +2861,11 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
                 # Test editing draftable block type without publish
                 signal_handler.reset_mock()
                 with self.store.bulk_operations(course_key):
-                    unit = self.store.create_child(self.user_id, subsection.location, 'vertical')
+                    unit = self.store.create_child(self.user_id, subsection.usage_key, 'vertical')
                     signal_handler.send.assert_not_called()
-                    block = self.store.create_child(self.user_id, unit.location, 'problem')
+                    block = self.store.create_child(self.user_id, unit.usage_key, 'problem')
                     signal_handler.send.assert_not_called()
-                    self.store.publish(unit.location, self.user_id)
+                    self.store.publish(unit.usage_key, self.user_id)
                     signal_handler.send.assert_not_called()
                 signal_handler.send.assert_called_with('course_published', course_key=course.id)
 
@@ -2914,32 +2914,32 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         course_locator = self.course.id
 
         chapter = self.store.create_child(
-            self.user_id, self.course.location, 'chapter', block_id='section_one'
+            self.user_id, self.course.usage_key, 'chapter', block_id='section_one'
         )
 
         sequential = self.store.create_child(
-            self.user_id, chapter.location, 'sequential', block_id='subsection_one'
+            self.user_id, chapter.usage_key, 'sequential', block_id='subsection_one'
         )
 
         vertical = self.store.create_child(
-            self.user_id, sequential.location, 'vertical', block_id='moon_unit'
+            self.user_id, sequential.usage_key, 'vertical', block_id='moon_unit'
         )
 
         problem = self.store.create_child(
-            self.user_id, vertical.location, 'problem', block_id='problem'
+            self.user_id, vertical.usage_key, 'problem', block_id='problem'
         )
 
-        self.store.publish(chapter.location, self.user_id)
+        self.store.publish(chapter.usage_key, self.user_id)
         # Verify that there are no changes
-        assert not self._has_changes(chapter.location)
-        assert not self._has_changes(sequential.location)
-        assert not self._has_changes(vertical.location)
-        assert not self._has_changes(problem.location)
+        assert not self._has_changes(chapter.usage_key)
+        assert not self._has_changes(sequential.usage_key)
+        assert not self._has_changes(vertical.usage_key)
+        assert not self._has_changes(problem.usage_key)
 
         # No orphans in course
         course_orphans = self.store.get_orphans(course_locator)
         assert len(course_orphans) == 0
-        self.store.delete_item(vertical.location, self.user_id)
+        self.store.delete_item(vertical.usage_key, self.user_id)
 
         # No orphans in course after delete, except
         # in old mongo, which still creates orphans
@@ -2968,27 +2968,27 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
         course_locator = self.course.id
 
         chapter = self.store.create_child(
-            self.user_id, self.course.location, 'chapter', block_id='section_one'
+            self.user_id, self.course.usage_key, 'chapter', block_id='section_one'
         )
 
         sequential = self.store.create_child(
-            self.user_id, chapter.location, 'sequential', block_id='subsection_one'
+            self.user_id, chapter.usage_key, 'sequential', block_id='subsection_one'
         )
 
         vertical = self.store.create_child(
-            self.user_id, sequential.location, 'vertical', block_id='moon_unit'
+            self.user_id, sequential.usage_key, 'vertical', block_id='moon_unit'
         )
 
         problem = self.store.create_child(
-            self.user_id, vertical.location, 'problem', block_id='problem'
+            self.user_id, vertical.usage_key, 'problem', block_id='problem'
         )
 
-        self.store.publish(chapter.location, self.user_id)
+        self.store.publish(chapter.usage_key, self.user_id)
         # Verify that there are no changes
-        assert not self._has_changes(chapter.location)
-        assert not self._has_changes(sequential.location)
-        assert not self._has_changes(vertical.location)
-        assert not self._has_changes(problem.location)
+        assert not self._has_changes(chapter.usage_key)
+        assert not self._has_changes(sequential.usage_key)
+        assert not self._has_changes(vertical.usage_key)
+        assert not self._has_changes(problem.usage_key)
 
         # No orphans in course
         course_orphans = self.store.get_orphans(course_locator)
@@ -2996,10 +2996,10 @@ class TestMixedModuleStore(CommonMixedModuleStoreSetup):
 
         problem.display_name = 'changed'
         problem = self.store.update_item(problem, self.user_id)
-        assert self._has_changes(vertical.location)
-        assert self._has_changes(problem.location)
+        assert self._has_changes(vertical.usage_key)
+        assert self._has_changes(problem.usage_key)
 
-        self.store.delete_item(vertical.location, self.user_id)
+        self.store.delete_item(vertical.usage_key, self.user_id)
         # No orphans in course after delete, except
         # in old mongo, which still creates them
         course_orphans = self.store.get_orphans(course_locator)
@@ -3089,14 +3089,14 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
                 block_id='test_vertical'
             )
             # Not yet published, so changes are present
-            assert self._has_changes(draft_xblock.location)
+            assert self._has_changes(draft_xblock.usage_key)
 
             self._export_import_course_round_trip(
                 self.store, contentstore, source_course_key, self.export_dir
             )
 
             # Verify that the imported block still is a draft, i.e. has changes.
-            assert self._has_changes(draft_xblock.location)
+            assert self._has_changes(draft_xblock.usage_key)
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_published_has_changes_before_export_and_after_import(self, default_ms):
@@ -3112,10 +3112,10 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
                 'vertical',
                 block_id='test_vertical'
             )
-            self.store.publish(published_xblock.location, self.user_id)
+            self.store.publish(published_xblock.usage_key, self.user_id)
 
             # Retrieve the published block and make sure it's published.
-            assert not self._has_changes(published_xblock.location)
+            assert not self._has_changes(published_xblock.usage_key)
 
             self._export_import_course_round_trip(
                 self.store, contentstore, source_course_key, self.export_dir
@@ -3123,7 +3123,7 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # Get the published xblock from the imported course.
             # Verify that it still is published, i.e. has no changes.
-            assert not self._has_changes(published_xblock.location)
+            assert not self._has_changes(published_xblock.usage_key)
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_changed_published_has_changes_before_export_and_after_import(self, default_ms):
@@ -3139,13 +3139,13 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
                 'vertical',
                 block_id='test_vertical'
             )
-            self.store.publish(published_xblock.location, self.user_id)
+            self.store.publish(published_xblock.usage_key, self.user_id)
 
             # Retrieve the published block and make sure it's published.
-            assert not self._has_changes(published_xblock.location)
+            assert not self._has_changes(published_xblock.usage_key)
 
             updated_display_name = 'Changed Display Name'
-            component = self.store.get_item(published_xblock.location)
+            component = self.store.get_item(published_xblock.usage_key)
             component.display_name = updated_display_name
             component = self.store.update_item(component, self.user_id)
             assert self.store.has_changes(component)
@@ -3156,11 +3156,11 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # Get the published xblock from the imported course.
             # Verify that the published block still has a draft block, i.e. has changes.
-            assert self._has_changes(published_xblock.location)
+            assert self._has_changes(published_xblock.usage_key)
 
             # Verify that the changes in the draft vertical still exist.
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, source_course_key):
-                component = self.store.get_item(published_xblock.location)
+                component = self.store.get_item(published_xblock.usage_key)
                 assert component.display_name == updated_display_name
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -3172,28 +3172,28 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # create chapter
             chapter = self.store.create_child(
-                self.user_id, self.course.location, 'chapter', block_id='section_one'
+                self.user_id, self.course.usage_key, 'chapter', block_id='section_one'
             )
-            self.store.publish(chapter.location, self.user_id)
+            self.store.publish(chapter.usage_key, self.user_id)
 
             # create sequential
             sequential = self.store.create_child(
-                self.user_id, chapter.location, 'sequential', block_id='subsection_one'
+                self.user_id, chapter.usage_key, 'sequential', block_id='subsection_one'
             )
-            self.store.publish(sequential.location, self.user_id)
+            self.store.publish(sequential.usage_key, self.user_id)
 
             # create vertical - don't publish it!
             vertical = self.store.create_child(
-                self.user_id, sequential.location, 'vertical', block_id='moon_unit'
+                self.user_id, sequential.usage_key, 'vertical', block_id='moon_unit'
             )
 
             # Retrieve the published block and make sure it's published.
             # Chapter is published - but the changes in vertical below means it "has_changes".
-            assert self._has_changes(chapter.location)
+            assert self._has_changes(chapter.usage_key)
             # Sequential is published - but the changes in vertical below means it "has_changes".
-            assert self._has_changes(sequential.location)
+            assert self._has_changes(sequential.usage_key)
             # Vertical is unpublished - so it "has_changes".
-            assert self._has_changes(vertical.location)
+            assert self._has_changes(vertical.usage_key)
 
             self._export_import_course_round_trip(
                 self.store, contentstore, source_course_key, self.export_dir
@@ -3201,9 +3201,9 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # Get the published xblock from the imported course.
             # Verify that the published block still has a draft block, i.e. has changes.
-            assert self._has_changes(chapter.location)
-            assert self._has_changes(sequential.location)
-            assert self._has_changes(vertical.location)
+            assert self._has_changes(chapter.usage_key)
+            assert self._has_changes(sequential.usage_key)
+            assert self._has_changes(vertical.usage_key)
 
     @ddt.data(ModuleStoreEnum.Type.split)
     def test_vertical_with_draft_and_published_unit_has_changes_before_export_and_after_import(self, default_ms):
@@ -3214,56 +3214,56 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # create chapter
             chapter = self.store.create_child(
-                self.user_id, self.course.location, 'chapter', block_id='section_one'
+                self.user_id, self.course.usage_key, 'chapter', block_id='section_one'
             )
-            self.store.publish(chapter.location, self.user_id)
+            self.store.publish(chapter.usage_key, self.user_id)
 
             # create sequential
             sequential = self.store.create_child(
-                self.user_id, chapter.location, 'sequential', block_id='subsection_one'
+                self.user_id, chapter.usage_key, 'sequential', block_id='subsection_one'
             )
-            self.store.publish(sequential.location, self.user_id)
+            self.store.publish(sequential.usage_key, self.user_id)
 
             # create vertical
             vertical = self.store.create_child(
-                self.user_id, sequential.location, 'vertical', block_id='moon_unit'
+                self.user_id, sequential.usage_key, 'vertical', block_id='moon_unit'
             )
             # Vertical has changes until it is actually published.
-            assert self._has_changes(vertical.location)
-            self.store.publish(vertical.location, self.user_id)
-            assert not self._has_changes(vertical.location)
+            assert self._has_changes(vertical.usage_key)
+            self.store.publish(vertical.usage_key, self.user_id)
+            assert not self._has_changes(vertical.usage_key)
 
             # create unit
             unit = self.store.create_child(
-                self.user_id, vertical.location, 'html', block_id='html_unit'
+                self.user_id, vertical.usage_key, 'html', block_id='html_unit'
             )
             # Vertical has a new child -and- unit is unpublished. So both have changes.
-            assert self._has_changes(vertical.location)
-            assert self._has_changes(unit.location)
+            assert self._has_changes(vertical.usage_key)
+            assert self._has_changes(unit.usage_key)
 
             # Publishing the vertical also publishes its unit child.
-            self.store.publish(vertical.location, self.user_id)
-            assert not self._has_changes(vertical.location)
-            assert not self._has_changes(unit.location)
+            self.store.publish(vertical.usage_key, self.user_id)
+            assert not self._has_changes(vertical.usage_key)
+            assert not self._has_changes(unit.usage_key)
 
             # Publishing the unit separately has no effect on whether it has changes - it's already published.
-            self.store.publish(unit.location, self.user_id)
-            assert not self._has_changes(vertical.location)
-            assert not self._has_changes(unit.location)
+            self.store.publish(unit.usage_key, self.user_id)
+            assert not self._has_changes(vertical.usage_key)
+            assert not self._has_changes(unit.usage_key)
 
             # Retrieve the published block and make sure it's published.
-            self.store.publish(chapter.location, self.user_id)
-            assert not self._has_changes(chapter.location)
-            assert not self._has_changes(sequential.location)
-            assert not self._has_changes(vertical.location)
-            assert not self._has_changes(unit.location)
+            self.store.publish(chapter.usage_key, self.user_id)
+            assert not self._has_changes(chapter.usage_key)
+            assert not self._has_changes(sequential.usage_key)
+            assert not self._has_changes(vertical.usage_key)
+            assert not self._has_changes(unit.usage_key)
 
             # Now make changes to the unit - but don't publish them.
-            component = self.store.get_item(unit.location)
+            component = self.store.get_item(unit.usage_key)
             updated_display_name = 'Changed Display Name'
             component.display_name = updated_display_name
             component = self.store.update_item(component, self.user_id)
-            assert self._has_changes(component.location)
+            assert self._has_changes(component.usage_key)
 
             # Export the course - then import the course export.
             self._export_import_course_round_trip(
@@ -3272,19 +3272,19 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # Get the published xblock from the imported course.
             # Verify that the published block still has a draft block, i.e. has changes.
-            assert self._has_changes(chapter.location)
-            assert self._has_changes(sequential.location)
-            assert self._has_changes(vertical.location)
-            assert self._has_changes(unit.location)
+            assert self._has_changes(chapter.usage_key)
+            assert self._has_changes(sequential.usage_key)
+            assert self._has_changes(vertical.usage_key)
+            assert self._has_changes(unit.usage_key)
 
             # Verify that the changes in the draft unit still exist.
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, source_course_key):
-                component = self.store.get_item(unit.location)
+                component = self.store.get_item(unit.usage_key)
                 assert component.display_name == updated_display_name
 
             # Verify that the draft changes don't exist in the published unit - it still uses the default name.
             with self.store.branch_setting(ModuleStoreEnum.Branch.published_only, source_course_key):
-                component = self.store.get_item(unit.location)
+                component = self.store.get_item(unit.usage_key)
                 assert component.display_name == 'Text'
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -3296,39 +3296,39 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # create chapter
             chapter = self.store.create_child(
-                self.user_id, self.course.location, 'chapter', block_id='section_one'
+                self.user_id, self.course.usage_key, 'chapter', block_id='section_one'
             )
-            self.store.publish(chapter.location, self.user_id)
+            self.store.publish(chapter.usage_key, self.user_id)
 
             # create sequential
             sequential = self.store.create_child(
-                self.user_id, chapter.location, 'sequential', block_id='subsection_one'
+                self.user_id, chapter.usage_key, 'sequential', block_id='subsection_one'
             )
-            self.store.publish(sequential.location, self.user_id)
+            self.store.publish(sequential.usage_key, self.user_id)
 
             # create vertical
             vertical = self.store.create_child(
-                self.user_id, sequential.location, 'vertical', block_id='moon_unit'
+                self.user_id, sequential.usage_key, 'vertical', block_id='moon_unit'
             )
             # Vertical has changes until it is actually published.
-            assert self._has_changes(vertical.location)
-            self.store.publish(vertical.location, self.user_id)
-            assert not self._has_changes(vertical.location)
+            assert self._has_changes(vertical.usage_key)
+            self.store.publish(vertical.usage_key, self.user_id)
+            assert not self._has_changes(vertical.usage_key)
 
             # create unit
             unit = self.store.create_child(
-                self.user_id, vertical.location, 'html', block_id='html_unit'
+                self.user_id, vertical.usage_key, 'html', block_id='html_unit'
             )
             # Now make changes to the unit.
             updated_display_name = 'Changed Display Name'
             unit.display_name = updated_display_name
             unit = self.store.update_item(unit, self.user_id)
-            assert self._has_changes(unit.location)
+            assert self._has_changes(unit.usage_key)
 
             # Publishing the vertical also publishes its unit child.
-            self.store.publish(vertical.location, self.user_id)
-            assert not self._has_changes(vertical.location)
-            assert not self._has_changes(unit.location)
+            self.store.publish(vertical.usage_key, self.user_id)
+            assert not self._has_changes(vertical.usage_key)
+            assert not self._has_changes(unit.usage_key)
 
             # Export the course - then import the course export.
             self._export_import_course_round_trip(
@@ -3337,14 +3337,14 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
             # Get the published xblock from the imported course.
             # Verify that the published block still has a draft block, i.e. has changes.
-            assert not self._has_changes(chapter.location)
-            assert not self._has_changes(sequential.location)
-            assert not self._has_changes(vertical.location)
-            assert not self._has_changes(unit.location)
+            assert not self._has_changes(chapter.usage_key)
+            assert not self._has_changes(sequential.usage_key)
+            assert not self._has_changes(vertical.usage_key)
+            assert not self._has_changes(unit.usage_key)
 
             # Verify that the published changes exist in the published unit.
             with self.store.branch_setting(ModuleStoreEnum.Branch.published_only, source_course_key):
-                component = self.store.get_item(unit.location)
+                component = self.store.get_item(unit.usage_key)
                 assert component.display_name == updated_display_name
 
     @ddt.data(ModuleStoreEnum.Type.split)
@@ -3394,7 +3394,7 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
                 check_block(courses[0])
 
                 # create a new block and ensure its aside magically appears with the right fields
-                new_chapter = self.store.create_child(self.user_id, courses[0].location, 'chapter', 'new_chapter')
+                new_chapter = self.store.create_child(self.user_id, courses[0].usage_key, 'chapter', 'new_chapter')
                 asides = new_chapter.runtime.get_asides(new_chapter)
 
                 assert len(asides) == 1, f'Found {asides} asides but expected only test_aside'
@@ -3409,7 +3409,7 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
                 chapter_aside.data_field = 'new value'
                 self.store.update_item(new_chapter, self.user_id, asides=[chapter_aside])
 
-                new_chapter = self.store.get_item(new_chapter.location)
+                new_chapter = self.store.get_item(new_chapter.usage_key)
                 chapter_aside = new_chapter.runtime.get_asides(new_chapter)[0]
                 assert 'new value' == chapter_aside.data_field
 
@@ -3417,7 +3417,7 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
                 chapter_aside.data_field = 'another one value'
                 self.store.update_item(new_chapter, self.user_id, asides=[chapter_aside])
 
-                new_chapter2 = self.store.get_item(new_chapter.location)
+                new_chapter2 = self.store.get_item(new_chapter.usage_key)
                 chapter_aside2 = new_chapter2.runtime.get_asides(new_chapter2)[0]
                 assert 'another one value' == chapter_aside2.data_field
 
@@ -3540,7 +3540,7 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
 
                 # create new chapter and modify aside for it
                 new_chapter_display_name = 'New Chapter'
-                new_chapter = self.store.create_child(self.user_id, courses[0].location, 'chapter', 'new_chapter')
+                new_chapter = self.store.create_child(self.user_id, courses[0].usage_key, 'chapter', 'new_chapter')
                 new_chapter.display_name = new_chapter_display_name
                 asides = new_chapter.runtime.get_asides(new_chapter)
 
@@ -3553,7 +3553,7 @@ class TestPublishOverExportImport(CommonMixedModuleStoreSetup):
                 # create new problem and modify aside for it
                 sequence = courses[0].get_children()[0].get_children()[0]
                 new_problem_display_name = 'New Problem'
-                new_problem = self.store.create_child(self.user_id, sequence.location, 'problem', 'new_problem')
+                new_problem = self.store.create_child(self.user_id, sequence.usage_key, 'problem', 'new_problem')
                 new_problem.display_name = new_problem_display_name
                 asides = new_problem.runtime.get_asides(new_problem)
 
@@ -3692,7 +3692,7 @@ class TestAsidesWithMixedModuleStore(CommonMixedModuleStoreSetup):
             assert asides[1].field22 == field22
 
         # get saved item and check asides
-        component = self.store.get_item(published_xblock.location)
+        component = self.store.get_item(published_xblock.usage_key)
         asides = component.runtime.get_asides(component)
         _check_asides(asides, 'new_value11', 'new_value12', 'new_value21', 'aside2_default_value2')
 
@@ -3703,7 +3703,7 @@ class TestAsidesWithMixedModuleStore(CommonMixedModuleStoreSetup):
         cached_asides = component.runtime.get_asides(component)
         _check_asides(cached_asides, 'other_value11', 'new_value12', 'new_value21', 'aside2_default_value2')
 
-        new_component = self.store.get_item(published_xblock.location)
+        new_component = self.store.get_item(published_xblock.usage_key)
         new_asides = new_component.runtime.get_asides(new_component)
         _check_asides(new_asides, 'other_value11', 'new_value12', 'new_value21', 'aside2_default_value2')
 
@@ -3789,7 +3789,7 @@ class TestAsidesWithMixedModuleStore(CommonMixedModuleStoreSetup):
         assert asides[0].field12 == 'new_value12'
 
         # remove item
-        self.store.delete_item(published_xblock.location, self.user_id)
+        self.store.delete_item(published_xblock.usage_key, self.user_id)
 
         # create item again
         published_xblock2 = self.store.create_item(
@@ -3835,7 +3835,7 @@ class TestAsidesWithMixedModuleStore(CommonMixedModuleStoreSetup):
         # start off as Private
         item = self.store.create_child(self.user_id, self.writable_chapter_location, 'problem',
                                        'test_compute_publish_state', asides=[aside1])
-        item_location = item.location
+        item_location = item.usage_key
         with check_mongo_calls(max_find, max_send):
             assert not self.store.has_published_version(item)
         _check_asides(item)

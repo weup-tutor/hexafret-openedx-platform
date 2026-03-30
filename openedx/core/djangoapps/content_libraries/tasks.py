@@ -478,10 +478,10 @@ def _sync_children(
         source_blocks.extend(library.children)
     with store.bulk_operations(dest_block.scope_ids.usage_id.context_key):
         try:
-            dest_block.source_library_version = str(library.location.library_key.version_guid)
+            dest_block.source_library_version = str(library.usage_key.library_key.version_guid)
             store.update_item(dest_block, user_id)
             dest_block.children = store.copy_from_template(
-                source_blocks, dest_block.location, user_id, head_validation=True
+                source_blocks, dest_block.usage_key, user_id, head_validation=True
             )
             # ^-- copy_from_template updates the children in the DB
             # but we must also set .children here to avoid overwriting the DB again

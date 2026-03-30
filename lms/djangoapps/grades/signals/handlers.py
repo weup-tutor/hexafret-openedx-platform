@@ -154,7 +154,7 @@ def score_published_handler(sender, block, user, raw_earned, raw_possible, only_
     """
     update_score = True
     if only_if_higher:
-        previous_score = get_score(user.id, block.location)
+        previous_score = get_score(user.id, block.usage_key)
 
         if previous_score is not None:
             prev_raw_earned, prev_raw_possible = (previous_score.grade, previous_score.max_grade)
@@ -164,13 +164,13 @@ def score_published_handler(sender, block, user, raw_earned, raw_possible, only_
                 log.warning(
                     "Grades: Rescore is not higher than previous: "
                     "user: {}, block: {}, previous: {}/{}, new: {}/{} ".format(
-                        user, block.location, prev_raw_earned, prev_raw_possible, raw_earned, raw_possible,
+                        user, block.usage_key, prev_raw_earned, prev_raw_possible, raw_earned, raw_possible,
                     )
                 )
 
     if update_score:
         # Set the problem score in CSM.
-        score_modified_time = set_score(user.id, block.location, raw_earned, raw_possible)
+        score_modified_time = set_score(user.id, block.usage_key, raw_earned, raw_possible)
 
         # Set the problem score on the xblock.
         if isinstance(block, ScorableXBlockMixin):
@@ -183,8 +183,8 @@ def score_published_handler(sender, block, user, raw_earned, raw_possible, only_
             raw_possible=raw_possible,
             weight=getattr(block, 'weight', None),
             user_id=user.id,
-            course_id=str(block.location.course_key),
-            usage_id=str(block.location),
+            course_id=str(block.usage_key.course_key),
+            usage_id=str(block.usage_key),
             only_if_higher=only_if_higher,
             modified=score_modified_time,
             score_db_table=ScoreDatabaseTableEnum.courseware_student_module,

@@ -41,8 +41,8 @@ class RawMixin:
         if not self.data:
             log.warning(
                 "Could not serialize %s: No XBlock installed for '%s' tag.",
-                self.location,
-                self.location.block_type,
+                self.usage_key,
+                self.usage_key.block_type,
             )
             return None
 
@@ -55,10 +55,10 @@ class RawMixin:
             lines = self.data.split("\n")
             line, offset = err.position
             msg = (
-                f"Unable to create xml for block {self.location}. "
+                f"Unable to create xml for block {self.usage_key}. "
                 f"Context: '{lines[line - 1][offset - 40 : offset + 40]}'"
             )
-            raise SerializationError(self.location, msg) from err
+            raise SerializationError(self.usage_key, msg) from err
 
     @classmethod
     def parse_xml_new_runtime(cls, node, runtime, keys):

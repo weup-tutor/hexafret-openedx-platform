@@ -153,7 +153,7 @@ class InheritingFieldDataTest(unittest.TestCase):
         assert parent_block.inherited == "Changed!"
 
         child = self.get_a_block(usage_id=self.get_usage_id("vertical", "child"))
-        child.parent = parent_block.location
+        child.parent = parent_block.usage_key
         assert child.inherited == "Changed!"
 
     def test_inherited_across_generations(self):
@@ -166,7 +166,7 @@ class InheritingFieldDataTest(unittest.TestCase):
         for child_num in range(10):
             usage_id = self.get_usage_id("vertical", f"child_{child_num}")
             child = self.get_a_block(usage_id=usage_id)
-            child.parent = parent.location
+            child.parent = parent.usage_key
             assert child.inherited == "Changed!"
 
     def test_not_inherited(self):
@@ -178,7 +178,7 @@ class InheritingFieldDataTest(unittest.TestCase):
         assert parent.not_inherited == "Changed!"
 
         child = self.get_a_block(usage_id=self.get_usage_id("vertical", "child"))
-        child.parent = parent.location
+        child.parent = parent.usage_key
         assert child.not_inherited == "nothing"
 
     def test_non_defaults_inherited_across_lib(self):
@@ -200,7 +200,7 @@ class InheritingFieldDataTest(unittest.TestCase):
             fields={},
             defaults={},
         )
-        child.parent = parent_block.location
+        child.parent = parent_block.usage_key
         assert child.inherited == "changed!"
 
     def test_defaults_not_inherited_across_lib(self):
@@ -222,7 +222,7 @@ class InheritingFieldDataTest(unittest.TestCase):
             fields={},
             defaults={"inherited": "child's default"},
         )
-        child.parent = parent_block.location
+        child.parent = parent_block.usage_key
         assert child.inherited == "child's default"
 
 

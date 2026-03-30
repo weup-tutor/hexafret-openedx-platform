@@ -38,7 +38,7 @@ class CustomCoursesForEdxOverrideProvider(FieldOverrideProvider):
         elif isinstance(identifier, UsageKey):
             course_key = block.id.course_key
         elif hasattr(block, 'location'):
-            course_key = block.location.course_key
+            course_key = block.usage_key.course_key
         else:
             msg = "Unable to get course id when calculating ccx overide for block type %r"
             log.error(msg, type(block))
@@ -53,7 +53,7 @@ class CustomCoursesForEdxOverrideProvider(FieldOverrideProvider):
         """
         CCX field overrides are enabled for CCX blocks.
         """
-        return getattr(block.location, 'ccx', None) or getattr(block, 'enable_ccx', False)
+        return getattr(block.usage_key, 'ccx', None) or getattr(block, 'enable_ccx', False)
 
 
 def get_current_ccx(course_key):
@@ -84,7 +84,7 @@ def get_override_for_ccx(ccx, block, name, default=None):
     """
     overrides = _get_overrides_for_ccx(ccx)
 
-    clean_ccx_key = _clean_ccx_key(block.location)
+    clean_ccx_key = _clean_ccx_key(block.usage_key)
 
     block_overrides = overrides.get(clean_ccx_key, {})
 
@@ -131,7 +131,7 @@ def _get_overrides_for_ccx(ccx):
         )
 
         for override in query:
-            block_overrides = overrides.setdefault(override.location, {})
+            block_overrides = overrides.setdefault(override.usage_key, {})
             block_overrides[override.field] = json.loads(override.value)
             block_overrides[override.field + "_id"] = override.id
             block_overrides[override.field + "_instance"] = override
@@ -152,7 +152,7 @@ def override_field_for_ccx(ccx, block, name, value):
     value_json = field.to_json(value)
     serialized_value = json.dumps(value_json)
     override_has_changes = False
-    clean_ccx_key = _clean_ccx_key(block.location)
+    clean_ccx_key = _clean_ccx_key(block.usage_key)
 
     override = get_override_for_ccx(ccx, block, name + "_instance")
     if override:
@@ -161,7 +161,7 @@ def override_field_for_ccx(ccx, block, name, value):
     if not override:
         override, created = CcxFieldOverride.objects.get_or_create(
             ccx=ccx,
-            location=block.location,
+            location=block.usage_key,
             field=name,
             defaults={'value': serialized_value},
         )
@@ -188,7 +188,7 @@ def clear_override_for_ccx(ccx, block, name):
     try:
         CcxFieldOverride.objects.get(
             ccx=ccx,
-            location=block.location,
+            location=block.usage_key,
             field=name).delete()
 
         clear_ccx_field_info_from_ccx_map(ccx, block, name)
@@ -202,7 +202,7 @@ def clear_ccx_field_info_from_ccx_map(ccx, block, name):
     Remove field information from ccx overrides mapping dictionary
     """
     try:
-        clean_ccx_key = _clean_ccx_key(block.location)
+        clean_ccx_key = _clean_ccx_key(block.usage_key)
         ccx_override_map = _get_overrides_for_ccx(ccx).setdefault(clean_ccx_key, {})
         ccx_override_map.pop(name)
         ccx_override_map.pop(name + "_id")

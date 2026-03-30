@@ -153,7 +153,7 @@ class HiddenContentTransformerTestCase(BlockParentsMapTestCase):
         block = self.get_block(1)
         block.hide_after_due = True
         update_block(block)
-        set_date_for_block(self.course.id, block.location, 'due', self.DateType.PAST_DATE)
+        set_date_for_block(self.course.id, block.usage_key, 'due', self.DateType.PAST_DATE)
 
         # Due date is in the past so some blocks are hidden
         self.assert_transform_results(
@@ -164,7 +164,7 @@ class HiddenContentTransformerTestCase(BlockParentsMapTestCase):
         )
 
         # Set an override for the due date to be in the future
-        set_date_for_block(self.course.id, block.location, 'due', self.DateType.FUTURE_DATE, user=self.student)
+        set_date_for_block(self.course.id, block.usage_key, 'due', self.DateType.FUTURE_DATE, user=self.student)
         # this line is just to bust the cache for the user so it returns the updated date.
         get_dates_for_course(self.course.id, user=self.student, use_cached=False)
 

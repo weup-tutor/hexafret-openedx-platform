@@ -161,7 +161,7 @@ class SearchIndexerBase(metaclass=ABCMeta):
             """
             Gets the version agnostic item location
             """
-            return item.location.version_agnostic().replace(branch=None)
+            return item.usage_key.version_agnostic().replace(branch=None)
 
         def prepare_item_index(item, skip_index=False, groups_usage_info=None):
             """
@@ -192,7 +192,7 @@ class SearchIndexerBase(metaclass=ABCMeta):
                         for group in split_partition.groups:
                             group_id = str(group.id)
                             child_location = item.group_id_to_child.get(group_id, None)
-                            if child_location == split_test_child.location:
+                            if child_location == split_test_child.usage_key:
                                 groups_usage_info.update({
                                     str(get_item_location(split_test_child)): [group_id],
                                 })
@@ -242,8 +242,8 @@ class SearchIndexerBase(metaclass=ABCMeta):
                 return item_content_groups
             except Exception as err:  # pylint: disable=broad-except
                 # broad exception so that index operation does not fail on one item of many
-                log.warning('Could not index item: %s - %r', item.location, err)
-                error_list.append(_('Could not index item: {}').format(item.location))
+                log.warning('Could not index item: %s - %r', item.usage_key, err)
+                error_list.append(_('Could not index item: {}').format(item.usage_key))
 
         try:
             with modulestore.branch_setting(ModuleStoreEnum.RevisionOption.published_only):
@@ -617,7 +617,7 @@ class CourseAboutSearchIndexer(CoursewareSearchIndexer):
 
         # load data for all of the 'about' blocks for this course into a dictionary
         about_dictionary = {
-            item.location.block_id: item.data
+            item.usage_key.block_id: item.data
             for item in modulestore.get_items(course.id, qualifiers={"category": "about"})
         }
 

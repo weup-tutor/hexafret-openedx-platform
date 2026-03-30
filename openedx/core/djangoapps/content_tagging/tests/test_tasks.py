@@ -213,16 +213,16 @@ class TestAutoTagging(  # type: ignore[misc]
         )
 
         # Create XBlocks
-        sequential = self.store.create_child(self.user_id, course.location, "sequential", "test_sequential")
-        vertical = self.store.create_child(self.user_id, sequential.location, "vertical", "test_vertical")
+        sequential = self.store.create_child(self.user_id, course.usage_key, "sequential", "test_sequential")
+        vertical = self.store.create_child(self.user_id, sequential.usage_key, "vertical", "test_vertical")
 
-        usage_key_str = str(vertical.location)
+        usage_key_str = str(vertical.usage_key)
 
         # Check if the tags are created in the XBlock
         assert self._check_tag(usage_key_str, LANGUAGE_TAXONOMY_ID, "Português (Brasil)")
 
         # Delete the XBlock
-        self.store.delete_item(vertical.location, self.user_id)
+        self.store.delete_item(vertical.usage_key, self.user_id)
 
         # Check if the tags are deleted
         assert self._check_tag(usage_key_str, LANGUAGE_TAXONOMY_ID, None)
@@ -260,16 +260,16 @@ class TestAutoTagging(  # type: ignore[misc]
         )
 
         # Create XBlocks
-        sequential = self.store.create_child(self.user_id, course.location, "sequential", "test_sequential")
-        vertical = self.store.create_child(self.user_id, sequential.location, "vertical", "test_vertical")
+        sequential = self.store.create_child(self.user_id, course.usage_key, "sequential", "test_sequential")
+        vertical = self.store.create_child(self.user_id, sequential.usage_key, "vertical", "test_vertical")
 
-        usage_key_str = str(vertical.location)
+        usage_key_str = str(vertical.usage_key)
 
         # No tags created
         assert self._check_tag(course.id, LANGUAGE_TAXONOMY_ID, None)
 
         # Delete the XBlock
-        self.store.delete_item(vertical.location, self.user_id)
+        self.store.delete_item(vertical.usage_key, self.user_id)
 
         # Still no tags
         assert self._check_tag(usage_key_str, LANGUAGE_TAXONOMY_ID, None)

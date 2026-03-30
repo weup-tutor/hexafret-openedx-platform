@@ -395,7 +395,7 @@ class BlocksInfoInCourseView(BlocksInCourseView):
         subsection_grades, section_breakdown = (
             get_assignments_grades(requested_user, course_id, BLOCK_STRUCTURE_CACHE_TIMEOUT)
         )
-        grades_with_locations = {str(grade.location): grade for grade in subsection_grades}
+        grades_with_locations = {str(grade.usage_key): grade for grade in subsection_grades}
         id_to_label = self._id_to_label(section_breakdown)
 
         for block_id, block_info in blocks_info_data.items():

@@ -432,10 +432,10 @@ def jump_to_id(request, course_id, module_id):
             module_id,
             course_id,
             request.META.get("HTTP_REFERER", ""),
-            str(items[0].location)
+            str(items[0].usage_key)
         )
 
-    return jump_to(request, course_id, str(items[0].location))
+    return jump_to(request, course_id, str(items[0].usage_key))
 
 
 @ensure_csrf_cookie
@@ -1534,17 +1534,17 @@ def enclosing_sequence_for_gating_checks(block):
     # will happen automatically when rendering the render_xblock view anyway,
     # and we don't want weird, weird edge cases where you have nested Sequences
     # (which would probably "work" in terms of OLX import).
-    if block.location.block_type in seq_tags:
+    if block.usage_key.block_type in seq_tags:
         return None
 
     ancestor = block
-    while ancestor and ancestor.location.block_type not in seq_tags:
+    while ancestor and ancestor.usage_key.block_type not in seq_tags:
         ancestor = ancestor.get_parent()  # Note: CourseBlock's parent is None
 
     if ancestor:
         # get_parent() returns a parent block instance cached on the block which does not
         # have user data bound to it so we need to get it again with get_block() which will set up everything.
-        return block.runtime.get_block(ancestor.location)
+        return block.runtime.get_block(ancestor.usage_key)
     return None
 
 
@@ -1686,7 +1686,7 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True, disable_sta
                     return redirect(
                         reverse(
                             'render_xblock',
-                            kwargs={'usage_key_string': str(ancestor_sequence_block.location)}
+                            kwargs={'usage_key_string': str(ancestor_sequence_block.usage_key)}
                         )
                     )
 
@@ -1699,7 +1699,7 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True, disable_sta
             if course.proctoring_provider == 'lti_external':
                 seq_block = ancestor_sequence_block if ancestor_sequence_block else block
                 if getattr(seq_block, 'is_time_limited', None):
-                    if not _check_sequence_exam_access(request, seq_block.location):
+                    if not _check_sequence_exam_access(request, seq_block.usage_key):
                         return HttpResponseForbidden("Access to exam content is restricted")
 
             context = {
@@ -1765,7 +1765,7 @@ def get_optimization_flags_for_content(block, fragment):
     # Only run our optimizations on the leaf HTML and ProblemBlock nodes. The
     # mobile apps access these directly, and we don't have to worry about
     # XBlocks that dynamically load content, like inline discussions.
-    usage_key = block.location
+    usage_key = block.usage_key
 
     # For now, confine ourselves to optimizing just the HTMLBlock
     if usage_key.block_type != 'html':
@@ -1868,7 +1868,7 @@ class BasePublicVideoXBlockView(View):
             )
 
             # Block must be marked as public to be viewed
-            if not is_public_sharing_enabled(video_block.location, video_block.public_access):
+            if not is_public_sharing_enabled(video_block.usage_key, video_block.public_access):
                 raise Http404("Video not found.")
 
         return course, video_block
@@ -1968,11 +1968,11 @@ class PublicVideoXBlockView(BasePublicVideoXBlockView):
             'video_thumbnail': video_poster if video_poster is not None else '',
             'video_embed_url': urljoin(
                 settings.LMS_ROOT_URL,
-                reverse('render_public_video_xblock_embed', kwargs={'usage_key_string': str(video_block.location)})
+                reverse('render_public_video_xblock_embed', kwargs={'usage_key_string': str(video_block.usage_key)})
             ),
             'video_url': urljoin(
                 settings.LMS_ROOT_URL,
-                reverse('render_public_video_xblock', kwargs={'usage_key_string': str(video_block.location)})
+                reverse('render_public_video_xblock', kwargs={'usage_key_string': str(video_block.usage_key)})
             ),
         }
 

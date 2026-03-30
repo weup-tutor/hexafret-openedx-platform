@@ -87,7 +87,7 @@ def get_grade_book_page(request, course, course_key):
         # Apply limit on queryset only if total number of students are greater then MAX_STUDENTS_PER_PAGE_GRADE_BOOK.
         enrolled_students = enrolled_students[offset: offset + MAX_STUDENTS_PER_PAGE_GRADE_BOOK]
 
-    with modulestore().bulk_operations(course.location.course_key):
+    with modulestore().bulk_operations(course.usage_key.course_key):
         student_info = [
             {
                 'username': student.username,

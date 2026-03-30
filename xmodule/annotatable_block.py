@@ -175,7 +175,7 @@ class _BuiltInAnnotatableBlock(
 
         context = {
             'display_name': self.display_name_with_default,
-            'element_id': self.location.html_id(),
+            'element_id': self.usage_key.html_id(),
             'instructions_html': instructions,
             'content_html': self._render_content()
         }

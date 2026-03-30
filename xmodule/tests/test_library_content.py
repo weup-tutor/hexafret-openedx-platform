@@ -60,7 +60,7 @@ class LegacyLibraryContentTest(MixedSplitTestCase):
             "library_content",
             self.vertical,
             max_count=1,
-            source_library_id=str(self.library.location.library_key)
+            source_library_id=str(self.library.usage_key.library_key)
         )
         self.lc_block.runtime._services.update({'library_tools': self.tools})  # pylint: disable=protected-access
 
@@ -73,18 +73,18 @@ class LegacyLibraryContentTest(MixedSplitTestCase):
         """
         self.store.update_item(self.lc_block, self.user_id)
         self.lc_block.sync_from_library(upgrade_to_latest=upgrade_to_latest)
-        self.lc_block = self.store.get_item(self.lc_block.location)
+        self.lc_block = self.store.get_item(self.lc_block.usage_key)
 
     def _bind_course_block(self, block):
         """
         Bind a block (part of self.course) so we can access student-specific data.
         """
-        prepare_block_runtime(block.runtime, course_id=block.location.course_key)
+        prepare_block_runtime(block.runtime, course_id=block.usage_key.course_key)
         block.runtime._services.update({'library_tools': self.tools})  # pylint: disable=protected-access
 
         def get_block(descriptor):
             """Mocks module_system get_block function"""
-            prepare_block_runtime(descriptor.runtime, course_id=block.location.course_key)
+            prepare_block_runtime(descriptor.runtime, course_id=block.usage_key.course_key)
             descriptor.runtime.get_block_for_descriptor = get_block
             descriptor.bind_for_student(self.user_id)
             return descriptor
@@ -126,7 +126,7 @@ class LegacyLibraryContentGeneralTest(LegacyLibraryContentTest):
         """
         Test that a lc block starts without children, but is correctly populated upon first sync.
         """
-        source_library_key = self.library.location.library_key
+        source_library_key = self.library.usage_key.library_key
 
         # Normally the children get added when the "source_libraries" setting
         # is updated, but the way we do it through a factory doesn't do that.
@@ -167,7 +167,7 @@ class TestLibraryContentExportImport(LegacyLibraryContentTest):
         self.lc_block.runtime.export_fs = self.export_fs  # pylint: disable=protected-access
 
         # Prepare runtime for the import.
-        self.runtime = DummyModuleStoreRuntime(load_error_blocks=True, course_id=self.lc_block.location.course_key)
+        self.runtime = DummyModuleStoreRuntime(load_error_blocks=True, course_id=self.lc_block.usage_key.course_key)
         self.runtime.resources_fs = self.export_fs
         self.id_generator = Mock()
 
@@ -250,7 +250,7 @@ class LegacyLibraryContentBlockTestMixin:
         self.problem_type_lookup = {}
         for problem_type in self.problem_types:
             block = self.make_block("problem", self.library, data=self._get_capa_problem_type_xml(*problem_type))
-            self.problem_type_lookup[block.location] = problem_type
+            self.problem_type_lookup[block.usage_key] = problem_type
 
     def test_children_seen_by_a_user(self):
         """
@@ -290,7 +290,7 @@ class LegacyLibraryContentBlockTestMixin:
         assert 'invalid' in result.summary.text
 
         # When source_library_id is set but the block hasn't been synced, the summary should say so:
-        self.lc_block.source_library_id = str(self.library.location.library_key)
+        self.lc_block.source_library_id = str(self.library.usage_key.library_key)
         self.lc_block.source_library_version = None
         result = self.lc_block.validate()
         assert not result
@@ -572,7 +572,7 @@ class TestLibraryContentAnalytics(LegacyLibraryContentTest):
         assert len(self.publisher.call_args[0]) == 3  # pylint:disable=unsubscriptable-object
         _, event_name, event_data = self.publisher.call_args[0]  # pylint:disable=unsubscriptable-object
         assert event_name == f'edx.librarycontentblock.content.{event_type}'
-        assert event_data['location'] == str(self.lc_block.location)
+        assert event_data['location'] == str(self.lc_block.usage_key)
         return event_data
 
     def test_assigned_event(self):
@@ -581,17 +581,17 @@ class TestLibraryContentAnalytics(LegacyLibraryContentTest):
         """
         # In the beginning was the lc_block and it assigned one child to the student:
         child = self.lc_block.get_child_blocks()[0]
-        child_lib_location, child_lib_version = self.store.get_block_original_usage(child.location)
+        child_lib_location, child_lib_version = self.store.get_block_original_usage(child.usage_key)
         assert isinstance(child_lib_version, ObjectId)
         event_data = self._assert_event_was_published("assigned")
         block_info = {
-            "usage_key": str(child.location),
+            "usage_key": str(child.usage_key),
             "original_usage_key": str(child_lib_location),
             "original_usage_version": str(child_lib_version),
             "descendants": [],
         }
         assert event_data ==\
-               {'location': str(self.lc_block.location),
+               {'location': str(self.lc_block.usage_key),
                 'added': [block_info],
                 'result': [block_info],
                 'previous_count': 0, 'max_count': 1}
@@ -601,9 +601,9 @@ class TestLibraryContentAnalytics(LegacyLibraryContentTest):
         self.lc_block.max_count = 2
         children = self.lc_block.get_child_blocks()
         assert len(children) == 2
-        child, new_child = children if children[0].location == child.location else reversed(children)
+        child, new_child = children if children[0].usage_key == child.usage_key else reversed(children)
         event_data = self._assert_event_was_published("assigned")
-        assert event_data['added'][0]['usage_key'] == str(new_child.location)
+        assert event_data['added'][0]['usage_key'] == str(new_child.usage_key)
         assert len(event_data['result']) == 2
         assert event_data['previous_count'] == 1
         assert event_data['max_count'] == 2
@@ -612,9 +612,9 @@ class TestLibraryContentAnalytics(LegacyLibraryContentTest):
         """
         Same as test_assigned_event but uses the published branch
         """
-        self.store.publish(self.course.location, self.user_id)
+        self.store.publish(self.course.usage_key, self.user_id)
         with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
-            self.lc_block = self.store.get_item(self.lc_block.location)
+            self.lc_block = self.store.get_item(self.lc_block.usage_key)
             self._bind_course_block(self.lc_block)
             self.lc_block.runtime.publish = self.publisher
             self.test_assigned_event()
@@ -624,7 +624,7 @@ class TestLibraryContentAnalytics(LegacyLibraryContentTest):
         Test the "assigned" event emitted includes descendant block information.
         """
         # Replace the blocks in the library with a block that has descendants:
-        with self.store.bulk_operations(self.library.location.library_key):
+        with self.store.bulk_operations(self.library.usage_key.library_key):
             self.library.children = []
             main_vertical = self.make_block("vertical", self.library)
             inner_vertical = self.make_block("vertical", main_vertical)
@@ -654,9 +654,9 @@ class TestLibraryContentAnalytics(LegacyLibraryContentTest):
 
             # Check that "descendants" is a flat, unordered list of all of main_vertical's descendants:
             descendants_expected = (
-                (inner_vertical.location, course_usage_inner_vertical),
-                (html_block.location, course_usage_html),
-                (problem_block.location, course_usage_problem),
+                (inner_vertical.usage_key, course_usage_inner_vertical),
+                (html_block.usage_key, course_usage_html),
+                (problem_block.usage_key, course_usage_problem),
             )
             descendant_data_expected = {}
             for lib_key, course_usage_key in descendants_expected:
@@ -703,10 +703,10 @@ class TestLibraryContentAnalytics(LegacyLibraryContentTest):
         # To cause an "invalid" event, we delete all blocks from the content library
         # except for one of the two already assigned to the student:
 
-        keep_block_key = initial_blocks_assigned[0].location
+        keep_block_key = initial_blocks_assigned[0].usage_key
         keep_block_lib_usage_key, keep_block_lib_version = self.store.get_block_original_usage(keep_block_key)
         assert keep_block_lib_usage_key is not None
-        deleted_block_key = initial_blocks_assigned[1].location
+        deleted_block_key = initial_blocks_assigned[1].usage_key
         self.library.children = [keep_block_lib_usage_key]
         self.store.update_item(self.library, self.user_id)
         self.store.update_item(self.lc_block, self.user_id)
@@ -757,7 +757,7 @@ class TestLegacyLibraryContentBlockMigration(LegacyLibraryContentTest):
         self.library_v2 = lib_api.ContentLibrary.objects.get(slug="mylib")
         api.start_migration_to_library(
             user=user,
-            source_key=self.library.location.library_key,
+            source_key=self.library.usage_key.library_key,
             target_library_key=self.library_v2.library_key,
             target_collection_slug=None,
             composition_level=CompositionLevel.Component,

@@ -280,7 +280,7 @@ class TextbookDetailTestCase(CourseTestCase):
         self.assertEqual(resp2.status_code, 200)
         compare = json.loads(resp2.content.decode('utf-8'))
         self.assertEqual(compare, replacement)
-        course = self.store.get_item(self.course.location)
+        course = self.store.get_item(self.course.usage_key)
         self.assertEqual(
             course.pdf_textbooks,
             [self.textbook1, replacement]

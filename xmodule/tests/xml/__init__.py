@@ -49,7 +49,7 @@ class InMemoryModuleStoreRuntime(XMLParsingModuleStoreRuntime):  # pylint: disab
             None,
             CourseLocationManager(self.course_id),
         )
-        self._blocks[str(block.location)] = block
+        self._blocks[str(block.usage_key)] = block
         return block
 
     def load_item(self, location, for_parent=None):  # pylint: disable=method-hidden, unused-argument

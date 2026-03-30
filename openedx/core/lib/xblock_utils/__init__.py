@@ -281,7 +281,7 @@ def add_staff_markup(user, disable_staff_debug_info, block, view, frag, context)
     if isinstance(block, SequenceBlock) or getattr(block, 'HIDDEN', False):
         return frag
 
-    block_id = block.location
+    block_id = block.usage_key
     if block.has_score and settings.FEATURES.get('DISPLAY_HISTOGRAMS_TO_STAFF'):
         histogram = grade_histogram(block_id)
         render_histogram = len(histogram) > 0
@@ -329,12 +329,12 @@ def add_staff_markup(user, disable_staff_debug_info, block, view, frag, context)
         'fields': field_contents,
         'xml_attributes': getattr(block, 'xml_attributes', {}),
         'tags': block._class_tags,  # pylint: disable=protected-access
-        'location': block.location,
+        'location': block.usage_key,
         'xqa_key': block.xqa_key,
         'source_file': source_file,
         'source_url': f'{giturl}/{data_dir}/tree/master/{source_file}',
         'category': str(block.__class__.__name__),
-        'element_id': sanitize_html_id(block.location.html_id()),
+        'element_id': sanitize_html_id(block.usage_key.html_id()),
         'edit_link': edit_link,
         'user': user,
         'xqa_server': settings.FEATURES.get('XQA_SERVER', "http://your_xqa_server.com"),

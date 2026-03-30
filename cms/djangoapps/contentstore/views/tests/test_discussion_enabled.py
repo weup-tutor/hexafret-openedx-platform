@@ -33,25 +33,25 @@ class TestDiscussionEnabled(CourseTestCase):
             modulestore=self.store
         )
         self.chapter = BlockFactory(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="What is SHIELD?",
             modulestore=self.store
         )
         self.sequential = BlockFactory(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="HQ",
             modulestore=self.store
         )
         self.vertical = BlockFactory(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category="vertical",
             display_name="Triskelion",
             modulestore=self.store
         )
         self.vertical_1 = BlockFactory(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category="vertical",
             display_name="Helicarrier",
             modulestore=self.store
@@ -72,7 +72,7 @@ class TestDiscussionEnabled(CourseTestCase):
         """
         Issue a GET request to fetch value of discussion_enabled flag of param:xblock's
         """
-        resp = self._get_discussion_enabled_status(xblock.location, client=client)
+        resp = self._get_discussion_enabled_status(xblock.usage_key, client=client)
         content = json.loads(resp.content.decode("utf-8"))
         return content.get("discussion_enabled", None)
 
@@ -81,7 +81,7 @@ class TestDiscussionEnabled(CourseTestCase):
         Issue a POST request to update value of discussion_enabled flag of param:xblock's
         """
         client = client if client is not None else self.client
-        xblock_location = xblock.location
+        xblock_location = xblock.usage_key
         url = reverse_usage_url("xblock_handler", xblock_location)
         resp = client.post(
             url,

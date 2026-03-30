@@ -40,7 +40,7 @@ class APIsTestCase(SharedModuleStoreTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.course = course = CourseFactory.create()
-        cls.course_key = cls.course.location.course_key
+        cls.course_key = cls.course.usage_key.course_key
 
         # Create a course outline
         start = datetime.datetime(

@@ -443,13 +443,13 @@ def _save_xblock(
     """
     store = modulestore()
     # Perform all xblock changes within a (single-versioned) transaction
-    with store.bulk_operations(xblock.location.course_key):
+    with store.bulk_operations(xblock.usage_key.course_key):
         # Don't allow updating an xblock and discarding changes in a single operation (unsupported by UI).
         if publish == "discard_changes":
-            store.revert_to_published(xblock.location, user.id)
+            store.revert_to_published(xblock.usage_key, user.id)
             # Returning the same sort of result that we do for other save operations. In the future,
             # we may want to return the full XBlockInfo.
-            return JsonResponse({"id": str(xblock.location)})
+            return JsonResponse({"id": str(xblock.usage_key)})
 
         old_metadata = own_metadata(xblock)
         old_content = xblock.get_explicitly_set_fields_by_scope(Scope.content)
@@ -501,7 +501,7 @@ def _save_xblock(
             # this is error could occur in modulestores (such as Draft) that do not support atomic write-transactions
             old_children = set(xblock.children) - set(children)
             if any(
-                store.get_parent_location(old_child) == xblock.location
+                store.get_parent_location(old_child) == xblock.usage_key
                 for old_child in old_children
             ):
                 # since children are moved as part of a single transaction, orphans should not be created
@@ -549,11 +549,11 @@ def _save_xblock(
         xblock = save_xblock_with_callback(xblock, user, old_metadata, old_content)
 
         # for static tabs, their containing course also records their display name
-        course = store.get_course(xblock.location.course_key)
-        if xblock.location.block_type == "static_tab":
+        course = store.get_course(xblock.usage_key.course_key)
+        if xblock.usage_key.block_type == "static_tab":
             # find the course's reference to this tab and update the name.
             static_tab = CourseTabList.get_tab_by_slug(
-                course.tabs, xblock.location.name
+                course.tabs, xblock.usage_key.name
             )
             # only update if changed
             if static_tab:
@@ -568,7 +568,7 @@ def _save_xblock(
                     store.update_item(course, user.id)
 
         result = {
-            "id": str(xblock.location),
+            "id": str(xblock.usage_key),
             "data": data,
             "metadata": own_metadata(xblock),
         }
@@ -583,16 +583,16 @@ def _save_xblock(
             if is_prereq is not None:
                 if is_prereq:
                     gating_api.add_prerequisite(
-                        xblock.location.course_key, xblock.location
+                        xblock.usage_key.course_key, xblock.usage_key
                     )
                 else:
-                    gating_api.remove_prerequisite(xblock.location)
+                    gating_api.remove_prerequisite(xblock.usage_key)
                 result["is_prereq"] = is_prereq
 
             if prereq_usage_key is not None:
                 gating_api.set_required_content(
-                    xblock.location.course_key,
-                    xblock.location,
+                    xblock.usage_key.course_key,
+                    xblock.usage_key,
                     prereq_usage_key,
                     prereq_min_score,
                     prereq_min_completion,
@@ -607,11 +607,11 @@ def _save_xblock(
 
         # Make public after updating the xblock, in case the caller asked for both an update and a publish.
         if publish == "make_public":
-            modulestore().publish(xblock.location, user.id)
+            modulestore().publish(xblock.usage_key, user.id)
 
         # If summary_configuration_enabled is not None, use AIAsideSummary to update it.
         if xblock.category == "vertical" and summary_configuration_enabled is not None:
-            AiAsideSummaryConfig(course.id).set_summary_settings(xblock.location, {
+            AiAsideSummaryConfig(course.id).set_summary_settings(xblock.usage_key, {
                 'enabled': summary_configuration_enabled
             })
 
@@ -761,8 +761,8 @@ def _create_block(request):
                 {"error": _("Your clipboard is empty or invalid.")}, status=400
             )
         return JsonResponse({
-            "locator": str(created_xblock.location),
-            "courseKey": str(created_xblock.location.course_key),
+            "locator": str(created_xblock.usage_key),
+            "courseKey": str(created_xblock.usage_key.course_key),
             "static_file_notices": asdict(notices),
             "upstreamRef": str(created_xblock.upstream),
         })
@@ -795,8 +795,8 @@ def _create_block(request):
     )
 
     response = {
-        "locator": str(created_block.location),
-        "courseKey": str(created_block.location.course_key),
+        "locator": str(created_block.usage_key),
+        "courseKey": str(created_block.usage_key.course_key),
     }
     # If it contains library_content_key, the block is being imported from a v2 library
     # so it needs to be synced with upstream block.
@@ -807,7 +807,7 @@ def _create_block(request):
             store = modulestore()
             static_file_notices = sync_library_content(created_block, request, store)
         except BadUpstream as exc:
-            _delete_item(created_block.location, request.user)
+            _delete_item(created_block.usage_key, request.user)
             log.exception(
                 f"Could not sync to new block at '{created_block.usage_key}' "
                 f"using provided library_content_key='{upstream_ref}'"
@@ -850,7 +850,7 @@ def is_source_item_in_target_parents(source_item, target_parent):
         "ancestors"
     ]
     for target_ancestor in target_ancestors:
-        if str(source_item.location) == target_ancestor["id"]:
+        if str(source_item.usage_key) == target_ancestor["id"]:
             return True
     return False
 
@@ -907,11 +907,11 @@ def _move_item(source_usage_key, target_parent_usage_key, user, target_index=Non
                 target_parent_type=target_parent_type,
             )
         elif (
-            source_parent.location == target_parent.location
-            or source_item.location in target_parent.children
+            source_parent.usage_key == target_parent.usage_key
+            or source_item.usage_key in target_parent.children
         ):
             error = _("Item is already present in target location.")
-        elif source_item.location == target_parent.location:
+        elif source_item.usage_key == target_parent.usage_key:
             error = _("You can not move an item into itself.")
         elif is_source_item_in_target_parents(source_item, target_parent):
             error = _("You can not move an item into it's child.")
@@ -920,7 +920,7 @@ def _move_item(source_usage_key, target_parent_usage_key, user, target_index=Non
         elif source_index is None:
             error = _("{source_usage_key} not found in {parent_usage_key}.").format(
                 source_usage_key=str(source_usage_key),
-                parent_usage_key=str(source_parent.location),
+                parent_usage_key=str(source_parent.usage_key),
             )
         else:
             try:
@@ -948,9 +948,9 @@ def _move_item(source_usage_key, target_parent_usage_key, user, target_index=Non
         )
 
         store.update_item_parent(
-            item_location=source_item.location,
-            new_parent_location=target_parent.location,
-            old_parent_location=source_parent.location,
+            item_location=source_item.usage_key,
+            new_parent_location=target_parent.usage_key,
+            old_parent_location=source_parent.usage_key,
             insert_at=insert_at,
             user_id=user.id,
         )
@@ -958,7 +958,7 @@ def _move_item(source_usage_key, target_parent_usage_key, user, target_index=Non
         log.info(
             "MOVE: %s moved from %s to %s at %d index",
             str(source_usage_key),
-            str(source_parent.location),
+            str(source_parent.usage_key),
             str(target_parent_usage_key),
             insert_at,
         )
@@ -1063,16 +1063,16 @@ def get_block_info(
     metadata, data, id representation of a leaf block fetcher.
     :param usage_key: A UsageKey
     """
-    with modulestore().bulk_operations(xblock.location.course_key):
+    with modulestore().bulk_operations(xblock.usage_key.course_key):
         data = getattr(xblock, "data", "")
         if rewrite_static_links:
-            data = replace_static_urls(data, None, course_id=xblock.location.course_key)
+            data = replace_static_urls(data, None, course_id=xblock.usage_key.course_key)
 
         # Pre-cache has changes for the entire course because we'll need it for the ancestor info
         # Except library blocks which don't [yet] use draft/publish
-        if not isinstance(xblock.location, LibraryUsageLocator):
+        if not isinstance(xblock.usage_key, LibraryUsageLocator):
             modulestore().has_changes(
-                modulestore().get_course(xblock.location.course_key, depth=None)
+                modulestore().get_course(xblock.usage_key.course_key, depth=None)
             )
 
         # Note that children aren't being returned until we have a use case.
@@ -1107,17 +1107,17 @@ def _get_gating_info(course, xblock):
             # Cache gating prerequisites on course block so that we are not
             # hitting the database for every xblock in the course
             course.gating_prerequisites = gating_api.get_prerequisites(course.id)
-        info["is_prereq"] = gating_api.is_prerequisite(course.id, xblock.location)
+        info["is_prereq"] = gating_api.is_prerequisite(course.id, xblock.usage_key)
         info["prereqs"] = [
             p
             for p in course.gating_prerequisites
-            if str(xblock.location) not in p["namespace"]
+            if str(xblock.usage_key) not in p["namespace"]
         ]
         (
             prereq,
             prereq_min_score,
             prereq_min_completion,
-        ) = gating_api.get_required_content(course.id, xblock.location)
+        ) = gating_api.get_required_content(course.id, xblock.usage_key)
         info["prereq"] = prereq
         info["prereq_min_score"] = prereq_min_score
         info["prereq_min_completion"] = prereq_min_completion
@@ -1166,7 +1166,7 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
     ...     xblock_info['icon'] = xblock.icon_override
     ...     return xblock_info
     """
-    is_library_block = isinstance(xblock.location, LibraryUsageLocator)
+    is_library_block = isinstance(xblock.usage_key, LibraryUsageLocator)
     is_xblock_unit = is_unit(xblock, parent_xblock)
     # this should not be calculated for Sections and Subsections on Unit page or for library blocks
     has_changes = None
@@ -1175,7 +1175,7 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
 
     if graders is None:
         if not is_library_block:
-            graders = CourseGradingModel.fetch(xblock.location.course_key).graders
+            graders = CourseGradingModel.fetch(xblock.usage_key.course_key).graders
         else:
             graders = []
 
@@ -1185,7 +1185,7 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
     # We need to load the course in order to retrieve user partition information.
     # For this reason, we load the course once and re-use it when recursively loading children.
     if course is None:
-        course = modulestore().get_course(xblock.location.course_key)
+        course = modulestore().get_course(xblock.usage_key.course_key)
 
     # Compute the child info first so it can be included in aggregate information for the parent
     should_visit_children = include_child_info and (
@@ -1193,7 +1193,7 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
     )
 
     if summary_configuration is None:
-        summary_configuration = AiAsideSummaryConfig(xblock.location.course_key)
+        summary_configuration = AiAsideSummaryConfig(xblock.usage_key.course_key)
 
     if should_visit_children and xblock.has_children:
         child_info = _create_xblock_child_info(
@@ -1261,13 +1261,13 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
         )
 
     xblock_info = {
-        "id": str(xblock.location),
+        "id": str(xblock.usage_key),
         "display_name": xblock.display_name_with_default,
         "category": xblock.category,
         "has_children": xblock.has_children,
     }
 
-    if course is not None and PUBLIC_VIDEO_SHARE.is_enabled(xblock.location.course_key):
+    if course is not None and PUBLIC_VIDEO_SHARE.is_enabled(xblock.usage_key.course_key):
         xblock_info.update(
             {
                 "video_sharing_enabled": True,
@@ -1493,7 +1493,7 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
 
             if not is_tagging_feature_disabled():
                 xblock_info["course_tags_count"] = _get_course_tags_count(course.id)
-                xblock_info["tag_counts_by_block"] = _get_course_block_tags(xblock.location.context_key)
+                xblock_info["tag_counts_by_block"] = _get_course_block_tags(xblock.usage_key.context_key)
 
             xblock_info[
                 "has_partition_group_components"
@@ -1556,7 +1556,7 @@ def _was_xblock_ever_exam_linked_with_external(course, xblock):
     Returns: bool
     """
     try:
-        exam = get_exam_by_content_id(course.id, xblock.location)
+        exam = get_exam_by_content_id(course.id, xblock.usage_key)
         return bool("external_id" in exam and exam["external_id"])
     except ProctoredExamNotFoundException:
         pass

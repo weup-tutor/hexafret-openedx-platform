@@ -340,7 +340,7 @@ def leaf_filter(block):
     Filter for traversals to find leaf blocks
     """
     return (
-        block.location.block_type not in ('chapter', 'sequential', 'vertical') and
+        block.usage_key.block_type not in ('chapter', 'sequential', 'vertical') and
         len(block.get_children()) == 0
     )
 

@@ -42,13 +42,13 @@ class RandomizeBlockTest(MixedSplitTestCase):
         Bind module system to block so we can access student-specific data.
         """
         user = Mock(name='get_test_system.user', id=user_id, is_staff=False)
-        prepare_block_runtime(block.runtime, course_id=block.location.course_key, user=user)
+        prepare_block_runtime(block.runtime, course_id=block.usage_key.course_key, user=user)
 
     def test_xml_export_import_cycle(self):
         """
         Test the export-import cycle.
         """
-        randomize_block = self.store.get_item(self.randomize_block.location)
+        randomize_block = self.store.get_item(self.randomize_block.usage_key)
 
         expected_olx = (
             '<randomize display_name="{block.display_name}">\n'
@@ -78,7 +78,7 @@ class RandomizeBlockTest(MixedSplitTestCase):
         # And compare.
         assert exported_olx == expected_olx
 
-        runtime = DummyModuleStoreRuntime(load_error_blocks=True, course_id=randomize_block.location.course_key)
+        runtime = DummyModuleStoreRuntime(load_error_blocks=True, course_id=randomize_block.usage_key.course_key)
         runtime.resources_fs = export_fs
 
         # Now import it.
@@ -94,7 +94,7 @@ class RandomizeBlockTest(MixedSplitTestCase):
         """
         Test that each student sees only one block as a child of the LibraryContent block.
         """
-        randomize_block = self.store.get_item(self.randomize_block.location)
+        randomize_block = self.store.get_item(self.randomize_block.usage_key)
         self._bind_module_system(randomize_block, 3)
 
         # Make sure the runtime knows that the block's children vary per-user:
@@ -110,6 +110,6 @@ class RandomizeBlockTest(MixedSplitTestCase):
         assert len(randomize_block.get_content_titles()) == 3
 
         # Bind to another user and check a different child block is displayed to user.
-        randomize_block = self.store.get_item(self.randomize_block.location)
+        randomize_block = self.store.get_item(self.randomize_block.usage_key)
         self._bind_module_system(randomize_block, 1)
         assert randomize_block.get_child_blocks()[0].display_name == 'Hello HTML 2'

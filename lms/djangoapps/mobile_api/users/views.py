@@ -183,7 +183,7 @@ class UserCourseStatus(views.APIView):
         Returns the course status
         """
         path = self._last_visited_block_path(request, course)
-        path_ids = [str(block.location) for block in path]
+        path_ids = [str(block.usage_key) for block in path]
         return Response({
             "last_visited_module_id": path_ids[0],
             "last_visited_module_path": path_ids,
@@ -208,7 +208,7 @@ class UserCourseStatus(views.APIView):
             key = KeyValueStore.Key(
                 scope=Scope.user_state,
                 user_id=request.user.id,
-                block_scope_id=course.location,
+                block_scope_id=course.usage_key,
                 field_name='position'
             )
             original_store_date = field_data_cache.last_modified(key)

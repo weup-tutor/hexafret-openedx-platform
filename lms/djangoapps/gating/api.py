@@ -24,7 +24,7 @@ def evaluate_prerequisite(course, subsection_grade, user):
     the minimum score required by dependent subsections, the related
     milestone will be marked fulfilled for the user.
     """
-    prereq_milestone = gating_api.get_gating_milestone(course.id, subsection_grade.location, 'fulfills')
+    prereq_milestone = gating_api.get_gating_milestone(course.id, subsection_grade.usage_key, 'fulfills')
     if prereq_milestone:
         gated_content_milestones = defaultdict(list)
         for milestone in gating_api.find_gating_milestones(course.id, content_key=None, relationship='requires'):
@@ -37,7 +37,7 @@ def evaluate_prerequisite(course, subsection_grade, user):
 
             for milestone in gated_content:
                 gating_api.update_milestone(
-                    milestone, subsection_grade.location, prereq_milestone, user, grade_percentage
+                    milestone, subsection_grade.usage_key, prereq_milestone, user, grade_percentage
                 )
 
 

@@ -723,10 +723,10 @@ class TestGetTranscript(SharedModuleStoreTestCase):
         self.sjson_mime_type = transcripts_utils.Transcript.mime_types[transcripts_utils.Transcript.SJSON]
 
         self.user = UserFactory.create()
-        self.vertical = BlockFactory.create(category='vertical', parent_location=self.course.location)
+        self.vertical = BlockFactory.create(category='vertical', parent_location=self.course.usage_key)
         self.video = BlockFactory.create(
             category='video',
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             edx_video_id='1234-5678-90'
         )
 
@@ -741,7 +741,7 @@ class TestGetTranscript(SharedModuleStoreTestCase):
         html5_sources = html5_sources or []
         self.video = BlockFactory.create(
             category='video',
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             sub=subs_id,
             youtube_id_1_0=youtube_id_1_0,
             transcripts=transcripts,
@@ -857,7 +857,7 @@ class TestGetTranscript(SharedModuleStoreTestCase):
         Verify that `get_transcript` function returns correct data when transcript is in content store.
         """
         base_filename = 'video_101.srt'
-        self.upload_file(self.create_srt_file(self.subs_srt.encode('utf-8')), self.video.location, base_filename)
+        self.upload_file(self.create_srt_file(self.subs_srt.encode('utf-8')), self.video.usage_key, base_filename)
         self.create_transcript(subs_id, language, base_filename, youtube_id_1_0, html5_sources)
         content, file_name, mimetype = transcripts_utils.get_transcript(
             self.video,
@@ -919,7 +919,7 @@ class TestGetTranscript(SharedModuleStoreTestCase):
         """
         Verify that `get_transcript` function returns correct exception when transcript content is empty.
         """
-        self.upload_file(self.create_srt_file(b''), self.video.location, 'ur_video_101.srt')
+        self.upload_file(self.create_srt_file(b''), self.video.usage_key, 'ur_video_101.srt')
         self.create_transcript('', 'ur', 'ur_video_101.srt')
 
         with self.assertRaises(NotFoundError) as no_content_exception:

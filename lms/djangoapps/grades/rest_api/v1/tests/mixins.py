@@ -129,7 +129,7 @@ class GradeViewTestMixin(SharedModuleStoreTestCase):
 
         chapter = BlockFactory.create(
             category='chapter',
-            parent_location=course.location,
+            parent_location=course.usage_key,
             display_name="Chapter 1",
         )
         # create a problem for each type and minimum count needed by the grading policy
@@ -138,7 +138,7 @@ class GradeViewTestMixin(SharedModuleStoreTestCase):
             for num in range(min_count):
                 section = BlockFactory.create(
                     category='sequential',
-                    parent_location=chapter.location,
+                    parent_location=chapter.usage_key,
                     due=datetime(2017, 12, 18, 11, 30, 00),
                     display_name=f'Sequential {grading_type} {num}',
                     format=grading_type,
@@ -146,12 +146,12 @@ class GradeViewTestMixin(SharedModuleStoreTestCase):
                 )
                 vertical = BlockFactory.create(
                     category='vertical',
-                    parent_location=section.location,
+                    parent_location=section.usage_key,
                     display_name=f'Vertical {grading_type} {num}',
                 )
                 BlockFactory.create(
                     category='problem',
-                    parent_location=vertical.location,
+                    parent_location=vertical.usage_key,
                     display_name=f'Problem {grading_type} {num}',
                 )
 

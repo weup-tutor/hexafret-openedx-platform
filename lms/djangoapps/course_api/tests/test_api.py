@@ -342,8 +342,8 @@ class TestGetCourseDates(CourseDetailTestMixin, SharedModuleStoreTestCase):
         mock_path = 'lms.djangoapps.course_api.api.get_dates_for_course'
         with mock.patch(mock_path) as mock_get_dates:
             mock_get_dates.return_value = {
-                (self.section_1.location, 'due'): self.section_1.due.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                (self.section_1.location, 'start'): self.section_1.start.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                (self.section_1.usage_key, 'due'): self.section_1.due.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                (self.section_1.usage_key, 'start'): self.section_1.start.strftime('%Y-%m-%dT%H:%M:%SZ'),
             }
 
             expected_due_dates = [
@@ -364,8 +364,8 @@ class TestGetCourseDates(CourseDetailTestMixin, SharedModuleStoreTestCase):
             with mock.patch(mock_path + 'modulestore') as mock_modulestore:
                 mock_modulestore.return_value.get_item.side_effect = ItemNotFoundError('whatever')
                 mock_get_dates.return_value = {
-                    (self.section_1.location, 'due'): self.section_1.due.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                    (self.section_1.location, 'start'): self.section_1.start.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    (self.section_1.usage_key, 'due'): self.section_1.due.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    (self.section_1.usage_key, 'start'): self.section_1.start.strftime('%Y-%m-%dT%H:%M:%SZ'),
                 }
 
                 expected_due_dates = [

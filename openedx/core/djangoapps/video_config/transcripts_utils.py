@@ -129,7 +129,7 @@ def save_subs_to_store(subs, subs_id, item, language='en'):
     """
     filedata = json.dumps(subs, indent=2).encode('utf-8')
     filename = subs_filename(subs_id, language)
-    return save_to_store(filedata, filename, 'application/json', item.location)
+    return save_to_store(filedata, filename, 'application/json', item.usage_key)
 
 
 def get_transcript_link_from_youtube(youtube_id):
@@ -288,7 +288,7 @@ def remove_subs_from_store(subs_id, item, lang='en'):
     Remove from store, if transcripts content exists.
     """
     filename = subs_filename(subs_id, lang)
-    Transcript.delete_asset(item.location, filename)
+    Transcript.delete_asset(item.usage_key, filename)
 
 
 def generate_subs_from_source(speed_subs, subs_type, subs_filedata, block, language='en'):
@@ -491,7 +491,7 @@ def generate_sjson_for_all_speeds(block, user_filename, result_subs_dict, lang):
     _ = block.runtime.service(block, "i18n").gettext
 
     try:
-        srt_transcripts = contentstore().find(Transcript.asset_location(block.location, user_filename))
+        srt_transcripts = contentstore().find(Transcript.asset_location(block.usage_key, user_filename))
     except NotFoundError as ex:
         raise TranscriptException(_("{exception_message}: Can't find uploaded transcripts: {user_filename}").format(  # lint-amnesty, pylint: disable=raise-missing-from
             exception_message=str(ex),
@@ -904,7 +904,7 @@ def get_transcript_from_contentstore(video, language, output_format, transcripts
         try:
             transcripts['en'] = sub_id
             input_format, base_name, transcript_content = get_transcript_for_video(
-                video.location,
+                video.usage_key,
                 subs_id=sub_id,
                 file_name=transcripts[language],
                 language=language

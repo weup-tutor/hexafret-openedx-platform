@@ -49,14 +49,14 @@ class BaseViewTest(SharedModuleStoreTestCase, APITestCase):
         cls.api_url = reverse(cls.view_name)
 
         cls.course = CourseFactory.create()
-        cls.course_key = cls.course.location.course_key
+        cls.course_key = cls.course.usage_key.course_key
 
         cls.ora_block = BlockFactory.create(
             category="openassessment",
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             display_name="test",
         )
-        cls.ora_usage_key = str(cls.ora_block.location)
+        cls.ora_usage_key = str(cls.ora_block.usage_key)
 
         cls.password = "password"
         cls.staff = StaffFactory(course_key=cls.course_key, password=cls.password)

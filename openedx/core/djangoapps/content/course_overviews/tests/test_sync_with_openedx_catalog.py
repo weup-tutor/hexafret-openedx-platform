@@ -33,7 +33,7 @@ class CourseOverviewSyncTestCase(ImmediateOnCommitMixin, ModuleStoreTestCase):
         (Also the corresponding `CatalogCourse`.)
         """
         course = CourseFactory.create(display_name="Intro to Testing", emit_signals=True)
-        course_key = course.location.context_key
+        course_key = course.usage_key.context_key
 
         run = catalog_api.get_course_run(course_key)
         assert run.title == "Intro to Testing"
@@ -56,7 +56,7 @@ class CourseOverviewSyncTestCase(ImmediateOnCommitMixin, ModuleStoreTestCase):
         """
         # Create a course
         course = CourseFactory.create(display_name="Intro to Testing", emit_signals=True)
-        course_id = course.location.context_key
+        course_id = course.usage_key.context_key
         run = catalog_api.get_course_run(course_id)
         assert run.title == "Intro to Testing"
         assert run.catalog_course.language_short == "en"
@@ -85,7 +85,7 @@ class CourseOverviewSyncTestCase(ImmediateOnCommitMixin, ModuleStoreTestCase):
 
         # Create a course
         course = CourseFactory.create(display_name="Intro to Testing", emit_signals=True)
-        course_id = course.location.context_key
+        course_id = course.usage_key.context_key
         run = catalog_api.get_course_run(course_id)
         assert run.title == "Intro to Testing"
         assert run.catalog_course.language_short == "en"
@@ -129,7 +129,7 @@ class CourseOverviewSyncTestCase(ImmediateOnCommitMixin, ModuleStoreTestCase):
 
         # Create a course with two runs:
         course = CourseFactory.create(display_name="Intro to Testing", emit_signals=True)
-        course_id1 = course.location.context_key
+        course_id1 = course.usage_key.context_key
         run1 = catalog_api.get_course_run(course_id1)
         # re-run the course:
         course_id2 = rerun_course(

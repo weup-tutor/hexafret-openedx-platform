@@ -821,7 +821,7 @@ class StudioDocumentsTest(SharedModuleStoreTestCase):
         ]
         # pylint: enable=line-too-long
         block = BlockFactory.create(
-            parent_location=self.toy_course.location,
+            parent_location=self.toy_course.usage_key,
             category="html",
             display_name="Non-default HTML Block",
             editor="raw",

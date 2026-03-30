@@ -41,7 +41,7 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
             )
             if master_branch == ModuleStoreEnum.BranchName.draft and not skip_auto_publish:
                 # any other value is hopefully only cloning or doing something which doesn't want this value add
-                self._auto_publish_no_children(item.location, item.location.block_type, user_id, **kwargs)
+                self._auto_publish_no_children(item.usage_key, item.usage_key.block_type, user_id, **kwargs)
 
                 # create any other necessary things as a side effect: ensure they populate the draft branch
                 # and rely on auto publish to populate the published branch: split's create course doesn't
@@ -141,12 +141,12 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
         return new_keys
 
     def update_item(self, block, user_id, allow_not_found=False, force=False, asides=None, **kwargs):  # lint-amnesty, pylint: disable=arguments-differ
-        old_block_locn = block.location
-        block.location = self._map_revision_to_branch(old_block_locn)
-        emit_signals = block.location.branch == ModuleStoreEnum.BranchName.published \
-            or block.location.block_type in DIRECT_ONLY_CATEGORIES
+        old_block_locn = block.usage_key
+        block.usage_key = self._map_revision_to_branch(old_block_locn)
+        emit_signals = block.usage_key.branch == ModuleStoreEnum.BranchName.published \
+            or block.usage_key.block_type in DIRECT_ONLY_CATEGORIES
 
-        with self.bulk_operations(block.location.course_key, emit_signals=emit_signals):
+        with self.bulk_operations(block.usage_key.course_key, emit_signals=emit_signals):
             item = super().update_item(
                 block,
                 user_id,
@@ -155,8 +155,8 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
                 asides=asides,
                 **kwargs
             )
-            self._auto_publish_no_children(item.location, item.location.block_type, user_id, **kwargs)
-            block.location = old_block_locn
+            self._auto_publish_no_children(item.usage_key, item.usage_key.block_type, user_id, **kwargs)
+            block.usage_key = old_block_locn
             return item
 
     def create_item(self, user_id, course_key, block_type, block_id=None,     # pylint: disable=W0221
@@ -174,7 +174,7 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
                 force=force, **kwargs
             )
             if not skip_auto_publish:
-                self._auto_publish_no_children(item.location, item.location.block_type, user_id, **kwargs)
+                self._auto_publish_no_children(item.usage_key, item.usage_key.block_type, user_id, **kwargs)
             return item
 
     def create_child(
@@ -188,8 +188,8 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
                 fields=fields, asides=asides, **kwargs
             )
             # Publish both the child and the parent, if the child is a direct-only category
-            self._auto_publish_no_children(item.location, item.location.block_type, user_id, **kwargs)
-            self._auto_publish_no_children(parent_usage_key, item.location.block_type, user_id, **kwargs)
+            self._auto_publish_no_children(item.usage_key, item.usage_key.block_type, user_id, **kwargs)
+            self._auto_publish_no_children(parent_usage_key, item.usage_key.block_type, user_id, **kwargs)
             return item
 
     def delete_item(self, location, user_id, revision=None, skip_auto_publish=False, **kwargs):  # lint-amnesty, pylint: disable=arguments-differ
@@ -337,7 +337,7 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
         :return: True if the draft and published versions differ
         """
         def get_course(branch_name):
-            return self._lookup_course(xblock.location.course_key.for_branch(branch_name)).structure
+            return self._lookup_course(xblock.usage_key.course_key.for_branch(branch_name)).structure
 
         def get_block(course_structure, block_key):
             return self._get_block_from_structure(course_structure, block_key)
@@ -365,7 +365,7 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
 
             return False
 
-        return has_changes_subtree(BlockKey.from_usage_key(xblock.location))
+        return has_changes_subtree(BlockKey.from_usage_key(xblock.usage_key))
 
     def publish(self, location, user_id, blacklist=None, **kwargs):  # lint-amnesty, pylint: disable=arguments-differ
         """
@@ -538,11 +538,11 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
     def _get_head(self, xblock, branch):
         """ Gets block at the head of specified branch """
         try:
-            course_structure = self._lookup_course(xblock.location.course_key.for_branch(branch)).structure
+            course_structure = self._lookup_course(xblock.usage_key.course_key.for_branch(branch)).structure
         except ItemNotFoundError:
             # There is no published version xblock container, e.g. Library
             return None
-        return self._get_block_from_structure(course_structure, BlockKey.from_usage_key(xblock.location))
+        return self._get_block_from_structure(course_structure, BlockKey.from_usage_key(xblock.usage_key))
 
     def _get_version(self, block):
         """
@@ -575,7 +575,7 @@ class DraftVersioningModuleStore(SplitMongoModuleStore, ModuleStoreDraftAndPubli
                     # Importing the block and publishing the block links the draft & published blocks' version history.
                     draft_block = self.import_xblock(user_id, draft_course, block_type, block_id, fields,
                                                      runtime, **kwargs)
-                    return self.publish(draft_block.location.version_agnostic(), user_id, blacklist=EXCLUDE_ALL, **kwargs)  # lint-amnesty, pylint: disable=line-too-long
+                    return self.publish(draft_block.usage_key.version_agnostic(), user_id, blacklist=EXCLUDE_ALL, **kwargs)  # lint-amnesty, pylint: disable=line-too-long
 
             # do the import
             partitioned_fields = self.partition_fields_by_scope(block_type, fields)

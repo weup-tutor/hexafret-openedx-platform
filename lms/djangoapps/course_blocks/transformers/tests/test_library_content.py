@@ -120,7 +120,7 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
         """
         raw_block_structure = get_course_blocks(
             self.user,
-            self.course.location,
+            self.course.usage_key,
             transformers=BlockStructureTransformers(),
         )
         assert len(list(raw_block_structure.get_block_keys())) == len(self.blocks)
@@ -129,7 +129,7 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
         clear_course_from_cache(self.course.id)
         trans_block_structure = get_course_blocks(
             self.user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
 
@@ -154,7 +154,7 @@ class ContentLibraryTransformerTestCase(CourseStructureTestCase):
         for i in range(5):
             trans_block_structure = get_course_blocks(
                 self.user,
-                self.course.location,
+                self.course.usage_key,
                 self.transformers,
             )
             assert set(trans_block_structure.get_block_keys()) == self.get_block_key_set(self.blocks, 'course',
@@ -275,7 +275,7 @@ class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
         for i in range(5):
             trans_block_structure = get_course_blocks(
                 self.user,
-                self.course.location,
+                self.course.usage_key,
                 self.transformers,
             )
             children = []
@@ -327,7 +327,7 @@ class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
         for _ in range(5):
             trans_block_structure = get_course_blocks(
                 self.user,
-                self.course.location,
+                self.course.usage_key,
                 self.transformers,
             )
             children = []
@@ -350,7 +350,7 @@ class ContentLibraryOrderTransformerTestCase(CourseStructureTestCase):
         for _ in range(5):
             trans_block_structure = get_course_blocks(
                 self.user,
-                self.course.location,
+                self.course.usage_key,
                 self.transformers,
             )
             children = []

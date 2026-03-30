@@ -55,19 +55,19 @@ class ContentLibraryToolsTest(MixedSplitTestCase, ContentLibrariesRestApiTest):
 
         Covers getting results for either string library key or LibraryLocator.
         """
-        lib_key = LibraryFactory.create(modulestore=self.store).location.library_key
+        lib_key = LibraryFactory.create(modulestore=self.store).usage_key.library_key
         # Re-load the library from the modulestore, explicitly including version information:
         lib = self.store.get_library(lib_key, remove_version=False, remove_branch=False)
         # check the result using the LibraryLocator
         assert isinstance(lib_key, LibraryLocator)
         result = self.tools.get_latest_library_version(lib_key)
         assert result
-        assert result == str(lib.location.library_key.version_guid)
+        assert result == str(lib.usage_key.library_key.version_guid)
         # the same check for string representation of the LibraryLocator
         str_key = str(lib_key)
         result = self.tools.get_latest_library_version(str_key)
         assert result
-        assert result == str(lib.location.library_key.version_guid)
+        assert result == str(lib.usage_key.library_key.version_guid)
 
     @ddt.data(
         'library-v1:Fake+Key',
@@ -92,10 +92,10 @@ class ContentLibraryToolsTest(MixedSplitTestCase, ContentLibrariesRestApiTest):
             "library_content",
             course,
             max_count=1,
-            source_library_id=str(library.location.library_key)
+            source_library_id=str(library.usage_key.library_key)
         )
 
         assert len(content_block.children) == 0
         self.tools.trigger_library_sync(content_block, library_version=None)
-        content_block = self.store.get_item(content_block.location)
+        content_block = self.store.get_item(content_block.usage_key)
         assert len(content_block.children) == 1

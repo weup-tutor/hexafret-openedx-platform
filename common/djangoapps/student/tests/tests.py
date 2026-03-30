@@ -345,7 +345,7 @@ class DashboardTest(ModuleStoreTestCase, TestVerificationBase):
         Check that the css class and the status message are in the dashboard html.
         """
         CourseModeFactory.create(mode_slug=mode, course_id=self.course.id)
-        CourseEnrollment.enroll(self.user, self.course.location.course_key, mode=mode)
+        CourseEnrollment.enroll(self.user, self.course.usage_key.course_key, mode=mode)
 
         if mode == 'verified':
             # Simulate a successful verification attempt
@@ -380,7 +380,7 @@ class DashboardTest(ModuleStoreTestCase, TestVerificationBase):
         Check that the css class and the status message are not in the dashboard html.
         """
         CourseModeFactory.create(mode_slug=mode, course_id=self.course.id)
-        CourseEnrollment.enroll(self.user, self.course.location.course_key, mode=mode)
+        CourseEnrollment.enroll(self.user, self.course.usage_key.course_key, mode=mode)
 
         if mode == 'verified':
             # Simulate a successful verification attempt
@@ -611,7 +611,7 @@ class DashboardTestsWithSiteOverrides(SiteMixin, ModuleStoreTestCase):
         self.course = CourseFactory.create(org=self.org)
         self.user = UserFactory.create(username='jack', email='jack@fake.edx.org', password=self.TEST_PASSWORD)
         CourseModeFactory.create(mode_slug='no-id-professional', course_id=self.course.id)
-        CourseEnrollment.enroll(self.user, self.course.location.course_key, mode='no-id-professional')
+        CourseEnrollment.enroll(self.user, self.course.usage_key.course_key, mode='no-id-professional')
         cache.clear()
 
     @skip_unless_lms

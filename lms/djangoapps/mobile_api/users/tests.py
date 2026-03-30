@@ -555,7 +555,7 @@ class TestUserEnrollmentApi(UrlResetMixin, MobileAPITestCase, MobileAuthUserTest
         StudentModule.objects.create(
             student=self.user,
             course_id=old_course.id,
-            module_state_key=old_course.location,
+            module_state_key=old_course.usage_key,
         )
         response = self.api_response(api_version=API_V4)
 
@@ -635,7 +635,7 @@ class TestUserEnrollmentApi(UrlResetMixin, MobileAPITestCase, MobileAuthUserTest
         StudentModule.objects.create(
             student=self.user,
             course_id=not_mobile_available.id,
-            module_state_key=not_mobile_available.location,
+            module_state_key=not_mobile_available.usage_key,
         )
         response = self.api_response(api_version=API_V4)
 
@@ -710,15 +710,15 @@ class TestUserEnrollmentApi(UrlResetMixin, MobileAPITestCase, MobileAuthUserTest
             display_name="problem",
         )
         self.enroll(course.id)
-        get_last_completed_block_mock.return_value = problem.location
+        get_last_completed_block_mock.return_value = problem.usage_key
         expected_course_status = {
-            'last_visited_module_id': str(subsection.location),
+            'last_visited_module_id': str(subsection.usage_key),
             'last_visited_module_path': [
-                str(course.location),
-                str(section.location),
-                str(subsection.location),
+                str(course.usage_key),
+                str(section.usage_key),
+                str(subsection.usage_key),
             ],
-            'last_visited_block_id': str(problem.location),
+            'last_visited_block_id': str(problem.usage_key),
             'last_visited_unit_display_name': vertical.display_name,
         }
 
@@ -1162,16 +1162,16 @@ class TestCourseStatusGET(CourseStatusAPITestCase, MobileAuthUserTestMixin,
         self.login_and_enroll()
 
         response = self.api_response(api_version=API_V05)
-        assert response.data['last_visited_module_id'] == str(self.sub_section.location)
-        assert response.data['last_visited_module_path'] == [str(block.location) for block in
+        assert response.data['last_visited_module_id'] == str(self.sub_section.usage_key)
+        assert response.data['last_visited_module_path'] == [str(block.usage_key) for block in
                                                              [self.sub_section, self.section, self.course]]
 
     def test_success_v1(self):
         self.override_waffle_switch(True)
         self.login_and_enroll()
-        submit_completions_for_testing(self.user, [self.unit.location])
+        submit_completions_for_testing(self.user, [self.unit.usage_key])
         response = self.api_response(api_version=API_V1)
-        assert response.data['last_visited_block_id'] == str(self.unit.location)
+        assert response.data['last_visited_block_id'] == str(self.unit.usage_key)
 
     # Since we are testing an non atomic view in atomic test case, therefore we are expecting error on failures
     def api_atomic_response(self, reverse_args=None, data=None, **kwargs):
@@ -1228,8 +1228,8 @@ class TestCourseStatusPATCH(CourseStatusAPITestCase, MobileAuthUserTestMixin,
 
     def test_success(self):
         self.login_and_enroll()
-        response = self.api_response(data={"last_visited_module_id": str(self.other_unit.location)})
-        assert response.data['last_visited_module_id'] == str(self.other_sub_section.location)
+        response = self.api_response(data={"last_visited_module_id": str(self.other_unit.usage_key)})
+        assert response.data['last_visited_module_id'] == str(self.other_sub_section.usage_key)
 
     def test_invalid_block(self):
         self.login_and_enroll()
@@ -1247,7 +1247,7 @@ class TestCourseStatusPATCH(CourseStatusAPITestCase, MobileAuthUserTestMixin,
         past_date = datetime.datetime.now()
         response = self.api_response(
             data={
-                "last_visited_module_id": str(self.other_unit.location),
+                "last_visited_module_id": str(self.other_unit.usage_key),
                 "modification_date": past_date.isoformat()
             },
             expected_response_code=400
@@ -1262,16 +1262,16 @@ class TestCourseStatusPATCH(CourseStatusAPITestCase, MobileAuthUserTestMixin,
         self.login_and_enroll()
 
         # save something so we have an initial date
-        self.api_response(data={"last_visited_module_id": str(initial_unit.location)})
+        self.api_response(data={"last_visited_module_id": str(initial_unit.usage_key)})
 
         # now actually update it
         response = self.api_response(
             data={
-                "last_visited_module_id": str(update_unit.location),
+                "last_visited_module_id": str(update_unit.usage_key),
                 "modification_date": date.isoformat()
             }
         )
-        assert response.data['last_visited_module_id'] == str(expected_subsection.location)
+        assert response.data['last_visited_module_id'] == str(expected_subsection.usage_key)
 
     def test_old_date(self):
         self.login_and_enroll()
@@ -1287,11 +1287,11 @@ class TestCourseStatusPATCH(CourseStatusAPITestCase, MobileAuthUserTestMixin,
         self.login_and_enroll()
         response = self.api_response(
             data={
-                "last_visited_module_id": str(self.other_unit.location),
+                "last_visited_module_id": str(self.other_unit.usage_key),
                 "modification_date": timezone.now().isoformat()
             }
         )
-        assert response.data['last_visited_module_id'] == str(self.other_sub_section.location)
+        assert response.data['last_visited_module_id'] == str(self.other_sub_section.usage_key)
 
     def test_invalid_date(self):
         self.login_and_enroll()
@@ -1535,7 +1535,7 @@ class TestUserEnrollmentsStatus(MobileAPITestCase, MobileAuthUserTestMixin):
             user=self.user,
             context_key=course.context_key,
             block_type='course',
-            block_key=section.location,
+            block_key=section.usage_key,
             completion=0.5,
         )
         completion.created = datetime.datetime.now(pytz.UTC) - datetime.timedelta(days=completed_days_ago)

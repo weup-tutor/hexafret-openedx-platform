@@ -294,7 +294,7 @@ class OverrideModulestoreFieldData(OverrideFieldData):
         Arguments:
             block: An XBlock
         """
-        course_id = str(block.location.course_key)
+        course_id = str(block.usage_key.course_key)
         cache_key = ENABLED_MODULESTORE_OVERRIDE_PROVIDERS_KEY.format(course_id=course_id)
 
         request_cache = DEFAULT_REQUEST_CACHE

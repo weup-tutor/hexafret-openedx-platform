@@ -44,38 +44,38 @@ class TestGetBlocks(SharedModuleStoreTestCase):
         self.request.user = self.user
 
     def test_basic(self):
-        blocks = get_blocks(self.request, self.course.location, self.user)
-        assert blocks['root'] == str(self.course.location)
+        blocks = get_blocks(self.request, self.course.usage_key, self.user)
+        assert blocks['root'] == str(self.course.usage_key)
 
         # subtract for (1) the orphaned course About block and (2) the hidden Html block
         assert len(blocks['blocks']) == (len(self.store.get_items(self.course.id)) - 2)
-        assert str(self.html_block.location) not in blocks['blocks']
+        assert str(self.html_block.usage_key) not in blocks['blocks']
 
     def test_no_user(self):
-        blocks = get_blocks(self.request, self.course.location)
-        assert str(self.html_block.location) not in blocks['blocks']
+        blocks = get_blocks(self.request, self.course.usage_key)
+        assert str(self.html_block.usage_key) not in blocks['blocks']
         vertical_block = self.store.get_item(self.course.id.make_usage_key('vertical', 'vertical_x1a'))
-        assert str(vertical_block.location) in blocks['blocks']
+        assert str(vertical_block.usage_key) in blocks['blocks']
 
     def test_access_before_api_transformer_order(self):
         """
         Tests the order of transformers: access checks are made before the api
         transformer is applied.
         """
-        blocks = get_blocks(self.request, self.course.location, self.user, nav_depth=5, requested_fields=['nav_depth'])
+        blocks = get_blocks(self.request, self.course.usage_key, self.user, nav_depth=5, requested_fields=['nav_depth'])
         vertical_block = self.store.get_item(self.course.id.make_usage_key('vertical', 'vertical_x1a'))
         problem_block = self.store.get_item(self.course.id.make_usage_key('problem', 'problem_x1a_1'))
 
-        vertical_descendants = blocks['blocks'][str(vertical_block.location)]['descendants']
+        vertical_descendants = blocks['blocks'][str(vertical_block.usage_key)]['descendants']
 
-        assert str(problem_block.location) in vertical_descendants
-        assert str(self.html_block.location) not in vertical_descendants
+        assert str(problem_block.usage_key) in vertical_descendants
+        assert str(self.html_block.usage_key) not in vertical_descendants
 
     def test_sub_structure(self):
         sequential_block = self.store.get_item(self.course.id.make_usage_key('sequential', 'sequential_y1'))
 
-        blocks = get_blocks(self.request, sequential_block.location, self.user)
-        assert blocks['root'] == str(sequential_block.location)
+        blocks = get_blocks(self.request, sequential_block.usage_key, self.user)
+        assert blocks['root'] == str(sequential_block.usage_key)
         assert len(blocks['blocks']) == 5
 
         for block_type, block_name, is_inside_of_structure in (
@@ -86,15 +86,15 @@ class TestGetBlocks(SharedModuleStoreTestCase):
         ):
             block = self.store.get_item(self.course.id.make_usage_key(block_type, block_name))
             if is_inside_of_structure:
-                assert str(block.location) in blocks['blocks']
+                assert str(block.usage_key) in blocks['blocks']
             else:
-                assert str(block.location) not in blocks['blocks']
+                assert str(block.usage_key) not in blocks['blocks']
 
     def test_filtering_by_block_types(self):
         sequential_block = self.store.get_item(self.course.id.make_usage_key('sequential', 'sequential_y1'))
 
         # not filtered blocks
-        blocks = get_blocks(self.request, sequential_block.location, self.user, requested_fields=['type'])
+        blocks = get_blocks(self.request, sequential_block.usage_key, self.user, requested_fields=['type'])
         assert len(blocks['blocks']) == 5
         found_not_problem = False
         for block in blocks['blocks'].values():
@@ -103,7 +103,7 @@ class TestGetBlocks(SharedModuleStoreTestCase):
         assert found_not_problem
 
         # filtered blocks
-        blocks = get_blocks(self.request, sequential_block.location, self.user,
+        blocks = get_blocks(self.request, sequential_block.usage_key, self.user,
                             block_types_filter=['problem'], requested_fields=['type'])
         assert len(blocks['blocks']) == 3
         for block in blocks['blocks'].values():
@@ -163,7 +163,7 @@ class TestGetBlocksVideoUrls(SharedModuleStoreTestCase):
             }
         }
         blocks = get_blocks(
-            self.request, self.course.location, requested_fields=['student_view_data'], student_view_data=['video']
+            self.request, self.course.usage_key, requested_fields=['student_view_data'], student_view_data=['video']
         )
         video_block_key = str(self.course.id.make_usage_key('video', 'sample_video'))
         video_block_data = blocks['blocks'][video_block_key]
@@ -200,7 +200,7 @@ class TestGetBlocksQueryCountsBase(SharedModuleStoreTestCase):
         """
         with check_mongo_calls(expected_mongo_queries):
             with self.assertNumQueries(expected_sql_queries, table_ignorelist=QUERY_COUNT_TABLE_IGNORELIST):
-                get_blocks(self.request, course.location, self.user)
+                get_blocks(self.request, course.usage_key, self.user)
 
 
 @ddt.ddt

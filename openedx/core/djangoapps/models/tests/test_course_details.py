@@ -40,9 +40,9 @@ class CourseDetailsTestCase(ModuleStoreTestCase):
                 if should_have_default_enroll_start
                 else f'enrollment_start date somehow initialized {str(details.enrollment_start)}'
             )
-            assert details.org == course.location.org, 'Org not copied into'
-            assert details.course_id == course.location.course, 'Course_id not copied into'
-            assert details.run == course.location.run, 'Course run not copied into'
+            assert details.org == course.usage_key.org, 'Org not copied into'
+            assert details.course_id == course.usage_key.course, 'Course_id not copied into'
+            assert details.run == course.usage_key.run, 'Course run not copied into'
             assert details.course_image_name == course.course_image
             assert details.start_date.tzinfo is not None
             assert details.end_date is None, ('end date somehow initialized ' + str(details.end_date))

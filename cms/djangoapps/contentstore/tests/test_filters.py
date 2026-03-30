@@ -41,10 +41,10 @@ class LMSPageURLRequestedFiltersTest(ModuleStoreTestCase):
         self.upload_date = datetime(2013, 6, 1, 10, 30, tzinfo=UTC)
         self.content_type = 'image/jpg'
         self.course_key = CourseLocator('org', 'class', 'run')
-        self.location = self.course_key.make_asset_key('asset', 'my_file_name.jpg')
+        self.usage_key = self.course_key.make_asset_key('asset', 'my_file_name.jpg')
         self.thumbnail_location = self.course_key.make_asset_key('thumbnail', 'my_file_name_thumb.jpg')
 
-        self.asset_url = StaticContent.serialize_asset_key_with_slash(self.location)
+        self.asset_url = StaticContent.serialize_asset_key_with_slash(self.usage_key)
 
     @override_settings(
         OPEN_EDX_FILTERS_CONFIG={
@@ -68,7 +68,7 @@ class LMSPageURLRequestedFiltersTest(ModuleStoreTestCase):
             "my_file",
             self.content_type,
             self.upload_date,
-            self.location,
+            self.usage_key,
             self.thumbnail_location,
             True,
             self.course_key
@@ -89,7 +89,7 @@ class LMSPageURLRequestedFiltersTest(ModuleStoreTestCase):
             "my_file",
             self.content_type,
             self.upload_date,
-            self.location,
+            self.usage_key,
             self.thumbnail_location,
             True,
             self.course_key

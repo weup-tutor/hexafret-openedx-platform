@@ -314,7 +314,7 @@ class ClipboardTestCase(ModuleStoreTestCase):
         _other_course_key, client = self._setup_course()
         course = CourseFactory.create()
         html_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="html",
             display_name="Some HTML",
             data="""
@@ -325,7 +325,7 @@ class ClipboardTestCase(ModuleStoreTestCase):
             """,
         )
         # Copy the HTML
-        response = client.post(CLIPBOARD_ENDPOINT, {"usage_key": str(html_block.location)}, format="json")
+        response = client.post(CLIPBOARD_ENDPOINT, {"usage_key": str(html_block.usage_key)}, format="json")
 
         # Validate the response:
         assert response.status_code == 200

@@ -20,38 +20,38 @@ class LmsUtilsTest(ModuleStoreTestCase):
         super().setUp()
 
         self.course = CourseFactory.create()
-        self.chapter = BlockFactory.create(category="chapter", parent_location=self.course.location)
-        self.sequential = BlockFactory.create(category="sequential", parent_location=self.chapter.location)
-        self.vertical = BlockFactory.create(category="vertical", parent_location=self.sequential.location)
-        self.html_block_1 = BlockFactory.create(category="html", parent_location=self.vertical.location)
+        self.chapter = BlockFactory.create(category="chapter", parent_location=self.course.usage_key)
+        self.sequential = BlockFactory.create(category="sequential", parent_location=self.chapter.usage_key)
+        self.vertical = BlockFactory.create(category="vertical", parent_location=self.sequential.usage_key)
+        self.html_block_1 = BlockFactory.create(category="html", parent_location=self.vertical.usage_key)
         self.vertical_with_container = BlockFactory.create(
-            category="vertical", parent_location=self.sequential.location
+            category="vertical", parent_location=self.sequential.usage_key
         )
         self.child_container = BlockFactory.create(
-            category="split_test", parent_location=self.vertical_with_container.location)
-        self.child_vertical = BlockFactory.create(category="vertical", parent_location=self.child_container.location)
-        self.child_html_block = BlockFactory.create(category="html", parent_location=self.child_vertical.location)
+            category="split_test", parent_location=self.vertical_with_container.usage_key)
+        self.child_vertical = BlockFactory.create(category="vertical", parent_location=self.child_container.usage_key)
+        self.child_html_block = BlockFactory.create(category="html", parent_location=self.child_vertical.usage_key)
 
         # Read again so that children lists are accurate
-        self.course = self.store.get_item(self.course.location)
-        self.chapter = self.store.get_item(self.chapter.location)
-        self.sequential = self.store.get_item(self.sequential.location)
-        self.vertical = self.store.get_item(self.vertical.location)
+        self.course = self.store.get_item(self.course.usage_key)
+        self.chapter = self.store.get_item(self.chapter.usage_key)
+        self.sequential = self.store.get_item(self.sequential.usage_key)
+        self.vertical = self.store.get_item(self.vertical.usage_key)
 
-        self.vertical_with_container = self.store.get_item(self.vertical_with_container.location)
-        self.child_container = self.store.get_item(self.child_container.location)
-        self.child_vertical = self.store.get_item(self.child_vertical.location)
-        self.child_html_block = self.store.get_item(self.child_html_block.location)
+        self.vertical_with_container = self.store.get_item(self.vertical_with_container.usage_key)
+        self.child_container = self.store.get_item(self.child_container.usage_key)
+        self.child_vertical = self.store.get_item(self.child_vertical.usage_key)
+        self.child_html_block = self.store.get_item(self.child_html_block.usage_key)
 
     def test_get_parent_unit(self):
         """
         Tests `get_parent_unit` method for the successful result.
         """
         parent = utils.get_parent_unit(self.html_block_1)
-        assert parent.location == self.vertical.location
+        assert parent.usage_key == self.vertical.usage_key
 
         parent = utils.get_parent_unit(self.child_html_block)
-        assert parent.location == self.vertical_with_container.location
+        assert parent.usage_key == self.vertical_with_container.usage_key
 
         assert utils.get_parent_unit(None) is None
         assert utils.get_parent_unit(self.vertical) is None

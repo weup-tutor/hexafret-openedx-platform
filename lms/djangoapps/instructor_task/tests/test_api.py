@@ -135,7 +135,7 @@ class InstructorTaskModuleSubmitTest(InstructorTaskModuleTestCase):
         # confirm that a rescore of an existent but unscorable module returns an exception
         # (Note that it is easier to test a scoreable but non-rescorable module in test_tasks,
         # where we are creating real modules.)
-        problem_url = self.problem_section.location
+        problem_url = self.problem_section.usage_key
         request = None
         with pytest.raises(NotImplementedError):
             submit_rescore_problem_for_student(request, problem_url, self.student)

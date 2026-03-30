@@ -133,10 +133,10 @@ class GroupAccessTestCase(ModuleStoreTestCase):
             vertical = BlockFactory.create(category='vertical', parent=section)
             component = BlockFactory.create(category='problem', parent=vertical)
 
-            self.chapter_location = chapter.location
-            self.section_location = section.location
-            self.vertical_location = vertical.location
-            self.component_location = component.location
+            self.chapter_location = chapter.usage_key
+            self.section_location = section.usage_key
+            self.vertical_location = vertical.usage_key
+            self.component_location = component.usage_key
 
         self.red_cat = UserFactory()  # student in red and cat groups
         self.set_user_group(self.red_cat, self.animal_partition, self.cat_group)

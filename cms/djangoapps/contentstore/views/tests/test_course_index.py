@@ -47,16 +47,16 @@ class TestCourseOutline(CourseTestCase):
         super().setUp()
 
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location, category='chapter', display_name="Week 1"
+            parent_location=self.course.usage_key, category='chapter', display_name="Week 1"
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location, category='sequential', display_name="Lesson 1"
+            parent_location=self.chapter.usage_key, category='sequential', display_name="Lesson 1"
         )
         self.vertical = BlockFactory.create(
-            parent_location=self.sequential.location, category='vertical', display_name='Subsection 1'
+            parent_location=self.sequential.usage_key, category='vertical', display_name='Subsection 1'
         )
         self.video = BlockFactory.create(
-            parent_location=self.vertical.location, category="video", display_name="My Video"
+            parent_location=self.vertical.usage_key, category="video", display_name="My Video"
         )
 
     @ddt.data(True, False)
@@ -78,7 +78,7 @@ class TestCourseOutline(CourseTestCase):
 
         # First spot check some values in the root response
         self.assertEqual(json_response['category'], 'course')
-        self.assertEqual(json_response['id'], str(self.course.location))
+        self.assertEqual(json_response['id'], str(self.course.usage_key))
         self.assertEqual(json_response['display_name'], self.course.display_name)
         self.assertNotEqual(json_response.get('published', False), is_concise)
         self.assertIsNone(json_response.get('visibility_state'))
@@ -88,7 +88,7 @@ class TestCourseOutline(CourseTestCase):
         self.assertGreater(len(children), 0)
         first_child_response = children[0]
         self.assertEqual(first_child_response['category'], 'chapter')
-        self.assertEqual(first_child_response['id'], str(self.chapter.location))
+        self.assertEqual(first_child_response['id'], str(self.chapter.usage_key))
         self.assertEqual(first_child_response['display_name'], 'Week 1')
         self.assertNotEqual(json_response.get('published', False), is_concise)
         if not is_concise:
@@ -111,7 +111,7 @@ class TestCourseOutline(CourseTestCase):
                 self.assert_correct_json_response(child_response, is_concise)
 
     def test_course_outline_initial_state(self):
-        course_block = modulestore().get_item(self.course.location)
+        course_block = modulestore().get_item(self.course.usage_key)
         course_structure = create_xblock_info(
             course_block,
             include_child_info=True,
@@ -122,12 +122,12 @@ class TestCourseOutline(CourseTestCase):
         self.assertIsNone(course_outline_initial_state('no-such-locator', course_structure))
 
         # Verify that the correct initial state is returned for the test chapter
-        chapter_locator = str(self.chapter.location)
+        chapter_locator = str(self.chapter.usage_key)
         initial_state = course_outline_initial_state(chapter_locator, course_structure)
         self.assertEqual(initial_state['locator_to_show'], chapter_locator)
         expanded_locators = initial_state['expanded_locators']
-        self.assertIn(str(self.sequential.location), expanded_locators)
-        self.assertIn(str(self.vertical.location), expanded_locators)
+        self.assertIn(str(self.sequential.usage_key), expanded_locators)
+        self.assertIn(str(self.vertical.usage_key), expanded_locators)
 
     def _create_test_data(self, course_block, create_blocks=False, publish=True, block_types=None):
         """
@@ -142,10 +142,10 @@ class TestCourseOutline(CourseTestCase):
                 )
 
             if not publish:
-                self.store.unpublish(self.vertical.location, self.user.id)
+                self.store.unpublish(self.vertical.usage_key, self.user.id)
 
         # get updated vertical
-        self.vertical = modulestore().get_item(self.vertical.location)
+        self.vertical = modulestore().get_item(self.vertical.usage_key)
         course_block.advanced_modules.extend(block_types)
 
     def _verify_deprecated_info(self, course_id, advanced_modules, info, deprecated_block_types):
@@ -156,7 +156,7 @@ class TestCourseOutline(CourseTestCase):
         for block_type in deprecated_block_types:
             expected_blocks.append(
                 [
-                    reverse_usage_url('container_handler', self.vertical.location),
+                    reverse_usage_url('container_handler', self.vertical.usage_key),
                     f'{block_type} Problem'
                 ]
             )
@@ -183,10 +183,10 @@ class TestCourseOutline(CourseTestCase):
         """
         Verify deprecated warning info.
         """
-        course_block = modulestore().get_item(self.course.location)
+        course_block = modulestore().get_item(self.course.usage_key)
         self._create_test_data(course_block, create_blocks=True, block_types=block_types, publish=publish)
         # get updated course_block
-        course_block = modulestore().get_item(self.course.location)
+        course_block = modulestore().get_item(self.course.usage_key)
 
         info = _deprecated_blocks_info(course_block, block_types)
         self._verify_deprecated_info(
@@ -209,10 +209,10 @@ class TestCourseOutline(CourseTestCase):
         Verify that we only warn about block_types that are both deprecated and enabled.
         """
         expected_block_types = list(set(enabled_block_types) & set(deprecated_block_types))
-        course_block = modulestore().get_item(self.course.location)
+        course_block = modulestore().get_item(self.course.usage_key)
         self._create_test_data(course_block, create_blocks=True, block_types=enabled_block_types)
         # get updated course_module
-        course_block = modulestore().get_item(self.course.location)
+        course_block = modulestore().get_item(self.course.usage_key)
         info = _deprecated_blocks_info(course_block, deprecated_block_types)
         self._verify_deprecated_info(
             course_block.id,
@@ -254,20 +254,20 @@ class TestCourseReIndex(CourseTestCase):
         modulestore().update_item(self.course, self.user.id)
 
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location, category='chapter', display_name="Week 1"
+            parent_location=self.course.usage_key, category='chapter', display_name="Week 1"
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location, category='sequential', display_name="Lesson 1"
+            parent_location=self.chapter.usage_key, category='sequential', display_name="Lesson 1"
         )
         self.vertical = BlockFactory.create(
-            parent_location=self.sequential.location, category='vertical', display_name='Subsection 1'
+            parent_location=self.sequential.usage_key, category='vertical', display_name='Subsection 1'
         )
         self.video = BlockFactory.create(
-            parent_location=self.vertical.location, category="video", display_name="My Video"
+            parent_location=self.vertical.usage_key, category="video", display_name="My Video"
         )
 
         self.html = BlockFactory.create(
-            parent_location=self.vertical.location, category="html", display_name="My HTML",
+            parent_location=self.vertical.usage_key, category="html", display_name="My HTML",
             data="<div>This is my unique HTML content</div>",
 
         )

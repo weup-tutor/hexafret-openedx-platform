@@ -75,7 +75,7 @@ class Command(BaseCommand):
             store = modulestore()
             if query_yes_no(self.CONFIRMATION_PROMPT, default="no"):
                 v1_library_keys = [
-                    library.location.library_key.replace(branch=None) for library in store.get_libraries()
+                    library.usage_key.library_key.replace(branch=None) for library in store.get_libraries()
                 ]
             else:
                 return

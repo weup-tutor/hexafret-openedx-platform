@@ -48,13 +48,13 @@ class LmsXBlockMixinTestCase(ModuleStoreTestCase):
         split_test = BlockFactory.create(parent=vertical, category='split_test', display_name='Test Content Experiment')
         child_vertical = BlockFactory.create(parent=split_test, category='vertical')
         child_html_block = BlockFactory.create(parent=child_vertical, category='html')
-        self.section_location = section.location
-        self.subsection_location = subsection.location
-        self.vertical_location = vertical.location
-        self.video_location = video.location
-        self.split_test_location = split_test.location
-        self.child_vertical_location = child_vertical.location
-        self.child_html_block_location = child_html_block.location
+        self.section_location = section.usage_key
+        self.subsection_location = subsection.usage_key
+        self.vertical_location = vertical.usage_key
+        self.video_location = video.usage_key
+        self.split_test_location = split_test.usage_key
+        self.child_vertical_location = child_vertical.usage_key
+        self.child_html_block_location = child_html_block.usage_key
 
     def set_group_access(self, block_location, access_dict):
         """
@@ -320,7 +320,7 @@ class XBlockGetParentTest(LmsXBlockMixinTestCase):
                 """
                 visited = []
                 for child in parent.get_children():
-                    assert parent.location == child.get_parent().location
+                    assert parent.usage_key == child.get_parent().usage_key
                     visited.append(child)
                     visited += recurse(child)
                 return visited
@@ -335,7 +335,7 @@ class XBlockGetParentTest(LmsXBlockMixinTestCase):
             subsection = self.store.get_item(self.subsection_location)
             new_vertical = BlockFactory.create(parent=subsection, category='vertical', display_name='New Test Unit')
             child_to_move_location = self.video_location.for_branch(None)
-            new_parent_location = new_vertical.location.for_branch(None)
+            new_parent_location = new_vertical.usage_key.for_branch(None)
             old_parent_location = self.vertical_location.for_branch(None)
 
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred):
@@ -355,11 +355,11 @@ class XBlockGetParentTest(LmsXBlockMixinTestCase):
                     # re-fetch video from draft store
                     video = self.store.get_item(child_to_move_location)
 
-                    assert new_parent_location == video.get_parent().location
+                    assert new_parent_location == video.get_parent().usage_key
             with self.store.branch_setting(ModuleStoreEnum.Branch.published_only):
                 # re-fetch video from published store
                 video = self.store.get_item(child_to_move_location)
-                assert old_parent_location == video.get_parent().location.for_branch(None)
+                assert old_parent_location == video.get_parent().usage_key.for_branch(None)
 
 
 class RenamedTuple(tuple):

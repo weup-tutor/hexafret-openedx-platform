@@ -111,7 +111,7 @@ class ItemTest(CourseTestCase):
         super().setUp()
 
         self.course_key = self.course.id
-        self.usage_key = self.course.location
+        self.usage_key = self.course.usage_key
 
     def get_item_from_modulestore(self, usage_key):
         """
@@ -489,7 +489,7 @@ class GetItemTest(ItemTest):
 
         # Create a parent chapter
         chap1 = self.create_xblock(
-            parent_usage_key=self.course.location,
+            parent_usage_key=self.course.usage_key,
             display_name="chapter1",
             category="chapter",
         )
@@ -526,7 +526,7 @@ class GetItemTest(ItemTest):
                 xblock (XBlock): An XBlock item.
                 xblock_info (dict): A dict containing xblock information.
             """
-            self.assertEqual(str(xblock.location), xblock_info["id"])
+            self.assertEqual(str(xblock.usage_key), xblock_info["id"])
             self.assertEqual(xblock.display_name, xblock_info["display_name"])
             self.assertEqual(xblock.category, xblock_info["category"])
 
@@ -563,7 +563,7 @@ class DeleteItem(ItemTest):
         course = CourseFactory.create()
         # Add static tab
         resp = self.create_xblock(
-            category="static_tab", parent_usage_key=course.location
+            category="static_tab", parent_usage_key=course.usage_key
         )
         usage_key = self.response_usage_key(resp)
 
@@ -590,8 +590,8 @@ class TestCreateItem(ItemTest):
         new_obj = self.get_item_from_modulestore(chap_usage_key)
         self.assertEqual(new_obj.scope_ids.block_type, "chapter")
         self.assertEqual(new_obj.display_name, display_name)
-        self.assertEqual(new_obj.location.org, self.course.location.org)
-        self.assertEqual(new_obj.location.course, self.course.location.course)
+        self.assertEqual(new_obj.usage_key.org, self.course.usage_key.org)
+        self.assertEqual(new_obj.usage_key.course, self.course.usage_key.course)
 
         # get the course and ensure it now points to this one
         course = self.get_item_from_modulestore(self.usage_key)
@@ -674,8 +674,8 @@ class DuplicateHelper:
             self.assertEqual(duplicated_asides[0].field13, "aside1_default_value3")
 
         self.assertNotEqual(
-            str(original_item.location),
-            str(duplicated_item.location),
+            str(original_item.usage_key),
+            str(duplicated_item.usage_key),
             "Location of duplicate should be different from original",
         )
 
@@ -696,7 +696,7 @@ class DuplicateHelper:
 
         # Set the location and parent to be the same so we can make sure the rest of the
         # duplicate is equal.
-        duplicated_item.location = original_item.location
+        duplicated_item.usage_key = original_item.usage_key
         duplicated_item.parent = original_item.parent
 
         # Children will also be duplicated, so for the purposes of testing equality, we will set
@@ -930,12 +930,12 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
         )
         BlockFactory(parent=source_chapter, category="html", display_name="Child")
         # Refresh.
-        source_chapter = self.store.get_item(source_chapter.location)
+        source_chapter = self.store.get_item(source_chapter.usage_key)
         self.assertEqual(len(source_chapter.get_children()), 1)
         destination_course = CourseFactory()
         destination_location = duplicate_block(
-            parent_usage_key=destination_course.location,
-            duplicate_source_usage_key=source_chapter.location,
+            parent_usage_key=destination_course.usage_key,
+            duplicate_source_usage_key=source_chapter.usage_key,
             user=user,
             display_name=source_chapter.display_name,
             shallow=True,
@@ -969,8 +969,8 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
             publish_item=False,
         )
         original_lib_version = store.get_library(
-            lib.location.library_key, remove_version=False, remove_branch=False,
-        ).location.library_key.version_guid
+            lib.usage_key.library_key, remove_version=False, remove_branch=False,
+        ).usage_key.library_key.version_guid
         assert original_lib_version is not None
 
         # Create a library content block (lc), point it out our library, and sync it.
@@ -983,13 +983,13 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
         lc = BlockFactory(
             parent=unit,
             category="library_content",
-            source_library_id=str(lib.location.library_key),
+            source_library_id=str(lib.usage_key.library_key),
             display_name="LC Block",
             max_count=1,
             publish_item=False,
         )
         lc.sync_from_library()
-        lc = store.get_item(lc.location)  # we must reload because sync_from_library happens out-of-thread
+        lc = store.get_item(lc.usage_key)  # we must reload because sync_from_library happens out-of-thread
         assert lc.source_library_version == str(original_lib_version)
         lc_html_1 = store.get_item(lc.children[0])
         lc_html_2 = store.get_item(lc.children[1])
@@ -1017,8 +1017,8 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
         store.update_item(lib_html_1, self.user.id)
         store.update_item(lib_html_2, self.user.id)
         updated_lib_version = store.get_library(
-            lib.location.library_key, remove_version=False, remove_branch=False,
-        ).location.library_key.version_guid
+            lib.usage_key.library_key, remove_version=False, remove_branch=False,
+        ).usage_key.library_key.version_guid
         assert updated_lib_version is not None
         assert updated_lib_version != original_lib_version
 
@@ -1027,17 +1027,17 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
         # All settings should match between lc and dupe.
         dupe = store.get_item(
             self._duplicate_item(
-                parent_usage_key=unit.location,
-                source_usage_key=lc.location,
+                parent_usage_key=unit.usage_key,
+                source_usage_key=lc.usage_key,
                 display_name="Dupe LC Block",
             )
         )
-        lc = store.get_item(lc.location)
-        unit = store.get_item(unit.location)
-        assert unit.children == [lc.location, dupe.location]
+        lc = store.get_item(lc.usage_key)
+        unit = store.get_item(unit.usage_key)
+        assert unit.children == [lc.usage_key, dupe.usage_key]
         assert len(lc.children) == len(dupe.children) == 2
         assert lc.max_count == dupe.max_count == 1
-        assert lc.source_library_id == dupe.source_library_id == str(lib.location.library_key)
+        assert lc.source_library_id == dupe.source_library_id == str(lib.usage_key.library_key)
         assert lc.source_library_version == dupe.source_library_version == str(original_lib_version)
 
         # The lc block's children should remain unchanged.
@@ -1064,7 +1064,7 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
         # Finally, upgrade the dupe's library version, and make sure it pulls in updated library block *content*,
         # whilst preserving *settings overrides* (specifically, HTML 1's title override).
         dupe.sync_from_library(upgrade_to_latest=True)
-        dupe = store.get_item(dupe.location)
+        dupe = store.get_item(dupe.usage_key)
         assert dupe.source_library_version == str(updated_lib_version)
         assert len(dupe.children) == 2
         dupe_html_1 = store.get_item(dupe.children[0])
@@ -1096,16 +1096,16 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
         tagging_api.add_tag_to_taxonomy(taxonomyB, "four")
 
         # Tag the chapter
-        tagging_api.tag_object(str(source_chapter.location), taxonomyA, ["one", "two"])
-        tagging_api.tag_object(str(source_chapter.location), taxonomyB, ["three", "four"])
+        tagging_api.tag_object(str(source_chapter.usage_key), taxonomyA, ["one", "two"])
+        tagging_api.tag_object(str(source_chapter.usage_key), taxonomyB, ["three", "four"])
 
         # Tag the child block
-        tagging_api.tag_object(str(source_block.location), taxonomyA, ["two"],)
+        tagging_api.tag_object(str(source_block.usage_key), taxonomyA, ["two"],)
 
         # Duplicate the chapter (and its children)
         dupe_location = duplicate_block(
-            parent_usage_key=source_course.location,
-            duplicate_source_usage_key=source_chapter.location,
+            parent_usage_key=source_course.usage_key,
+            duplicate_source_usage_key=source_chapter.usage_key,
             user=user,
         )
         dupe_chapter = self.store.get_item(dupe_location)
@@ -1114,17 +1114,17 @@ class TestDuplicateItem(ItemTest, DuplicateHelper, OpenEdxEventsTestMixin):
 
         # Check that the duplicated blocks also duplicated tags
         expected_chapter_tags = [
-            f'<ObjectTag> {str(dupe_chapter.location)}: A=one',
-            f'<ObjectTag> {str(dupe_chapter.location)}: A=two',
-            f'<ObjectTag> {str(dupe_chapter.location)}: B=four',
-            f'<ObjectTag> {str(dupe_chapter.location)}: B=three',
+            f'<ObjectTag> {str(dupe_chapter.usage_key)}: A=one',
+            f'<ObjectTag> {str(dupe_chapter.usage_key)}: A=two',
+            f'<ObjectTag> {str(dupe_chapter.usage_key)}: B=four',
+            f'<ObjectTag> {str(dupe_chapter.usage_key)}: B=three',
         ]
-        dupe_chapter_tags = [str(object_tag) for object_tag in tagging_api.get_object_tags(str(dupe_chapter.location))]
+        dupe_chapter_tags = [str(object_tag) for object_tag in tagging_api.get_object_tags(str(dupe_chapter.usage_key))]
         assert dupe_chapter_tags == expected_chapter_tags
         expected_block_tags = [
-            f'<ObjectTag> {str(dupe_block.location)}: A=two',
+            f'<ObjectTag> {str(dupe_block.usage_key)}: A=two',
         ]
-        dupe_block_tags = [str(object_tag) for object_tag in tagging_api.get_object_tags(str(dupe_block.location))]
+        dupe_block_tags = [str(object_tag) for object_tag in tagging_api.get_object_tags(str(dupe_block.usage_key))]
         assert dupe_block_tags == expected_block_tags
 
 
@@ -1163,14 +1163,14 @@ class TestMoveItem(ItemTest):
 
         # Create a parent chapter
         chap1 = self.create_xblock(
-            parent_usage_key=course.location,
+            parent_usage_key=course.usage_key,
             display_name="chapter1",
             category="chapter",
         )
         self.chapter_usage_key = self.response_usage_key(chap1)
 
         chap2 = self.create_xblock(
-            parent_usage_key=course.location,
+            parent_usage_key=course.usage_key,
             display_name="chapter2",
             category="chapter",
         )
@@ -1225,7 +1225,7 @@ class TestMoveItem(ItemTest):
         )
         self.split_test_usage_key = self.response_usage_key(resp)
 
-        self.course = self.store.get_item(course.location)
+        self.course = self.store.get_item(course.usage_key)
 
     def setup_and_verify_content_experiment(self, partition_id):
         """
@@ -1342,7 +1342,7 @@ class TestMoveItem(ItemTest):
         parent = self.get_item_from_modulestore(self.vert_usage_key)
         children = parent.get_children()
         self.assertEqual(len(children), 4)
-        self.assertEqual(children[1].location, html2_usage_key)
+        self.assertEqual(children[1].usage_key, html2_usage_key)
 
     def test_move_undo(self):
         """
@@ -2078,7 +2078,7 @@ class TestEditItem(TestEditItemSetup):
         """
         unit_1_key = self.store.create_item(
             self.user.id, self.course_key, "vertical", "unit1"
-        ).location
+        ).usage_key
 
         # adding orphaned unit 1 should return an error
         resp = self.client.ajax_post(
@@ -2251,7 +2251,7 @@ class TestEditItem(TestEditItemSetup):
         self.assertIsNone(published.due)
         # Fetch the published version again to make sure the due date is still unset.
         published = modulestore().get_item(
-            published.location, revision=ModuleStoreEnum.RevisionOption.published_only
+            published.usage_key, revision=ModuleStoreEnum.RevisionOption.published_only
         )
         self.assertIsNone(published.due)
 
@@ -2308,7 +2308,7 @@ class TestEditItem(TestEditItemSetup):
         self.assertNotEqual(draft.data, published.data)
         # Fetch the published version again to make sure the data is correct.
         published = modulestore().get_item(
-            published.location, revision=ModuleStoreEnum.RevisionOption.published_only
+            published.usage_key, revision=ModuleStoreEnum.RevisionOption.published_only
         )
         self.assertNotEqual(draft.data, published.data)
 
@@ -2481,11 +2481,11 @@ class TestEditSplitModule(ItemTest):
         # Verify that the group_id_to_child mapping is correct.
         self.assertEqual(2, len(split_test.group_id_to_child))
         self.assertEqual(
-            vertical_0.location,
+            vertical_0.usage_key,
             split_test.group_id_to_child[str(self.first_user_partition_group_1.id)],
         )
         self.assertEqual(
-            vertical_1.location,
+            vertical_1.usage_key,
             split_test.group_id_to_child[str(self.first_user_partition_group_2.id)],
         )
 
@@ -2542,19 +2542,19 @@ class TestEditSplitModule(ItemTest):
         # Verify that the group_id_to child mapping is correct.
         self.assertEqual(3, len(split_test.group_id_to_child))
         self.assertEqual(
-            vertical_0.location,
+            vertical_0.usage_key,
             split_test.group_id_to_child[str(self.second_user_partition_group_1.id)],
         )
         self.assertEqual(
-            vertical_1.location,
+            vertical_1.usage_key,
             split_test.group_id_to_child[str(self.second_user_partition_group_2.id)],
         )
         self.assertEqual(
-            vertical_2.location,
+            vertical_2.usage_key,
             split_test.group_id_to_child[str(self.second_user_partition_group_3.id)],
         )
-        self.assertNotEqual(initial_vertical_0_location, vertical_0.location)
-        self.assertNotEqual(initial_vertical_1_location, vertical_1.location)
+        self.assertNotEqual(initial_vertical_0_location, vertical_0.usage_key)
+        self.assertNotEqual(initial_vertical_1_location, vertical_1.usage_key)
 
     def test_change_same_user_partition_id(self):
         """
@@ -3082,7 +3082,7 @@ class TestComponentTemplates(CourseTestCase):
         """
         Test the Discussion button present when legacy discussion provider configured for course
         """
-        course_key = self.course.location.course_key
+        course_key = self.course.usage_key.course_key
 
         # Create a discussion configuration with discussion provider set as legacy
         DiscussionsConfiguration.objects.create(
@@ -3097,7 +3097,7 @@ class TestComponentTemplates(CourseTestCase):
         """
         Test the Discussion button not present when non-legacy discussion provider configured for course
         """
-        course_key = self.course.location.course_key
+        course_key = self.course.usage_key.course_key
 
         # Create a discussion configuration with discussion provider set as legacy
         DiscussionsConfiguration.objects.create(
@@ -3154,26 +3154,26 @@ class TestXBlockInfo(ItemTest):
         super().setUp()
         user_id = self.user.id
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="Week 1",
             user_id=user_id,
             highlights=["highlight"],
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Lesson 1",
             user_id=user_id,
         )
         self.vertical = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category="vertical",
             display_name="Unit 1",
             user_id=user_id,
         )
         self.video = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category="video",
             display_name="My Video",
             user_id=user_id,
@@ -3188,18 +3188,18 @@ class TestXBlockInfo(ItemTest):
     def test_xblock_outline_handler_mongo_calls(self):
         course = CourseFactory.create()
         chapter = BlockFactory.create(
-            parent_location=course.location, category='chapter', display_name='Week 1'
+            parent_location=course.usage_key, category='chapter', display_name='Week 1'
         )
-        outline_url = reverse_usage_url('xblock_outline_handler', chapter.location)
+        outline_url = reverse_usage_url('xblock_outline_handler', chapter.usage_key)
         with check_mongo_calls(3):
             self.client.get(outline_url, HTTP_ACCEPT='application/json')
 
         sequential = BlockFactory.create(
-            parent_location=chapter.location, category='sequential', display_name='Sequential 1'
+            parent_location=chapter.usage_key, category='sequential', display_name='Sequential 1'
         )
 
         BlockFactory.create(
-            parent_location=sequential.location, category='vertical', display_name='Vertical 1'
+            parent_location=sequential.usage_key, category='vertical', display_name='Vertical 1'
         )
         # calls should be same after adding two new children for split only.
         with check_mongo_calls(3):
@@ -3207,13 +3207,13 @@ class TestXBlockInfo(ItemTest):
 
     def test_entrance_exam_chapter_xblock_info(self):
         chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="Entrance Exam",
             user_id=self.user.id,
             is_entrance_exam=True,
         )
-        chapter = modulestore().get_item(chapter.location)
+        chapter = modulestore().get_item(chapter.usage_key)
         xblock_info = create_xblock_info(
             chapter,
             include_child_info=True,
@@ -3229,12 +3229,12 @@ class TestXBlockInfo(ItemTest):
 
     def test_none_entrance_exam_chapter_xblock_info(self):
         chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="Test Chapter",
             user_id=self.user.id,
         )
-        chapter = modulestore().get_item(chapter.location)
+        chapter = modulestore().get_item(chapter.usage_key)
         xblock_info = create_xblock_info(
             chapter,
             include_child_info=True,
@@ -3251,7 +3251,7 @@ class TestXBlockInfo(ItemTest):
 
     def test_entrance_exam_sequential_xblock_info(self):
         chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="Entrance Exam",
             user_id=self.user.id,
@@ -3260,13 +3260,13 @@ class TestXBlockInfo(ItemTest):
         )
 
         subsection = BlockFactory.create(
-            parent_location=chapter.location,
+            parent_location=chapter.usage_key,
             category="sequential",
             display_name="Subsection - Entrance Exam",
             user_id=self.user.id,
             in_entrance_exam=True,
         )
-        subsection = modulestore().get_item(subsection.location)
+        subsection = modulestore().get_item(subsection.usage_key)
         xblock_info = create_xblock_info(
             subsection, include_child_info=True, include_children_predicate=ALWAYS
         )
@@ -3276,12 +3276,12 @@ class TestXBlockInfo(ItemTest):
 
     def test_none_entrance_exam_sequential_xblock_info(self):
         subsection = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Subsection - Exam",
             user_id=self.user.id,
         )
-        subsection = modulestore().get_item(subsection.location)
+        subsection = modulestore().get_item(subsection.usage_key)
         xblock_info = create_xblock_info(
             subsection,
             include_child_info=True,
@@ -3292,7 +3292,7 @@ class TestXBlockInfo(ItemTest):
         self.assertIsNone(xblock_info.get("is_header_visible", None))
 
     def test_chapter_xblock_info(self):
-        chapter = modulestore().get_item(self.chapter.location)
+        chapter = modulestore().get_item(self.chapter.usage_key)
         xblock_info = create_xblock_info(
             chapter,
             include_child_info=True,
@@ -3301,7 +3301,7 @@ class TestXBlockInfo(ItemTest):
         self.validate_chapter_xblock_info(xblock_info)
 
     def test_sequential_xblock_info(self):
-        sequential = modulestore().get_item(self.sequential.location)
+        sequential = modulestore().get_item(self.sequential.usage_key)
         xblock_info = create_xblock_info(
             sequential,
             include_child_info=True,
@@ -3310,7 +3310,7 @@ class TestXBlockInfo(ItemTest):
         self.validate_sequential_xblock_info(xblock_info)
 
     def test_vertical_xblock_info(self):
-        vertical = modulestore().get_item(self.vertical.location)
+        vertical = modulestore().get_item(self.vertical.usage_key)
 
         xblock_info = create_xblock_info(
             vertical,
@@ -3323,7 +3323,7 @@ class TestXBlockInfo(ItemTest):
         self.validate_vertical_xblock_info(xblock_info)
 
     def test_component_xblock_info(self):
-        video = modulestore().get_item(self.video.location)
+        video = modulestore().get_item(self.video.usage_key)
         xblock_info = create_xblock_info(
             video, include_child_info=True, include_children_predicate=ALWAYS
         )
@@ -3335,7 +3335,7 @@ class TestXBlockInfo(ItemTest):
         """
         course = CourseFactory.create()
         chapter = BlockFactory.create(
-            parent_location=course.location, category='chapter', display_name='Week 1'
+            parent_location=course.usage_key, category='chapter', display_name='Week 1'
         )
 
         chapter.start = datetime(year=1899, month=1, day=1, tzinfo=UTC)
@@ -3385,7 +3385,7 @@ class TestXBlockInfo(ItemTest):
         Validate that the xblock info is correct for the test course.
         """
         self.assertEqual(xblock_info["category"], "course")
-        self.assertEqual(xblock_info["id"], str(self.course.location))
+        self.assertEqual(xblock_info["id"], str(self.course.usage_key))
         self.assertEqual(xblock_info["display_name"], self.course.display_name)
         self.assertTrue(xblock_info["published"])
         self.assertFalse(xblock_info["highlights_enabled_for_messaging"])
@@ -3400,7 +3400,7 @@ class TestXBlockInfo(ItemTest):
         Validate that the xblock info is correct for the test chapter.
         """
         self.assertEqual(xblock_info["category"], "chapter")
-        self.assertEqual(xblock_info["id"], str(self.chapter.location))
+        self.assertEqual(xblock_info["id"], str(self.chapter.usage_key))
         self.assertEqual(xblock_info["display_name"], "Week 1")
         self.assertTrue(xblock_info["published"])
         self.assertIsNone(xblock_info.get("edited_by", None))
@@ -3425,7 +3425,7 @@ class TestXBlockInfo(ItemTest):
         Validate that the xblock info is correct for the test sequential.
         """
         self.assertEqual(xblock_info["category"], "sequential")
-        self.assertEqual(xblock_info["id"], str(self.sequential.location))
+        self.assertEqual(xblock_info["id"], str(self.sequential.usage_key))
         self.assertEqual(xblock_info["display_name"], "Lesson 1")
         self.assertTrue(xblock_info["published"])
         self.assertIsNone(xblock_info.get("edited_by", None))
@@ -3440,7 +3440,7 @@ class TestXBlockInfo(ItemTest):
         Validate that the xblock info is correct for the test vertical.
         """
         self.assertEqual(xblock_info["category"], "vertical")
-        self.assertEqual(xblock_info["id"], str(self.vertical.location))
+        self.assertEqual(xblock_info["id"], str(self.vertical.usage_key))
         self.assertEqual(xblock_info["display_name"], "Unit 1")
         self.assertTrue(xblock_info["published"])
         self.assertEqual(xblock_info["edited_by"], "testuser")
@@ -3464,7 +3464,7 @@ class TestXBlockInfo(ItemTest):
         Validate that the xblock info is correct for the test component.
         """
         self.assertEqual(xblock_info["category"], "video")
-        self.assertEqual(xblock_info["id"], str(self.video.location))
+        self.assertEqual(xblock_info["id"], str(self.video.usage_key))
         self.assertEqual(xblock_info["display_name"], "My Video")
         self.assertTrue(xblock_info["published"])
         self.assertIsNone(xblock_info.get("edited_by", None))
@@ -3542,20 +3542,20 @@ class TestSpecialExamXBlockInfo(ItemTest):
         super().setUp()
         user_id = self.user.id
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="Week 1",
             user_id=user_id,
             highlights=["highlight"],
         )
         # get updated course
-        self.course = self.store.get_item(self.course.location)
+        self.course = self.store.get_item(self.course.usage_key)
         self.course.enable_proctored_exams = True
         self.course.save()
         self.course = self.store.update_item(self.course, self.user.id)
 
     def test_proctoring_is_enabled_for_course(self):
-        course = modulestore().get_item(self.course.location)
+        course = modulestore().get_item(self.course.usage_key)
         xblock_info = create_xblock_info(
             course,
             include_child_info=True,
@@ -3574,7 +3574,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
         mock_get_exam_configuration_dashboard_url,
     ):
         sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Test Lesson 1",
             user_id=self.user.id,
@@ -3583,7 +3583,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
             default_time_limit_minutes=100,
             is_onboarding_exam=False,
         )
-        sequential = modulestore().get_item(sequential.location)
+        sequential = modulestore().get_item(sequential.usage_key)
         xblock_info = create_xblock_info(
             sequential,
             include_child_info=True,
@@ -3621,7 +3621,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
         # Set course.proctoring_provider to test_proctoring_provider
         self.course.proctoring_provider = 'test_proctoring_provider'
         sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Test Lesson 1",
             user_id=self.user.id,
@@ -3630,7 +3630,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
             default_time_limit_minutes=100,
             is_onboarding_exam=False,
         )
-        sequential = modulestore().get_item(sequential.location)
+        sequential = modulestore().get_item(sequential.usage_key)
         xblock_info = create_xblock_info(
             sequential,
             include_child_info=True,
@@ -3658,7 +3658,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
         _mock_get_exam_configuration_dashboard_url,
     ):
         sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Test Lesson 1",
             user_id=self.user.id,
@@ -3674,7 +3674,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
 
         # mock_does_backend_support_onboarding returns True
         mock_does_backend_support_onboarding.return_value = True
-        sequential = modulestore().get_item(sequential.location)
+        sequential = modulestore().get_item(sequential.usage_key)
         xblock_info = create_xblock_info(
             sequential,
             include_child_info=True,
@@ -3701,7 +3701,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
         _mock_get_exam_configuration_dashboard_url,
     ):
         sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Test Lesson 1",
             user_id=self.user.id,
@@ -3710,7 +3710,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
             is_onboarding_exam=False,
         )
         mock_get_exam_by_content_id.return_value = {"external_id": external_id}
-        sequential = modulestore().get_item(sequential.location)
+        sequential = modulestore().get_item(sequential.usage_key)
         xblock_info = create_xblock_info(
             sequential,
             include_child_info=True,
@@ -3729,7 +3729,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
         _mock_get_exam_configuration_dashboard_url,
     ):
         sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Test Lesson 1",
             user_id=self.user.id,
@@ -3737,7 +3737,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
             is_time_limited=False,
             is_onboarding_exam=False,
         )
-        sequential = modulestore().get_item(sequential.location)
+        sequential = modulestore().get_item(sequential.usage_key)
         xblock_info = create_xblock_info(
             sequential,
             include_child_info=True,
@@ -3756,7 +3756,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
         mock_get_exam_configuration_dashboard_url,
     ):
         sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Test Lesson 1",
             user_id=self.user.id,
@@ -3765,7 +3765,7 @@ class TestSpecialExamXBlockInfo(ItemTest):
             default_time_limit_minutes=100,
             is_onboarding_exam=False,
         )
-        sequential = modulestore().get_item(sequential.location)
+        sequential = modulestore().get_item(sequential.usage_key)
         mock_get_exam_configuration_dashboard_url.side_effect = Exception("proctoring error")
         xblock_info = create_xblock_info(
             sequential,
@@ -3794,19 +3794,19 @@ class TestLibraryXBlockInfo(ModuleStoreTestCase):
         user_id = self.user.id
         self.library = LibraryFactory.create()
         self.top_level_html = BlockFactory.create(
-            parent_location=self.library.location,
+            parent_location=self.library.usage_key,
             category="html",
             user_id=user_id,
             publish_item=False,
         )
         self.vertical = BlockFactory.create(
-            parent_location=self.library.location,
+            parent_location=self.library.usage_key,
             category="vertical",
             user_id=user_id,
             publish_item=False,
         )
         self.child_html = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category="html",
             display_name="Test HTML Child Block",
             user_id=user_id,
@@ -3814,13 +3814,13 @@ class TestLibraryXBlockInfo(ModuleStoreTestCase):
         )
 
     def test_lib_xblock_info(self):
-        html_block = modulestore().get_item(self.top_level_html.location)
+        html_block = modulestore().get_item(self.top_level_html.usage_key)
         xblock_info = create_xblock_info(html_block)
         self.validate_component_xblock_info(xblock_info, html_block)
         self.assertIsNone(xblock_info.get("child_info", None))
 
     def test_lib_child_xblock_info(self):
-        html_block = modulestore().get_item(self.child_html.location)
+        html_block = modulestore().get_item(self.child_html.usage_key)
         xblock_info = create_xblock_info(
             html_block, include_ancestor_info=True, include_child_info=True
         )
@@ -3829,7 +3829,7 @@ class TestLibraryXBlockInfo(ModuleStoreTestCase):
         ancestors = xblock_info["ancestor_info"]["ancestors"]
         self.assertEqual(len(ancestors), 2)
         self.assertEqual(ancestors[0]["category"], "vertical")
-        self.assertEqual(ancestors[0]["id"], str(self.vertical.location))
+        self.assertEqual(ancestors[0]["id"], str(self.vertical.usage_key))
         self.assertEqual(ancestors[1]["category"], "library")
 
     def validate_component_xblock_info(self, xblock_info, original_block):
@@ -3837,7 +3837,7 @@ class TestLibraryXBlockInfo(ModuleStoreTestCase):
         Validate that the xblock info is correct for the test component.
         """
         self.assertEqual(xblock_info["category"], original_block.category)
-        self.assertEqual(xblock_info["id"], str(original_block.location))
+        self.assertEqual(xblock_info["id"], str(original_block.usage_key))
         self.assertEqual(xblock_info["display_name"], original_block.display_name)
         self.assertIsNone(xblock_info.get("has_changes", None))
         self.assertIsNone(xblock_info.get("published", None))
@@ -3856,9 +3856,9 @@ class TestLibraryXBlockCreation(ItemTest):
         """
         lib = LibraryFactory.create()
         self.create_xblock(
-            parent_usage_key=lib.location, display_name="Test", category="html"
+            parent_usage_key=lib.usage_key, display_name="Test", category="html"
         )
-        lib = self.store.get_library(lib.location.library_key)
+        lib = self.store.get_library(lib.usage_key.library_key)
         self.assertTrue(lib.children)
         xblock_locator = lib.children[0]
         self.assertEqual(self.store.get_item(xblock_locator).display_name, "Test")
@@ -3869,10 +3869,10 @@ class TestLibraryXBlockCreation(ItemTest):
         """
         lib = LibraryFactory.create()
         response = self.create_xblock(
-            parent_usage_key=lib.location, display_name="Test", category="discussion"
+            parent_usage_key=lib.usage_key, display_name="Test", category="discussion"
         )
         self.assertEqual(response.status_code, 400)
-        lib = self.store.get_library(lib.location.library_key)
+        lib = self.store.get_library(lib.usage_key.library_key)
         self.assertFalse(lib.children)
 
     def test_no_add_advanced(self):
@@ -3880,10 +3880,10 @@ class TestLibraryXBlockCreation(ItemTest):
         lib.advanced_modules = ["lti"]
         lib.save()
         response = self.create_xblock(
-            parent_usage_key=lib.location, display_name="Test", category="lti"
+            parent_usage_key=lib.usage_key, display_name="Test", category="lti"
         )
         self.assertEqual(response.status_code, 400)
-        lib = self.store.get_library(lib.location.library_key)
+        lib = self.store.get_library(lib.usage_key.library_key)
         self.assertFalse(lib.children)
 
 
@@ -3904,16 +3904,16 @@ class TestXBlockPublishingInfo(ItemTest):
         Creates a child xblock for the given parent.
         """
         child = BlockFactory.create(
-            parent_location=parent.location,
+            parent_location=parent.usage_key,
             category=category,
             display_name=display_name,
             user_id=self.user.id,
             publish_item=publish_item,
         )
         if staff_only:
-            self._enable_staff_only(child.location)
+            self._enable_staff_only(child.usage_key)
         # In case the staff_only state was set, return the updated xblock.
-        return modulestore().get_item(child.location)
+        return modulestore().get_item(child.usage_key)
 
     def _get_child_xblock_info(self, xblock_info, index):
         """
@@ -4027,7 +4027,7 @@ class TestXBlockPublishingInfo(ItemTest):
 
     def test_empty_chapter(self):
         empty_chapter = self._create_child(self.course, "chapter", "Empty Chapter")
-        xblock_info = self._get_xblock_info(empty_chapter.location)
+        xblock_info = self._get_xblock_info(empty_chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.unscheduled)
 
     def test_chapter_self_paced_default_start_date(self):
@@ -4037,14 +4037,14 @@ class TestXBlockPublishingInfo(ItemTest):
         chapter = self._create_child(course, "chapter", "Test Chapter")
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         self._create_child(sequential, "vertical", "Published Unit", publish_item=True)
-        self._set_release_date(chapter.location, DEFAULT_START_DATE)
-        xblock_info = self._get_xblock_info(chapter.location)
+        self._set_release_date(chapter.usage_key, DEFAULT_START_DATE)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.live)
 
     def test_empty_sequential(self):
         chapter = self._create_child(self.course, "chapter", "Test Chapter")
         self._create_child(chapter, "sequential", "Empty Sequential")
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.unscheduled)
         self._verify_visibility_state(
             xblock_info, VisibilityState.unscheduled, path=self.FIRST_SUBSECTION_PATH
@@ -4058,8 +4058,8 @@ class TestXBlockPublishingInfo(ItemTest):
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         self._create_child(sequential, "vertical", "Published Unit", publish_item=True)
         self._create_child(sequential, "vertical", "Staff Only Unit", staff_only=True)
-        self._set_release_date(chapter.location, datetime.now(UTC) + timedelta(days=1))
-        xblock_info = self._get_xblock_info(chapter.location)
+        self._set_release_date(chapter.usage_key, datetime.now(UTC) + timedelta(days=1))
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.ready)
         self._verify_visibility_state(
             xblock_info, VisibilityState.ready, path=self.FIRST_SUBSECTION_PATH
@@ -4079,8 +4079,8 @@ class TestXBlockPublishingInfo(ItemTest):
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         self._create_child(sequential, "vertical", "Published Unit", publish_item=True)
         self._create_child(sequential, "vertical", "Staff Only Unit", staff_only=True)
-        self._set_release_date(chapter.location, datetime.now(UTC) - timedelta(days=1))
-        xblock_info = self._get_xblock_info(chapter.location)
+        self._set_release_date(chapter.usage_key, datetime.now(UTC) - timedelta(days=1))
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.live)
         self._verify_visibility_state(
             xblock_info, VisibilityState.live, path=self.FIRST_SUBSECTION_PATH
@@ -4103,8 +4103,8 @@ class TestXBlockPublishingInfo(ItemTest):
         )
         self._create_child(sequential, "vertical", "Staff Only Unit", staff_only=True)
         # Setting the display name creates a draft version of unit.
-        self._set_display_name(unit.location, "Updated Unit")
-        xblock_info = self._get_xblock_info(chapter.location)
+        self._set_display_name(unit.usage_key, "Updated Unit")
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.needs_attention)
         self._verify_visibility_state(
             xblock_info,
@@ -4123,12 +4123,12 @@ class TestXBlockPublishingInfo(ItemTest):
         released_sequential = self._create_child(chapter, 'sequential', "Released Sequential")
         self._create_child(released_sequential, 'vertical', "Released Unit", publish_item=True)
         self._create_child(released_sequential, 'vertical', "Staff Only Unit 1", staff_only=True)
-        self._set_release_date(chapter.location, datetime.now(UTC) - timedelta(days=1))
+        self._set_release_date(chapter.usage_key, datetime.now(UTC) - timedelta(days=1))
         published_sequential = self._create_child(chapter, 'sequential', "Published Sequential")
         self._create_child(published_sequential, 'vertical', "Published Unit", publish_item=True)
         self._create_child(published_sequential, 'vertical', "Staff Only Unit 2", staff_only=True)
-        self._set_release_date(published_sequential.location, datetime.now(UTC) + timedelta(days=1))
-        xblock_info = self._get_xblock_info(chapter.location)
+        self._set_release_date(published_sequential.usage_key, datetime.now(UTC) + timedelta(days=1))
+        xblock_info = self._get_xblock_info(chapter.usage_key)
 
         # Verify the state of the released sequential
         self._verify_visibility_state(xblock_info, VisibilityState.live, path=[0])
@@ -4156,7 +4156,7 @@ class TestXBlockPublishingInfo(ItemTest):
         )
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         vertical = self._create_child(sequential, "vertical", "Unit")
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.staff_only)
         self._verify_visibility_state(
             xblock_info, VisibilityState.staff_only, path=self.FIRST_SUBSECTION_PATH
@@ -4173,7 +4173,7 @@ class TestXBlockPublishingInfo(ItemTest):
             xblock_info, False, path=self.FIRST_UNIT_PATH
         )
 
-        vertical_info = self._get_xblock_info(vertical.location)
+        vertical_info = self._get_xblock_info(vertical.usage_key)
         add_container_page_publishing_info(vertical, vertical_info)
         self.assertEqual(
             _xblock_type_and_display_name(chapter), vertical_info["staff_lock_from"]
@@ -4188,7 +4188,7 @@ class TestXBlockPublishingInfo(ItemTest):
         self._create_child(
             chapter, "sequential", "Test Staff Locked Sequential", staff_only=True
         )
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(
             xblock_info, VisibilityState.staff_only, should_equal=False
         )
@@ -4207,7 +4207,7 @@ class TestXBlockPublishingInfo(ItemTest):
             chapter, "sequential", "Test Sequential", staff_only=True
         )
         vertical = self._create_child(sequential, "vertical", "Unit")
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.staff_only)
         self._verify_visibility_state(
             xblock_info, VisibilityState.staff_only, path=self.FIRST_SUBSECTION_PATH
@@ -4224,7 +4224,7 @@ class TestXBlockPublishingInfo(ItemTest):
             xblock_info, False, path=self.FIRST_UNIT_PATH
         )
 
-        vertical_info = self._get_xblock_info(vertical.location)
+        vertical_info = self._get_xblock_info(vertical.usage_key)
         add_container_page_publishing_info(vertical, vertical_info)
         self.assertEqual(
             _xblock_type_and_display_name(sequential), vertical_info["staff_lock_from"]
@@ -4238,7 +4238,7 @@ class TestXBlockPublishingInfo(ItemTest):
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         self._create_child(sequential, "vertical", "Unit")
         self._create_child(sequential, "vertical", "Locked Unit", staff_only=True)
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(
             xblock_info,
             VisibilityState.staff_only,
@@ -4259,7 +4259,7 @@ class TestXBlockPublishingInfo(ItemTest):
         chapter = self._create_child(self.course, "chapter", "Test Chapter")
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         vertical = self._create_child(sequential, "vertical", "Unit", staff_only=True)
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.staff_only)
         self._verify_visibility_state(
             xblock_info, VisibilityState.staff_only, path=self.FIRST_SUBSECTION_PATH
@@ -4276,7 +4276,7 @@ class TestXBlockPublishingInfo(ItemTest):
             xblock_info, True, path=self.FIRST_UNIT_PATH
         )
 
-        vertical_info = self._get_xblock_info(vertical.location)
+        vertical_info = self._get_xblock_info(vertical.usage_key)
         add_container_page_publishing_info(vertical, vertical_info)
         self.assertEqual(
             _xblock_type_and_display_name(vertical), vertical_info["staff_lock_from"]
@@ -4288,9 +4288,9 @@ class TestXBlockPublishingInfo(ItemTest):
         self._create_child(sequential, "vertical", "Published Unit", publish_item=True)
         self._create_child(sequential, "vertical", "Staff Only Unit", staff_only=True)
         self._set_release_date(
-            sequential.location, datetime.now(UTC) - timedelta(days=1)
+            sequential.usage_key, datetime.now(UTC) - timedelta(days=1)
         )
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.needs_attention)
         self._verify_visibility_state(
             xblock_info, VisibilityState.live, path=self.FIRST_SUBSECTION_PATH
@@ -4307,11 +4307,11 @@ class TestXBlockPublishingInfo(ItemTest):
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         self._create_child(sequential, "vertical", "Published Unit", publish_item=True)
         self._create_child(sequential, "vertical", "Staff Only Unit", staff_only=True)
-        self._set_release_date(chapter.location, datetime.now(UTC) + timedelta(days=1))
+        self._set_release_date(chapter.usage_key, datetime.now(UTC) + timedelta(days=1))
         self._set_release_date(
-            sequential.location, datetime.now(UTC) - timedelta(days=1)
+            sequential.usage_key, datetime.now(UTC) - timedelta(days=1)
         )
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.needs_attention)
         self._verify_visibility_state(
             xblock_info, VisibilityState.live, path=self.FIRST_SUBSECTION_PATH
@@ -4332,7 +4332,7 @@ class TestXBlockPublishingInfo(ItemTest):
         )
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         self._create_child(sequential, "vertical", "Unit")
-        xblock_info = self._get_xblock_outline_info(chapter.location)
+        xblock_info = self._get_xblock_outline_info(chapter.usage_key)
         self._verify_has_staff_only_message(xblock_info, True)
         self._verify_has_staff_only_message(
             xblock_info, False, path=self.FIRST_SUBSECTION_PATH
@@ -4348,7 +4348,7 @@ class TestXBlockPublishingInfo(ItemTest):
         chapter = self._create_child(self.course, "chapter", "Test Chapter")
         sequential = self._create_child(chapter, "sequential", "Test Sequential")
         self._create_child(sequential, "vertical", "Unit", staff_only=True)
-        xblock_info = self._get_xblock_outline_info(chapter.location)
+        xblock_info = self._get_xblock_outline_info(chapter.usage_key)
         self._verify_has_staff_only_message(xblock_info, True)
         self._verify_has_staff_only_message(
             xblock_info, True, path=self.FIRST_SUBSECTION_PATH
@@ -4367,10 +4367,10 @@ class TestXBlockPublishingInfo(ItemTest):
         # Create course, chapter and setup future release date to make chapter in scheduled state
         course = CourseFactory.create()
         chapter = self._create_child(course, "chapter", "Test Chapter")
-        self._set_release_date(chapter.location, datetime.now(UTC) + timedelta(days=1))
+        self._set_release_date(chapter.usage_key, datetime.now(UTC) + timedelta(days=1))
 
         # Check that chapter has scheduled state
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.ready)
         self.assertFalse(course.self_paced)
 
@@ -4380,7 +4380,7 @@ class TestXBlockPublishingInfo(ItemTest):
         self.assertTrue(course.self_paced)
 
         # Check that in self paced course content has live state now
-        xblock_info = self._get_xblock_info(chapter.location)
+        xblock_info = self._get_xblock_info(chapter.usage_key)
         self._verify_visibility_state(xblock_info, VisibilityState.live)
 
 
@@ -4429,7 +4429,7 @@ class TestUpdateFromSource(ModuleStoreTestCase):
         self.store.update_item(source_block, self.user.id, asides=[aside])
 
         # quick sanity checks
-        source_block = self.store.get_item(source_block.location)
+        source_block = self.store.get_item(source_block.usage_key)
         self.assertEqual(source_block.due, datetime(2010, 11, 22, 4, 0, tzinfo=UTC))
         self.assertEqual(source_block.display_name, "Source Block")
         self.assertEqual(
@@ -4473,7 +4473,7 @@ class TestUpdateFromSource(ModuleStoreTestCase):
             destination_block=destination_block,
             user_id=user.id,
         )
-        self.check_updated(source_block, destination_block.location)
+        self.check_updated(source_block, destination_block.usage_key)
 
     @XBlockAside.register_temp_plugin(AsideTest, "test_aside")
     def test_update_clobbers(self):
@@ -4507,7 +4507,7 @@ class TestUpdateFromSource(ModuleStoreTestCase):
             destination_block=destination_block,
             user_id=user.id,
         )
-        self.check_updated(source_block, destination_block.location)
+        self.check_updated(source_block, destination_block.usage_key)
 
 
 class TestXblockEditView(CourseTestCase):
@@ -4530,7 +4530,7 @@ class TestXblockEditView(CourseTestCase):
         self.video = self._create_block(self.child_vertical, "video", "My Video")
         self.store = modulestore()
 
-        self.store.publish(self.vertical.location, self.user.id)
+        self.store.publish(self.vertical.usage_key, self.user.id)
 
     def _create_block(self, parent, category, display_name, **kwargs):
         """
@@ -4546,7 +4546,7 @@ class TestXblockEditView(CourseTestCase):
         )
 
     def test_xblock_edit_view(self):
-        url = reverse_usage_url("xblock_edit_handler", self.video.location)
+        url = reverse_usage_url("xblock_edit_handler", self.video.usage_key)
         resp = self.client.get_html(url)
         self.assertEqual(resp.status_code, 200)
 
@@ -4554,7 +4554,7 @@ class TestXblockEditView(CourseTestCase):
         self.assertIn("var decodedActionName = 'edit';", html_content)
 
     def test_xblock_edit_view_contains_resources(self):
-        url = reverse_usage_url("xblock_edit_handler", self.video.location)
+        url = reverse_usage_url("xblock_edit_handler", self.video.usage_key)
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
 

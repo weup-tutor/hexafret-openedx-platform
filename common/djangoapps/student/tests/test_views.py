@@ -757,9 +757,9 @@ class StudentDashboardTests(SharedModuleStoreTestCase, MilestonesTestCaseMixin, 
         block_keys = [
             BlockFactory.create(
                 category='video',
-                parent_location=course.location,
+                parent_location=course.usage_key,
                 display_name=f'Video {str(number)}'
-            ).location
+            ).usage_key
             for number in range(5)
         ]
 
@@ -857,9 +857,9 @@ class StudentDashboardTests(SharedModuleStoreTestCase, MilestonesTestCaseMixin, 
                 block_keys = [
                     BlockFactory.create(
                         category='video',
-                        parent_location=course.location,
+                        parent_location=course.usage_key,
                         display_name=f'Video {str(number)}'
-                    ).location
+                    ).usage_key
                     for number in range(5)
                 ]
                 last_completed_block_string = str(block_keys[-1])

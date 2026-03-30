@@ -85,13 +85,13 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
         self.other_user = UserFactory.create()
         self.course_key = self.course.id
         self.other_course_key = CourseKey.from_string("course-v1:ReedX+Hum110+1904")
-        self.block_keys = [problem.location for problem in self.problems]
+        self.block_keys = [problem.usage_key for problem in self.problems]
         self.completion_service = CompletionService(self.user, self.course_key)
 
         # Proper completions for the given runtime
         BlockCompletion.objects.submit_completion(
             user=self.user,
-            block_key=self.html.location,
+            block_key=self.html.usage_key,
             completion=1.0,
         )
 
@@ -121,12 +121,12 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
         """
         Bind a block (part of self.course) so we can access student-specific data.
         """
-        prepare_block_runtime(block.runtime, course_id=block.location.course_key)
+        prepare_block_runtime(block.runtime, course_id=block.usage_key.course_key)
         block.runtime._services.update({'library_tools': LegacyLibraryToolsService(self.store, self.user.id)})  # lint-amnesty, pylint: disable=protected-access
 
         def get_block(descriptor):
             """Mocks module_system get_block_for_descriptor function"""
-            prepare_block_runtime(descriptor.runtime, course_id=block.location.course_key)
+            prepare_block_runtime(descriptor.runtime, course_id=block.usage_key.course_key)
             descriptor.runtime.get_block_for_descriptor = get_block
             descriptor.bind_for_student(self.user.id)
             return descriptor
@@ -188,7 +188,7 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
             parent=lib_vertical,
             category='library_content',
             max_count=1,
-            source_library_id=str(library.location.library_key),
+            source_library_id=str(library.usage_key.library_key),
             user_id=self.user.id,
         )
         self.assertTrue(self.completion_service.can_mark_block_complete_on_view(library_content_block))
@@ -199,11 +199,11 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
         BlockFactory.create(parent=library, category='problem', publish_item=False, user_id=self.user.id)
         BlockFactory.create(parent=library, category='problem', publish_item=False, user_id=self.user.id)
         # Create a new vertical to hold the library content block
-        # It is very important that we use parent_location=self.sequence.location (and not parent=self.sequence), since
+        # It is very important that we use parent_location=self.sequence.usage_key (and not parent=self.sequence), since
         # sequence is a class attribute and passing it by value will update its .children=[] which will then leak into
         # other tests and cause errors if the children no longer exist.
         lib_vertical = BlockFactory.create(
-            parent_location=self.sequence.location,
+            parent_location=self.sequence.usage_key,
             category='vertical',
             publish_item=False,
         )
@@ -211,7 +211,7 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
             parent=lib_vertical,
             category='library_content',
             max_count=1,
-            source_library_id=str(library.location.library_key),
+            source_library_id=str(library.usage_key.library_key),
             user_id=self.user.id,
         )
         # Library Content Block needs its children to be completed.
@@ -224,7 +224,7 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
         # Long-term solution: https://github.com/openedx/edx-platform/issues/33545
         with override_settings(ROOT_URLCONF="cms.urls"):
             library_content_block.sync_from_library()
-            lib_vertical = self.store.get_item(lib_vertical.location)
+            lib_vertical = self.store.get_item(lib_vertical.usage_key)
 
         self._bind_course_block(lib_vertical)
         # We need to refetch the library_content_block to retrieve the
@@ -263,13 +263,13 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
 
     def test_vertical_completion_with_nested_children(self):
         # Create a new vertical.
-        # It is very important that we use parent_location=self.sequence.location (and not parent=self.sequence), since
+        # It is very important that we use parent_location=self.sequence.usage_key (and not parent=self.sequence), since
         # sequence is a class attribute and passing it by value will update its .children=[] which will then leak into
         # other tests and cause errors if the children no longer exist.
-        parent_vertical = BlockFactory(parent_location=self.sequence.location, category='vertical')
+        parent_vertical = BlockFactory(parent_location=self.sequence.usage_key, category='vertical')
         extra_vertical = BlockFactory(parent=parent_vertical, category='vertical')
         problem = BlockFactory(parent=extra_vertical, category='problem')
-        parent_vertical = self.store.get_item(parent_vertical.location)
+        parent_vertical = self.store.get_item(parent_vertical.usage_key)
 
         # Nothing is complete
         assert not self.completion_service.vertical_is_complete(parent_vertical)
@@ -285,7 +285,7 @@ class CompletionServiceTestCase(CompletionWaffleTestMixin, SharedModuleStoreTest
 
         BlockCompletion.objects.submit_completion(
             user=self.user,
-            block_key=problem.location,
+            block_key=problem.usage_key,
             completion=1.0
         )
         assert self.completion_service.vertical_is_complete(parent_vertical)

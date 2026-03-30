@@ -564,7 +564,7 @@ class TestInstructorDashboard(ModuleStoreTestCase, LoginEnrollmentTestCase, XssT
         response = self.client.get(self.url)
         self.assertNotContains(response, ora_section)
 
-        BlockFactory.create(parent_location=self.course.location, category="openassessment")
+        BlockFactory.create(parent_location=self.course.usage_key, category="openassessment")
         response = self.client.get(self.url)
         self.assertContains(response, ora_section)
 
@@ -575,7 +575,7 @@ class TestInstructorDashboard(ModuleStoreTestCase, LoginEnrollmentTestCase, XssT
         """
         # create non-orphaned openassessment block
         BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="openassessment",
         )
         # create orphan
@@ -635,7 +635,7 @@ class TestInstructorDashboardPerformance(ModuleStoreTestCase, LoginEnrollmentTes
         """
         # prepare course structure
         course = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="course",
             display_name="Test course",
         )
@@ -685,7 +685,7 @@ class TestInstructorDashboardPerformance(ModuleStoreTestCase, LoginEnrollmentTes
                     max_grade=1,
                     student=j,
                     course_id=self.course.id,
-                    module_state_key=problem.location
+                    module_state_key=problem.usage_key
                 )
 
         # check MongoDB calls count

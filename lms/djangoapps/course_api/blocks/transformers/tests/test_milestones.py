@@ -56,8 +56,8 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
             gated_block: The block that should be inaccessible until gating_block is completed
             gating_block: The block that must be completed before access is granted
         """
-        gating_api.add_prerequisite(self.course.id, str(gating_block.location))
-        gating_api.set_required_content(self.course.id, gated_block.location, gating_block.location, 100, 0)
+        gating_api.add_prerequisite(self.course.id, str(gating_block.usage_key))
+        gating_api.set_required_content(self.course.id, gated_block.usage_key, gating_block.usage_key, 100, 0)
 
     ALL_BLOCKS = (
         'course', 'A', 'B', 'C', 'ProctoredExam', 'D', 'E', 'PracticeExam', 'F', 'G', 'H', 'I', 'TimedExam', 'J', 'K'
@@ -184,7 +184,7 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
         # this call triggers reevaluation of prerequisites fulfilled by the gating block.
         lms_gating_api.evaluate_prerequisite(
             self.course,
-            Mock(location=self.blocks[gating_block_ref].location, percent_graded=1.0),
+            Mock(location=self.blocks[gating_block_ref].usage_key, percent_graded=1.0),
             self.user,
         )
 
@@ -218,7 +218,7 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
         # this call triggers reevaluation of prerequisites fulfilled by the gating block.
         lms_gating_api.evaluate_prerequisite(
             self.course,
-            Mock(location=self.blocks['A'].location, percent_graded=1.0),
+            Mock(location=self.blocks['A'].usage_key, percent_graded=1.0),
             self.user,
         )
         self.get_blocks_and_check_against_expected(self.user, self.ALL_BLOCKS)
@@ -230,7 +230,7 @@ class MilestonesTransformerTestCase(CourseStructureTestCase, MilestonesTestCaseM
         """
         block_structure = get_course_blocks(
             user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
         assert set(block_structure.get_block_keys()) == set(self.get_block_key_set(self.blocks, *expected_blocks))

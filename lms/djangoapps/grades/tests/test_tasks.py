@@ -75,7 +75,7 @@ class HasCourseWithProblemsMixin:
             ('user_id', self.user.id),
             ('anonymous_user_id', 5),
             ('course_id', str(self.course.id)),
-            ('usage_id', str(self.problem.location)),
+            ('usage_id', str(self.problem.usage_key)),
             ('only_if_higher', None),
             ('modified', self.frozen_now_datetime),
             ('score_db_table', ScoreDatabaseTableEnum.courseware_student_module),
@@ -86,7 +86,7 @@ class HasCourseWithProblemsMixin:
         self.recalculate_subsection_grade_kwargs = OrderedDict([
             ('user_id', self.user.id),
             ('course_id', str(self.course.id)),
-            ('usage_id', str(self.problem.location)),
+            ('usage_id', str(self.problem.usage_key)),
             ('anonymous_user_id', 5),
             ('only_if_higher', None),
             ('expected_modified_time', self.frozen_now_timestamp),
@@ -150,7 +150,7 @@ class RecalculateSubsectionGradeTest(HasCourseWithProblemsMixin, ModuleStoreTest
         self.set_up_course()
         with patch(
             'openedx.core.djangoapps.content.block_structure.factory.BlockStructureFactory.create_from_store',
-            side_effect=BlockStructureNotFound(self.course.location),
+            side_effect=BlockStructureNotFound(self.course.usage_key),
         ) as mock_block_structure_create:
             self._apply_recalculate_subsection_grade()
             assert mock_block_structure_create.call_count == 1
@@ -196,7 +196,7 @@ class RecalculateSubsectionGradeTest(HasCourseWithProblemsMixin, ModuleStoreTest
         # Update problem to have 2 additional sequential parents.
         # So in total, 3 sequential parents, with one inaccessible.
         for sequential in (accessible_seq, inaccessible_seq):
-            sequential.children = [self.problem.location]
+            sequential.children = [self.problem.usage_key]
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, self.course.id):
                 self.store.update_item(sequential, self.user.id)
 
@@ -205,12 +205,12 @@ class RecalculateSubsectionGradeTest(HasCourseWithProblemsMixin, ModuleStoreTest
         self._apply_recalculate_subsection_grade()
         assert mock_subsection_signal.call_count == 1
         sequentials_signalled = {
-            args[1]['subsection_grade'].location
+            args[1]['subsection_grade'].usage_key
             for args in mock_subsection_signal.call_args_list
         }
         self.assertSetEqual(
             sequentials_signalled,
-            {self.sequential.location},
+            {self.sequential.usage_key},
         )
 
     @patch('lms.djangoapps.grades.signals.signals.SUBSECTION_SCORE_CHANGED.send')
@@ -248,7 +248,7 @@ class RecalculateSubsectionGradeTest(HasCourseWithProblemsMixin, ModuleStoreTest
             group_access={verified_partition.id: [verified_group.id]}
         )
 
-        self.recalculate_subsection_grade_kwargs['usage_id'] = str(restricted_problem.location)
+        self.recalculate_subsection_grade_kwargs['usage_id'] = str(restricted_problem.usage_key)
         verified_partition.scheme.set_group_for_user(self.user, verified_partition, verified_group)
 
         self._apply_recalculate_subsection_grade()

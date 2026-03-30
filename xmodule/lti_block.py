@@ -507,7 +507,7 @@ class _BuiltInLTIBlock(
 
             # These parameters do not participate in OAuth signing.
             'launch_url': self.launch_url.strip(),
-            'element_id': self.location.html_id(),
+            'element_id': self.usage_key.html_id(),
             'element_class': self.category,
             'open_in_a_new_page': self.open_in_a_new_page,
             'display_name': self.display_name,
@@ -595,7 +595,7 @@ class _BuiltInLTIBlock(
         i4x-2-3-lti-31de800015cf4afb973356dbe81496df this part of resource_link_id:
         makes resource_link_id to be unique among courses inside same system.
         """
-        return str(parse.quote(f"{settings.LMS_BASE}-{self.location.html_id()}"))
+        return str(parse.quote(f"{settings.LMS_BASE}-{self.usage_key.html_id()}"))
 
     def get_lis_result_sourcedid(self):
         """
@@ -727,8 +727,8 @@ class _BuiltInLTIBlock(
             # Stubbing headers for now:
             log.info(
                 "LTI block %s in course %s does not have oauth parameters correctly configured.",
-                self.location,
-                self.location.course_key,
+                self.usage_key,
+                self.usage_key.course_key,
             )
             headers = {
                 'Content-Type': 'application/x-www-form-urlencoded',

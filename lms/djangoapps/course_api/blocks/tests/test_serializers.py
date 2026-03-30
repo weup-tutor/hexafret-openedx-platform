@@ -49,7 +49,7 @@ class TestBlockSerializerBase(SharedModuleStoreTestCase):
         )
         self.block_structure = get_course_blocks(
             self.user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
         self.serializer_context = {
@@ -127,11 +127,11 @@ class TestBlockSerializerBase(SharedModuleStoreTestCase):
         """
         # Create a staff user to be able to test visible_to_staff_only
         staff_user = UserFactory.create()
-        CourseStaffRole(self.course.location.course_key).add_users(staff_user)
+        CourseStaffRole(self.course.usage_key.course_key).add_users(staff_user)
 
         block_structure = get_course_blocks(
             staff_user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
         return {
@@ -144,7 +144,7 @@ class TestBlockSerializerBase(SharedModuleStoreTestCase):
         """
         Test fields accessed by a staff user
         """
-        if serialized_block['id'] == str(self.html_block.location):
+        if serialized_block['id'] == str(self.html_block.usage_key):
             assert serialized_block['visible_to_staff_only']
         else:
             assert not serialized_block['visible_to_staff_only']

@@ -152,7 +152,7 @@ class UpdateDiscussionsSettingsFromCourseTestCase(ModuleStoreTestCase, Discussio
         ) in config_data.contexts
         assert DiscussionTopicContext(
             title='Unit',
-            usage_key=self.unit.location,
+            usage_key=self.unit.usage_key,
             group_id=None,
             external_id=None,
             ordering=100,
@@ -269,7 +269,7 @@ class MigrateUnitDiscussionStateFromXBlockTestCase(ModuleStoreTestCase, Discussi
             BlockFactory.create(
                 parent=unit,
                 category='discussion',
-                discussion_id=f'id-{unit.location}',
+                discussion_id=f'id-{unit.usage_key}',
                 discussion_target=f'Target {unit.display_name}',
                 discussion_category=f'Category {unit.display_name}',
             )

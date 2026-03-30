@@ -112,9 +112,9 @@ class CourseModeSignalTest(ModuleStoreTestCase):
         with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred):
             # create the master's mode. signal will add masters to the verified section
             self.create_mode('masters', 'masters')
-            verified_section_ret = self.store.get_item(verified_section.location)
-            section2_ret = self.store.get_item(section2.location)
-            section3_ret = self.store.get_item(section3.location)
+            verified_section_ret = self.store.get_item(verified_section.usage_key)
+            section2_ret = self.store.get_item(section2.usage_key)
+            section3_ret = self.store.get_item(section3.usage_key)
             # the verified section will now also be visible to master's
             assert verified_section_ret.group_access[ENROLLMENT_TRACK_PARTITION_ID] == [VERIFIED_ID, MASTERS_ID]
             assert section2_ret.group_access == {}

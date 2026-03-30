@@ -57,7 +57,7 @@ class _TestWordCloudBase(TestCase):
         keys = ScopeIds(None, olx_element.tag, def_id, runtime.id_generator.create_usage(def_id))
         block = self.word_cloud_class.parse_xml(olx_element, runtime, keys)
 
-        block.location = BlockUsageLocator(
+        block.usage_key = BlockUsageLocator(
             CourseLocator('org', 'course', 'run', branch='revision'), 'word_cloud', 'block_id'
         )
 

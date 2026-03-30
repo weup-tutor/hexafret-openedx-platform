@@ -518,7 +518,7 @@ class BaseTestDashboardView(SharedModuleStoreTestCase, APITestCase):
 
         # Set up a course
         cls.course = CourseFactory.create()
-        cls.course_key = cls.course.location.course_key
+        cls.course_key = cls.course.usage_key.course_key
 
         # Set up a user
         cls.username = "alan"

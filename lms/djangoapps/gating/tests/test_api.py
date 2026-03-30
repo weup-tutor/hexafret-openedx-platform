@@ -41,19 +41,19 @@ class GatingTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase):
 
         # create chapter
         self.chapter1 = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name='untitled chapter 1'
         )
 
         # create sequentials
         self.seq1 = BlockFactory.create(
-            parent_location=self.chapter1.location,
+            parent_location=self.chapter1.usage_key,
             category='sequential',
             display_name='gating sequential'
         )
         self.seq2 = BlockFactory.create(
-            parent_location=self.chapter1.location,
+            parent_location=self.chapter1.usage_key,
             category='sequential',
             display_name='gated sequential'
         )
@@ -69,17 +69,17 @@ class TestEvaluatePrerequisite(GatingTestCase, MilestonesTestCaseMixin):
         super().setUp()
         self.user_dict = {'id': self.user.id}
         self.prereq_milestone = None
-        self.subsection_grade = Mock(location=self.seq1.location, percent_graded=0.5)
+        self.subsection_grade = Mock(location=self.seq1.usage_key, percent_graded=0.5)
 
     def _setup_gating_milestone(self, min_score, min_completion):
         """
         Setup a gating milestone for testing
         """
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
         gating_api.set_required_content(
-            self.course.id, self.seq2.location, self.seq1.location, min_score, min_completion
+            self.course.id, self.seq2.usage_key, self.seq1.usage_key, min_score, min_completion
         )
-        self.prereq_milestone = gating_api.get_gating_milestone(self.course.id, self.seq1.location, 'fulfills')
+        self.prereq_milestone = gating_api.get_gating_milestone(self.course.id, self.seq1.usage_key, 'fulfills')
 
     @patch('openedx.core.lib.gating.api.get_subsection_completion_percentage')
     @data(
@@ -122,7 +122,7 @@ class TestEvaluatePrerequisite(GatingTestCase, MilestonesTestCaseMixin):
 
     @patch('openedx.core.lib.gating.api.get_subsection_grade_percentage')
     def test_no_gated_content(self, mock_score):
-        gating_api.add_prerequisite(self.course.id, self.seq1.location)
+        gating_api.add_prerequisite(self.course.id, self.seq1.usage_key)
 
         evaluate_prerequisite(self.course, self.subsection_grade, self.user)
         assert not mock_score.called

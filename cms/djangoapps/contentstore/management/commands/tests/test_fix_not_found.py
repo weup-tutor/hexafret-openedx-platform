@@ -25,7 +25,7 @@ class TestFixNotFound(ModuleStoreTestCase):
 
     def test_fix_not_found(self):
         course = CourseFactory.create(default_store=ModuleStoreEnum.Type.split)
-        BlockFactory.create(category='chapter', parent_location=course.location)
+        BlockFactory.create(category='chapter', parent_location=course.usage_key)
 
         # get course again in order to update its children list
         course = self.store.get_course(course.id)

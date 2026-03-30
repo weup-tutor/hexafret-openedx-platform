@@ -212,13 +212,13 @@ def handle_item_deleted(**kwargs):
             deleted_block = modulestore().get_item(usage_key)
         except ItemNotFoundError:
             return
-        id_list = {deleted_block.location}
+        id_list = {deleted_block.usage_key}
         for block in yield_dynamic_block_descendants(deleted_block, kwargs.get('user_id')):
             # Remove prerequisite milestone data
-            gating_api.remove_prerequisite(block.location)
+            gating_api.remove_prerequisite(block.usage_key)
             # Remove any 'requires' course content milestone relationships
-            gating_api.set_required_content(course_key, block.location, None, None, None)
-            id_list.add(block.location)
+            gating_api.set_required_content(course_key, block.usage_key, None, None, None)
+            id_list.add(block.usage_key)
 
         ComponentLink.objects.filter(downstream_usage_key__in=id_list).delete()
         ContainerLink.objects.filter(downstream_usage_key__in=id_list).delete()

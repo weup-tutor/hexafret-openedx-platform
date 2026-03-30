@@ -48,7 +48,7 @@ def override_xblock_fields(course_key, location_list, block_structure, user_id):
         value = json.loads(student_field_override.value)
         field = student_field_override.field
         block_structure.override_xblock_field(
-            student_field_override.location,
+            student_field_override.usage_key,
             field,
             value
         )

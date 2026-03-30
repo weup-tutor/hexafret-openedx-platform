@@ -54,7 +54,7 @@ def _get_overrides_for_user(user, block):
     ):
         location = block.scope_ids.usage_id.usage_key
     else:
-        location = block.location
+        location = block.usage_key
 
     query = StudentFieldOverride.objects.filter(
         course_id=block.scope_ids.usage_id.context_key,
@@ -77,7 +77,7 @@ def override_field_for_user(user, block, name, value):
     """
     override, _ = StudentFieldOverride.objects.get_or_create(
         course_id=block.scope_ids.usage_id.context_key,
-        location=block.location,
+        location=block.usage_key,
         student_id=user.id,
         field=name)
     field = block.fields[name]
@@ -96,7 +96,7 @@ def clear_override_for_user(user, block, name):
         StudentFieldOverride.objects.get(
             course_id=block.scope_ids.usage_id.context_key,
             student_id=user.id,
-            location=block.location,
+            location=block.usage_key,
             field=name).delete()
     except StudentFieldOverride.DoesNotExist:
         pass

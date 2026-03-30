@@ -1105,7 +1105,7 @@ class CourseBlock(
         self._gating_prerequisites = None
 
         if self.wiki_slug is None:
-            self.wiki_slug = self.location.course
+            self.wiki_slug = self.usage_key.course
 
         if self.due_date_display_format is None and self.show_timezone is False:
             # For existing courses with show_timezone set to False (and no due_date_display_format specified),
@@ -1129,7 +1129,7 @@ class CourseBlock(
         self.set_grading_policy(self.grading_policy)
 
         if not self.discussion_topics:
-            self.discussion_topics = {_('General'): {'id': self.location.html_id()}}
+            self.discussion_topics = {_('General'): {'id': self.usage_key.html_id()}}
 
         try:
             if not getattr(self, "tabs", []):
@@ -1434,7 +1434,7 @@ class CourseBlock(
     @property
     def id(self):
         """Return the course_id for this course"""
-        return self.location.course_key
+        return self.usage_key.course_key
 
     @property
     def start_date_is_still_default(self):
@@ -1502,7 +1502,7 @@ class CourseBlock(
         "Intro to Computer Science" with the course key "edX/CS-101/2014", the
         course number would be "CS-101"
         """
-        return course_metadata_utils.number_for_course_location(self.location)
+        return course_metadata_utils.number_for_course_location(self.usage_key)
 
     @property
     def display_number_with_default(self):
@@ -1516,7 +1516,7 @@ class CourseBlock(
 
     @property
     def org(self):
-        return self.location.org
+        return self.usage_key.org
 
     @property
     def display_org_with_default(self):
@@ -1543,7 +1543,7 @@ class CourseBlock(
         Returns a unique deterministic base32-encoded ID for the course.
         The optional padding_char parameter allows you to override the "=" character used for padding.
         """
-        return course_metadata_utils.clean_course_key(self.location.course_key, padding_char)
+        return course_metadata_utils.clean_course_key(self.usage_key.course_key, padding_char)
 
     @property
     def teams_enabled(self):
@@ -1637,7 +1637,7 @@ class CourseSummary:
         self.display_name = display_name
 
         self.id = course_locator  # pylint: disable=invalid-name
-        self.location = course_locator.make_usage_key('course', 'course')
+        self.usage_key = course_locator.make_usage_key('course', 'course')
         self.end = end
         if end is not None and not isinstance(end, datetime):
             self.end = dateutil.parser.parse(end)
@@ -1650,7 +1650,7 @@ class CourseSummary:
         """
         if self.display_organization:
             return self.display_organization
-        return self.location.org
+        return self.usage_key.org
 
     @property
     def display_number_with_default(self):
@@ -1660,7 +1660,7 @@ class CourseSummary:
         """
         if self.display_coursenumber:
             return self.display_coursenumber
-        return self.location.course
+        return self.usage_key.course
 
     def has_ended(self):
         """

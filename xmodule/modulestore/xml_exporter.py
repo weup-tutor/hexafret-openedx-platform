@@ -56,7 +56,7 @@ def _export_drafts(modulestore, course_key, export_fs, xml_centric_course_key):
 
             for draft_block in draft_blocks:
                 parent_loc = modulestore.get_parent_location(
-                    draft_block.location,
+                    draft_block.usage_key,
                     revision=ModuleStoreEnum.RevisionOption.draft_preferred
                 )
 
@@ -67,8 +67,8 @@ def _export_drafts(modulestore, course_key, export_fs, xml_centric_course_key):
 
                 draft_node = draft_node_constructor(
                     draft_block,
-                    location=draft_block.location,
-                    url=str(draft_block.location),
+                    location=draft_block.usage_key,
+                    url=str(draft_block.usage_key),
                     parent_location=parent_loc,
                     parent_url=parent_url,
                 )
@@ -94,9 +94,9 @@ def _export_drafts(modulestore, course_key, export_fs, xml_centric_course_key):
                 parent = modulestore.get_item(draft_node.parent_location)
 
                 # Don't try to export orphaned items
-                if draft_node.module.location not in parent.children:
+                if draft_node.module.usage_key not in parent.children:
                     continue
-                index = parent.children.index(draft_node.module.location)
+                index = parent.children.index(draft_node.module.usage_key)
                 draft_node.module.xml_attributes['index_in_children_list'] = str(index)
 
                 draft_node.module.runtime.export_fs = draft_course_dir
@@ -278,7 +278,7 @@ class CourseExportManager(ExportManager):
             'about', 'about', '.html'
         )
 
-        course_policy_dir_name = courselike.location.run
+        course_policy_dir_name = courselike.usage_key.run
         course_run_policy_dir = policies_dir.makedir(course_policy_dir_name, recreate=True)
 
         # export the grading policy
@@ -289,7 +289,7 @@ class CourseExportManager(ExportManager):
         # export all of the course metadata in policy.json
         set_custom_attribute("export_policy_started", str(courselike))
         with course_run_policy_dir.open('policy.json', 'wb') as course_policy:
-            policy = {'course/' + courselike.location.run: own_metadata(courselike)}
+            policy = {'course/' + courselike.usage_key.run: own_metadata(courselike)}
             course_policy.write(dumps(policy, cls=EdxJSONEncoder, sort_keys=True, indent=4).encode('utf-8'))
 
         set_custom_attribute("export_drafts_started", str(courselike))
@@ -408,7 +408,7 @@ def _export_field_content(xblock_item, item_dir):
         for field_name in block_data:
             if field_name not in DEFAULT_CONTENT_FIELDS:
                 # filename format: {dirname}.{field_name}.json
-                with item_dir.open('{}.{}.{}'.format(xblock_item.location.block_id, field_name, 'json'),
+                with item_dir.open('{}.{}.{}'.format(xblock_item.usage_key.block_id, field_name, 'json'),
                                    'wb') as field_content_file:
                     field_content_file.write(dumps(block_data.get(field_name, {}), cls=EdxJSONEncoder,
                                                    sort_keys=True, indent=4).encode('utf-8'))
@@ -421,7 +421,7 @@ def export_extra_content(export_fs, modulestore, source_course_key, dest_course_
         item_dir = export_fs.makedir(dirname, recreate=True)
         for item in items:
             adapt_references(item, dest_course_key, export_fs)
-            with item_dir.open(item.location.block_id + file_suffix, 'wb') as item_file:
+            with item_dir.open(item.usage_key.block_id + file_suffix, 'wb') as item_file:
                 item_file.write(item.data.encode('utf8'))
 
                 # export content fields other then metadata and data in json format in current directory

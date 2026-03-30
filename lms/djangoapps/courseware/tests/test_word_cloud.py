@@ -288,7 +288,7 @@ class _TestWordCloudBase(BaseTestXmodule):
             assert fragment_content_clean == self.runtime.render_template('templates/word_cloud.html', expected_context)
         else:
             expected_context['ajax_url'] = self.block.ajax_url
-            expected_context['element_id'] = self.block.location.html_id()
+            expected_context['element_id'] = self.block.usage_key.html_id()
             assert fragment.content == self.runtime.render_template('word_cloud.html', expected_context)
 
 

@@ -150,9 +150,9 @@ class GradesTransformer(BlockStructureTransformer):
         `transformer_block_field` associated with the `GradesTransformer`.
         """
         max_score = block.max_score()
-        block_structure.set_transformer_block_field(block.location, cls, 'max_score', max_score)
+        block_structure.set_transformer_block_field(block.usage_key, cls, 'max_score', max_score)
         if max_score is None:
-            log.warning(f"GradesTransformer: max_score is None for {block.location}")
+            log.warning(f"GradesTransformer: max_score is None for {block.usage_key}")
 
     @classmethod
     def _collect_grading_policy_hash(cls, block_structure):
@@ -163,7 +163,7 @@ class GradesTransformer(BlockStructureTransformer):
         course_location = block_structure.root_block_usage_key
         course_block = block_structure.get_xblock(course_location)
         block_structure.set_transformer_block_field(
-            course_block.location,
+            course_block.usage_key,
             cls,
             "grading_policy_hash",
             cls.grading_policy_hash(course_block),

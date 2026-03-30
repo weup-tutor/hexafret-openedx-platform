@@ -102,7 +102,7 @@ def find_unit(course, url):
         """
         Find node in course tree for url.
         """
-        if str(node.location) == url:
+        if str(node.usage_key) == url:
             return node
         for child in node.get_children():
             found = find(child, url)
@@ -137,7 +137,7 @@ def get_units_with_due_date(course):
         `units` if it does.  Otherwise recurses into children to search for
         nodes with due dates.
         """
-        if (node.location, 'due') in course_dates:
+        if (node.usage_key, 'due') in course_dates:
             units.append(node)
         else:
             for child in node.get_children():
@@ -154,7 +154,7 @@ def title_or_url(node):
     """
     title = getattr(node, 'display_name', None)
     if not title:
-        title = str(node.location)
+        title = str(node.usage_key)
     return title
 
 
@@ -183,7 +183,7 @@ def set_due_date_extension(course, unit, student, due_date, actor=None, reason='
         `blocks_to_set` if it does.  And recurses into children to search for
         nodes with due dates.
         """
-        if (node.location, 'due') in course_dates:
+        if (node.usage_key, 'due') in course_dates:
             blocks_to_set.add(node)
         for child in node.get_children():
             visit(child)
@@ -193,14 +193,14 @@ def set_due_date_extension(course, unit, student, due_date, actor=None, reason='
         if due_date:
             try:
                 api.set_date_for_block(
-                    course.id, block.location, 'due', due_date, user=student, reason=reason, actor=actor
+                    course.id, block.usage_key, 'due', due_date, user=student, reason=reason, actor=actor
                 )
             except api.MissingDateError as ex:
-                raise DashboardError(_("Unit {0} has no due date to extend.").format(unit.location)) from ex
+                raise DashboardError(_("Unit {0} has no due date to extend.").format(unit.usage_key)) from ex
             except api.InvalidDateError as ex:
                 raise DashboardError(_("An extended due date must be later than the original due date.")) from ex
         else:
-            api.set_date_for_block(course.id, block.location, 'due', None, user=student, reason=reason, actor=actor)
+            api.set_date_for_block(course.id, block.usage_key, 'due', None, user=student, reason=reason, actor=actor)
 
     # edx-proctoring is checking cached course dates, so the overrides made above will not be enforced until the
     # TieredCache is reloaded. This can lead to situations when a student's extension is revoked, but they can still
@@ -220,7 +220,7 @@ def dump_block_extensions(course, unit):
     """
     header = [_("Username"), _("Full Name"), _("Extended Due Date")]
     data = []
-    for username, fullname, due_date, *unused in api.get_overrides_for_block(course.id, unit.location):
+    for username, fullname, due_date, *unused in api.get_overrides_for_block(course.id, unit.usage_key):
         due_date = due_date.strftime('%Y-%m-%d %H:%M')
         data.append(dict(list(zip(header, (username, fullname, due_date)))))
     data.sort(key=operator.itemgetter(_("Username")))
@@ -240,7 +240,7 @@ def dump_student_extensions(course, student):
     data = []
     header = [_("Unit"), _("Extended Due Date")]
     units = get_units_with_due_date(course)
-    units = {u.location: u for u in units}
+    units = {u.usage_key: u for u in units}
     query = api.get_overrides_for_user(course.id, student)
     for override in query:
         location = override['location'].replace(course_key=course.id)

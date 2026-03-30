@@ -1243,7 +1243,7 @@ class TestAccountsAPI(FilteredQueryCountMixin, CacheIsolationTestCase, UserAPITe
         self.assertIsInstance(storage, S3Boto3Storage)
         self.assertEqual(storage.bucket_name, "test")
         self.assertEqual(storage.default_acl, 'public')
-        self.assertEqual(storage.location, "abc/def")
+        self.assertEqual(storage.usage_key, "abc/def")
 
     @override_settings(PROFILE_IMAGE_BACKEND={'class': None, 'options': {}})
     def test_profile_backend_without_backend(self):
@@ -1283,7 +1283,7 @@ class TestAccountsAPI(FilteredQueryCountMixin, CacheIsolationTestCase, UserAPITe
         self.assertIsInstance(storage, S3Boto3Storage)
         self.assertEqual(storage.bucket_name, "profiles")
         self.assertEqual(storage.default_acl, 'public')
-        self.assertEqual(storage.location, "profile/images")
+        self.assertEqual(storage.usage_key, "profile/images")
 
     @override_settings(
         PROFILE_IMAGE_BACKEND={},

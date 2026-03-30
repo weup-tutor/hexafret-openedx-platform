@@ -95,7 +95,7 @@ def setup_students_and_grades(context):
                         max_grade=1,
                         student=context.student,
                         course_id=context.course.id,
-                        module_state_key=problem.location
+                        module_state_key=problem.usage_key
                     )
 
                     StudentModuleFactory.create(
@@ -103,7 +103,7 @@ def setup_students_and_grades(context):
                         max_grade=1,
                         student=context.student2,
                         course_id=context.course.id,
-                        module_state_key=problem.location
+                        module_state_key=problem.usage_key
                     )
 
         task_compute_all_grades_for_course.apply_async(kwargs={'course_key': str(context.course.id)})
@@ -906,17 +906,17 @@ class TestCoachDashboardSchedule(CcxTestCase, LoginEnrollmentTestCase, ModuleSto
         vertical = self.verticals[0]
         self.hide_node(vertical)
         locations = self.assert_elements_in_schedule(url, n_verticals=7)
-        assert str(vertical.location) not in locations
+        assert str(vertical.usage_key) not in locations
         # hide a sequential
         sequential = self.sequentials[0]
         self.hide_node(sequential)
         locations = self.assert_elements_in_schedule(url, n_sequentials=3, n_verticals=6)
-        assert str(sequential.location) not in locations
+        assert str(sequential.usage_key) not in locations
         # hide a chapter
         chapter = self.chapters[0]
         self.hide_node(chapter)
         locations = self.assert_elements_in_schedule(url, n_chapters=1, n_sequentials=2, n_verticals=4)
-        assert str(chapter.location) not in locations
+        assert str(chapter.usage_key) not in locations
 
 
 GET_CHILDREN = XModuleMixin.get_children

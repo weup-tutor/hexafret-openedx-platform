@@ -187,16 +187,16 @@ def _list_libraries(request):
     lib_info = [
         {
             "display_name": lib.display_name,
-            "library_key": str(lib.location.library_key),
+            "library_key": str(lib.usage_key.library_key),
         }
         for lib in libraries
         if (
             (
                 text_search in lib.display_name.lower() or
-                text_search in lib.location.library_key.org.lower() or
-                text_search in lib.location.library_key.library.lower()
+                text_search in lib.usage_key.library_key.org.lower() or
+                text_search in lib.usage_key.library_key.library.lower()
             ) and
-            has_studio_read_access(request.user, lib.location.library_key)
+            has_studio_read_access(request.user, lib.usage_key.library_key)
         )
     ]
     return JsonResponse(lib_info)
@@ -226,7 +226,7 @@ def _create_library(request):
                 fields={"display_name": display_name},
             )
         # Give the user admin ("Instructor") role for this library:
-        add_instructor(new_lib.location.library_key, request.user, request.user)
+        add_instructor(new_lib.usage_key.library_key, request.user, request.user)
     except PermissionDenied as error:  # pylint: disable=unused-variable
         log.info(
             "User does not have the permission to create LIBRARY in this organization."
@@ -267,7 +267,7 @@ def _create_library(request):
             ).format(organization_key=org)
         })
 
-    lib_key_str = str(new_lib.location.library_key)
+    lib_key_str = str(new_lib.usage_key.library_key)
     return JsonResponse({
         'url': reverse_library_url('library_handler', lib_key_str),
         'library_key': lib_key_str,
@@ -284,8 +284,8 @@ def library_blocks_view(library, user, response_format):
 
     Assumes that read permissions have been checked before calling this.
     """
-    assert isinstance(library.location.library_key, LibraryLocator)
-    assert isinstance(library.location, LibraryUsageLocator)
+    assert isinstance(library.usage_key.library_key, LibraryLocator)
+    assert isinstance(library.usage_key, LibraryUsageLocator)
 
     children = library.children
     if response_format == "json":
@@ -293,13 +293,13 @@ def library_blocks_view(library, user, response_format):
         prev_version = library.runtime.course_entry.structure['previous_version']
         return JsonResponse({
             "display_name": library.display_name,
-            "library_id": str(library.location.library_key),
+            "library_id": str(library.usage_key.library_key),
             "version": str(library.runtime.course_entry.course_key.version_guid),
             "previous_version": str(prev_version) if prev_version else None,
             "blocks": [str(x) for x in children],
         })
 
-    can_edit = has_studio_write_access(user, library.location.library_key)
+    can_edit = has_studio_write_access(user, library.usage_key.library_key)
 
     xblock_info = create_xblock_info(library, include_ancestor_info=False, graders=[])
     component_templates = get_component_templates(library, library=True) if can_edit else []

@@ -74,7 +74,7 @@ class CourseIndexViewTest(CourseTestCase, PermissionAccessMixin):
                 "source_edit_url": ""
             },
             "language_code": "en",
-            "lms_link": get_lms_link_for_item(self.course.location),
+            "lms_link": get_lms_link_for_item(self.course.usage_key),
             "mfe_proctored_exam_settings_url": (
                 f"http://course-authoring-mfe/course/{self.course.id}"
                 "/pages-and-resources/proctoring/settings"
@@ -99,7 +99,7 @@ class CourseIndexViewTest(CourseTestCase, PermissionAccessMixin):
     @override_waffle_flag(CUSTOM_RELATIVE_DATES, active=False)
     def test_course_index_response_with_show_locators(self):
         """Check successful response content with show query param"""
-        response = self.client.get(self.url, {"show": str(self.unit.location)})
+        response = self.client.get(self.url, {"show": str(self.unit.usage_key)})
         expected_response = {
             "course_release_date": "Set Date",
             "course_structure": _course_outline_json(self.request, self.course),
@@ -113,10 +113,10 @@ class CourseIndexViewTest(CourseTestCase, PermissionAccessMixin):
             "is_custom_relative_dates_active": False,
             "initial_state": {
                 "expanded_locators": [
-                    str(self.unit.location),
-                    str(self.xblock.location),
+                    str(self.unit.usage_key),
+                    str(self.xblock.usage_key),
                 ],
-                "locator_to_show": str(self.unit.location),
+                "locator_to_show": str(self.unit.usage_key),
             },
             "initial_user_clipboard": {
                 "content": None,
@@ -125,7 +125,7 @@ class CourseIndexViewTest(CourseTestCase, PermissionAccessMixin):
                 "source_edit_url": ""
             },
             "language_code": "en",
-            "lms_link": get_lms_link_for_item(self.course.location),
+            "lms_link": get_lms_link_for_item(self.course.usage_key),
             "mfe_proctored_exam_settings_url": (
                 f"http://course-authoring-mfe/course/{self.course.id}"
                 "/pages-and-resources/proctoring/settings"

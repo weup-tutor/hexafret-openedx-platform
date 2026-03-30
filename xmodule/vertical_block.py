@@ -90,7 +90,7 @@ class VerticalBlock(
             if 'bookmarked' not in child_context:
                 bookmarks_service = self.runtime.service(self, 'bookmarks')
                 child_context['bookmarked'] = bookmarks_service.is_bookmarked(
-                    usage_key=self.location),  # lint-amnesty, pylint: disable=no-member, trailing-comma-tuple
+                    usage_key=self.usage_key),  # lint-amnesty, pylint: disable=no-member, trailing-comma-tuple
             if 'username' not in child_context:
                 user_service = self.runtime.service(self, 'user')
                 child_context['username'] = user_service.get_current_user().opt_attrs.get(
@@ -132,7 +132,7 @@ class VerticalBlock(
             fragment.add_fragment_resources(rendered_child)
 
             contents.append({
-                'id': str(child.location),
+                'id': str(child.usage_key),
                 'content': rendered_child.content
             })
 
@@ -159,7 +159,7 @@ class VerticalBlock(
                 'show_title': child_context.get('show_title', True),
                 'bookmarked': child_context['bookmarked'],
                 'bookmark_id': "{},{}".format(
-                    child_context['username'], str(self.location)),  # pylint: disable=no-member
+                    child_context['username'], str(self.usage_key)),  # pylint: disable=no-member
             })
 
         mako_service = self.runtime.service(self, 'mako')
@@ -215,7 +215,7 @@ class VerticalBlock(
         """
         fragment = Fragment()
         root_xblock = context.get('root_xblock')
-        is_root = root_xblock and root_xblock.location == self.location  # pylint: disable=no-member
+        is_root = root_xblock and root_xblock.usage_key == self.usage_key  # pylint: disable=no-member
 
         # For the container page we want the full drag-and-drop, but for unit pages we want
         # a more concise version that appears alongside the "View =>" link-- unless it is

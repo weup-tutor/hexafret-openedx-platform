@@ -56,7 +56,7 @@ class Content:
     A class with location and content_type members
     """
     def __init__(self, location, content_type):
-        self.location = location
+        self.usage_key = location
         self.content_type = content_type
         self.data = None
 

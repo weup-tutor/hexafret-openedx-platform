@@ -93,8 +93,8 @@ class TestVideoYouTube(TestVideo):  # lint-amnesty, pylint: disable=missing-clas
             'autoadvance_enabled': False,
             'license': None,
             'bumper_metadata': 'null',
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -102,7 +102,7 @@ class TestVideoYouTube(TestVideo):  # lint-amnesty, pylint: disable=missing-clas
             'is_video_from_same_origin': False,
             'handout': None,
             'hide_downloads': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'is_embed': False,
             'metadata': json.dumps(OrderedDict({
                 'autoAdvance': False,
@@ -184,8 +184,8 @@ class TestVideoNonYouTube(TestVideo):  # pylint: disable=test-inherits-tests
             'autoadvance_enabled': False,
             'license': None,
             'bumper_metadata': 'null',
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -194,7 +194,7 @@ class TestVideoNonYouTube(TestVideo):  # pylint: disable=test-inherits-tests
             'handout': None,
             'hide_downloads': False,
             'is_embed': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'metadata': json.dumps(OrderedDict({
                 'autoAdvance': False,
                 'saveStateEnabled': True,
@@ -270,12 +270,12 @@ class TestVideoPublicAccess(BaseTestVideoXBlock):
         """Test public video url."""
         assert self.block.public_access is True
         with self.mock_feature_toggle(enabled=feature_enabled):
-            assert sharing.is_public_sharing_enabled(self.block.location, self.block.public_access) == feature_enabled
+            assert sharing.is_public_sharing_enabled(self.block.usage_key, self.block.public_access) == feature_enabled
 
     def test_is_public_sharing_enabled__not_public(self):
         self.block.public_access = False
         with self.mock_feature_toggle():
-            assert not sharing.is_public_sharing_enabled(self.block.location, self.block.public_access)
+            assert not sharing.is_public_sharing_enabled(self.block.usage_key, self.block.public_access)
 
     @patch('openedx.core.djangoapps.video_config.sharing.get_course_video_sharing_override')
     def test_is_public_sharing_enabled_by_course_override(self, mock_course_sharing_override):
@@ -286,7 +286,7 @@ class TestVideoPublicAccess(BaseTestVideoXBlock):
 
         # When I try to determine if public sharing is enabled
         with self.mock_feature_toggle():
-            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.location, self.block.public_access)
+            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.usage_key, self.block.public_access)
 
         # Then I will get that course value
         self.assertTrue(is_public_sharing_enabled)
@@ -299,7 +299,7 @@ class TestVideoPublicAccess(BaseTestVideoXBlock):
 
         # When I try to determine if public sharing is enabled
         with self.mock_feature_toggle():
-            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.location, self.block.public_access)
+            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.usage_key, self.block.public_access)
 
         # Then I will get that course value
         self.assertFalse(is_public_sharing_enabled)
@@ -313,7 +313,7 @@ class TestVideoPublicAccess(BaseTestVideoXBlock):
 
         # When I try to determine if public sharing is enabled
         with self.mock_feature_toggle():
-            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.location, self.block.public_access)
+            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.usage_key, self.block.public_access)
 
         # I will get the per-video value
         self.assertEqual(self.block.public_access, is_public_sharing_enabled)
@@ -326,7 +326,7 @@ class TestVideoPublicAccess(BaseTestVideoXBlock):
 
         # When I try to determine if public sharing is enabled
         with self.mock_feature_toggle():
-            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.location, self.block.public_access)
+            is_public_sharing_enabled = sharing.is_public_sharing_enabled(self.block.usage_key, self.block.public_access)
 
         # I will fall-back to per-video values
         self.assertEqual(self.block.public_access, is_public_sharing_enabled)
@@ -469,8 +469,8 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'autoadvance_enabled': False,
             'license': None,
             'bumper_metadata': 'null',
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -478,7 +478,7 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'is_video_from_same_origin': False,
             'handout': None,
             'hide_downloads': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'is_embed': False,
             'metadata': '',
             'track': None,
@@ -524,9 +524,9 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
                 'track': (
                     track_url if data['expected_track_url'] == 'a_sub_file.srt.sjson' else data['expected_track_url']
                 ),
-                'id': self.block.location.html_id(),
-                'block_id': str(self.block.location),
-                'course_id': str(self.block.location.course_key),
+                'id': self.block.usage_key.html_id(),
+                'block_id': str(self.block.usage_key),
+                'course_id': str(self.block.usage_key.course_key),
                 'metadata': json.dumps(metadata)
             })
 
@@ -604,8 +604,8 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'autoadvance_enabled': False,
             'license': None,
             'bumper_metadata': 'null',
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -613,7 +613,7 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'is_video_from_same_origin': False,
             'handout': None,
             'hide_downloads': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'is_embed': False,
             'metadata': self.default_metadata_dict,
             'track': None,
@@ -648,9 +648,9 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             })
             expected_context.update({
                 'display_name': data['name'],
-                'id': self.block.location.html_id(),
-                'block_id': str(self.block.location),
-                'course_id': str(self.block.location.course_key),
+                'id': self.block.usage_key.html_id(),
+                'block_id': str(self.block.usage_key),
+                'course_id': str(self.block.usage_key.course_key),
                 'download_video_link': data['result'].get('download_video_link'),
                 'metadata': json.dumps(expected_context['metadata'])
             })
@@ -754,8 +754,8 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'autoadvance_enabled': False,
             'license': None,
             'bumper_metadata': 'null',
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -764,7 +764,7 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'handout': None,
             'hide_downloads': False,
             'is_embed': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'track': None,
             'transcript_download_format': 'srt',
             'transcript_download_formats_list': [
@@ -810,9 +810,9 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
                 'sources': data['result']['sources'],
             })
             expected_context.update({
-                'id': self.block.location.html_id(),
-                'block_id': str(self.block.location),
-                'course_id': str(self.block.location.course_key),
+                'id': self.block.usage_key.html_id(),
+                'block_id': str(self.block.usage_key),
+                'course_id': str(self.block.usage_key.course_key),
                 'download_video_link': data['result']['download_video_link'],
                 'metadata': json.dumps(expected_context['metadata'])
             })
@@ -876,8 +876,8 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'autoadvance_enabled': False,
             'license': None,
             'bumper_metadata': 'null',
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -886,7 +886,7 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'handout': None,
             'hide_downloads': False,
             'is_embed': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'track': None,
             'transcript_download_format': 'srt',
             'transcript_download_formats_list': [
@@ -920,9 +920,9 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'sources': data['result']['sources'],
         })
         expected_context.update({
-            'id': self.block.location.html_id(),
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'id': self.block.usage_key.html_id(),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'download_video_link': data['result']['download_video_link'],
             'is_video_from_same_origin': data['result']['is_video_from_same_origin'],
             'metadata': json.dumps(expected_context['metadata'])
@@ -984,8 +984,8 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
             'autoadvance_enabled': False,
             'license': None,
             'bumper_metadata': 'null',
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -1031,9 +1031,9 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
                 'sources': data['result'].get('sources', []),
             })
             expected_context.update({
-                'id': self.block.location.html_id(),
-                'block_id': str(self.block.location),
-                'course_id': str(self.block.location.course_key),
+                'id': self.block.usage_key.html_id(),
+                'block_id': str(self.block.usage_key),
+                'course_id': str(self.block.usage_key.course_key),
                 'download_video_link': data['result'].get('download_video_link'),
                 'metadata': json.dumps(expected_context['metadata'])
             })
@@ -1142,9 +1142,9 @@ class TestGetHtmlMethod(BaseTestVideoXBlock):
                 'sources': data['result'].get('sources', []),
             })
             expected_context.update({
-                'id': self.block.location.html_id(),
-                'block_id': str(self.block.location),
-                'course_id': str(self.block.location.course_key),
+                'id': self.block.usage_key.html_id(),
+                'block_id': str(self.block.usage_key),
+                'course_id': str(self.block.usage_key.course_key),
                 'download_video_link': data['result'].get('download_video_link'),
                 'metadata': json.dumps(expected_context['metadata'])
             })
@@ -1515,17 +1515,17 @@ class TestEditorSavedMethod(BaseTestVideoXBlock):
         for video.
         """
         self.initialize_block(metadata=self.metadata)
-        item = self.store.get_item(self.block.location)
+        item = self.store.get_item(self.block.usage_key)
         with open(self.file_path, "rb") as myfile:  # lint-amnesty, pylint: disable=bad-option-value, open-builtin
-            save_to_store(myfile.read(), self.file_name, 'text/sjson', item.location)
+            save_to_store(myfile.read(), self.file_name, 'text/sjson', item.usage_key)
         item.sub = "3_yD_cEKoCk"
         # subs_video.srt.sjson does not exist before calling editor_saved function
         with pytest.raises(NotFoundError):
-            Transcript.get_asset(item.location, 'subs_video.srt.sjson')
+            Transcript.get_asset(item.usage_key, 'subs_video.srt.sjson')
         old_metadata = own_metadata(item)
         # calling editor_saved will generate new file subs_video.srt.sjson for html5_sources
         item.editor_saved(self.user, old_metadata, None)
-        assert isinstance(Transcript.get_asset(item.location, 'subs_3_yD_cEKoCk.srt.sjson'), StaticContent)
+        assert isinstance(Transcript.get_asset(item.usage_key, 'subs_3_yD_cEKoCk.srt.sjson'), StaticContent)
 
     def test_editor_saved_when_youtube_and_html5_subs_exist(self):
         """
@@ -1533,14 +1533,14 @@ class TestEditorSavedMethod(BaseTestVideoXBlock):
         sub will be generated by editor_saved function.
         """
         self.initialize_block(metadata=self.metadata)
-        item = self.store.get_item(self.block.location)
+        item = self.store.get_item(self.block.usage_key)
         with open(self.file_path, "rb") as myfile:  # lint-amnesty, pylint: disable=bad-option-value, open-builtin
-            save_to_store(myfile.read(), self.file_name, 'text/sjson', item.location)
-            save_to_store(myfile.read(), 'subs_video.srt.sjson', 'text/sjson', item.location)
+            save_to_store(myfile.read(), self.file_name, 'text/sjson', item.usage_key)
+            save_to_store(myfile.read(), 'subs_video.srt.sjson', 'text/sjson', item.usage_key)
         item.sub = "3_yD_cEKoCk"
         # subs_3_yD_cEKoCk.srt.sjson and subs_video.srt.sjson already exist
-        assert isinstance(Transcript.get_asset(item.location, self.file_name), StaticContent)
-        assert isinstance(Transcript.get_asset(item.location, 'subs_video.srt.sjson'), StaticContent)
+        assert isinstance(Transcript.get_asset(item.usage_key, self.file_name), StaticContent)
+        assert isinstance(Transcript.get_asset(item.usage_key, 'subs_video.srt.sjson'), StaticContent)
         old_metadata = own_metadata(item)
         with patch(
             'openedx.core.djangoapps.video_config.services.manage_video_subtitles_save'
@@ -1558,7 +1558,7 @@ class TestEditorSavedMethod(BaseTestVideoXBlock):
             'edx_video_id': unstripped_video_id
         })
         self.initialize_block(metadata=self.metadata)
-        item = self.store.get_item(self.block.location)
+        item = self.store.get_item(self.block.usage_key)
         assert item.edx_video_id == unstripped_video_id
 
         # Now, modifying and saving the video block should strip the video id.
@@ -1574,7 +1574,7 @@ class TestEditorSavedMethod(BaseTestVideoXBlock):
         for a given `edx_video_id`.
         """
         self.initialize_block(metadata=self.metadata)
-        item = self.store.get_item(self.block.location)
+        item = self.store.get_item(self.block.usage_key)
         assert item.youtube_id_1_0 == '3_yD_cEKoCk'
 
         # Now, modify `edx_video_id` and save should override `youtube_id_1_0`.
@@ -1632,7 +1632,7 @@ class TestVideoBlockStudentViewJson(BaseTestVideoXBlock, CacheIsolationTestCase)
             'duration': self.TEST_DURATION,
             'status': 'dummy',
             'encoded_videos': [self.TEST_ENCODED_VIDEO],
-            'courses': [str(self.video.location.course_key)] if associate_course_in_val else [],
+            'courses': [str(self.video.usage_key.course_key)] if associate_course_in_val else [],
         })
         self.val_video = get_video_info(self.TEST_EDX_VIDEO_ID)  # pylint: disable=attribute-defined-outside-init
 
@@ -2393,8 +2393,8 @@ class TestVideoWithBumper(TestVideo):  # pylint: disable=test-inherits-tests
                     self.get_handler_url('publish_completion', ''), 'is_bumper', 1
                 ),
             })),
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'cdn_eval': False,
             'cdn_exp_group': None,
             'display_name': 'A Name',
@@ -2403,7 +2403,7 @@ class TestVideoWithBumper(TestVideo):  # pylint: disable=test-inherits-tests
             'handout': None,
             'hide_downloads': False,
             'is_embed': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'metadata': json.dumps(OrderedDict({
                 'autoAdvance': False,
                 'saveStateEnabled': True,
@@ -2476,8 +2476,8 @@ class TestAutoAdvanceVideo(TestVideo):  # lint-amnesty, pylint: disable=test-inh
 
         context = {
             'autoadvance_enabled': autoadvanceenabled_flag,
-            'block_id': str(self.block.location),
-            'course_id': str(self.block.location.course_key),
+            'block_id': str(self.block.usage_key),
+            'course_id': str(self.block.usage_key.course_key),
             'license': None,
             'cdn_eval': False,
             'cdn_exp_group': None,
@@ -2487,7 +2487,7 @@ class TestAutoAdvanceVideo(TestVideo):  # lint-amnesty, pylint: disable=test-inh
             'handout': None,
             'hide_downloads': False,
             'is_embed': False,
-            'id': self.block.location.html_id(),
+            'id': self.block.usage_key.html_id(),
             'bumper_metadata': 'null',
             'metadata': json.dumps(OrderedDict({
                 'autoAdvance': autoadvance_flag,

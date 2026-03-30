@@ -65,7 +65,7 @@ class TestUpdateIndexHandlers(ImmediateOnCommitMixin, ModuleStoreTestCase, LiveS
         # Create XBlocks
         created_date = datetime(2023, 4, 5, 6, 7, 8, tzinfo=timezone.utc)
         with freeze_time(created_date):
-            sequential = self.store.create_child(self.user_id, course.location, "sequential", "test_sequential")
+            sequential = self.store.create_child(self.user_id, course.usage_key, "sequential", "test_sequential")
         doc_sequential = {
             "id": "block-v1orgatest_coursetest_runtypesequentialblocktest_sequential-0cdb9395",
             "type": "course_block",
@@ -88,7 +88,7 @@ class TestUpdateIndexHandlers(ImmediateOnCommitMixin, ModuleStoreTestCase, LiveS
         meilisearch_client.return_value.index.return_value.update_documents.assert_called_with([doc_sequential])
 
         with freeze_time(created_date):
-            vertical = self.store.create_child(self.user_id, sequential.location, "vertical", "test_vertical")
+            vertical = self.store.create_child(self.user_id, sequential.usage_key, "vertical", "test_vertical")
         doc_vertical = {
             "id": "block-v1orgatest_coursetest_runtypeverticalblocktest_vertical-011f143b",
             "type": "course_block",
@@ -115,7 +115,7 @@ class TestUpdateIndexHandlers(ImmediateOnCommitMixin, ModuleStoreTestCase, LiveS
         meilisearch_client.return_value.index.return_value.update_documents.assert_called_with([doc_vertical])
 
         # Update the XBlock
-        sequential = self.store.get_item(sequential.location, self.user_id)  # Refresh the XBlock
+        sequential = self.store.get_item(sequential.usage_key, self.user_id)  # Refresh the XBlock
         sequential.display_name = "Updated Sequential"
         modified_date = datetime(2024, 5, 6, 7, 8, 9, tzinfo=timezone.utc)
         with freeze_time(modified_date):
@@ -132,7 +132,7 @@ class TestUpdateIndexHandlers(ImmediateOnCommitMixin, ModuleStoreTestCase, LiveS
         ])
 
         # Delete the XBlock
-        self.store.delete_item(vertical.location, self.user_id)
+        self.store.delete_item(vertical.usage_key, self.user_id)
 
         meilisearch_client.return_value.index.return_value.delete_document.assert_called_with(
             "block-v1orgatest_coursetest_runtypeverticalblocktest_vertical-011f143b"

@@ -538,8 +538,8 @@ class SplitTestBlockExportImportTest(MixedSplitTestCase):
             for i in range(1, 3)
         ]
         self.split_test_block.group_id_to_child = {
-            '0': self.child_blocks[0].location,
-            '1': self.child_blocks[1].location,
+            '0': self.child_blocks[0].usage_key,
+            '1': self.child_blocks[1].usage_key,
         }
         self.store.update_item(self.split_test_block, self.user_id)
 
@@ -547,19 +547,19 @@ class SplitTestBlockExportImportTest(MixedSplitTestCase):
         """
         Test the export-import cycle.
         """
-        split_test_block = self.store.get_item(self.split_test_block.location)
+        split_test_block = self.store.get_item(self.split_test_block.usage_key)
 
         expected_olx = (
             '<split_test group_id_to_child="{group_id_to_child}" user_partition_id="2" display_name="A Split Test">\n'
-            '  <html url_name="{child_blocks[0].location.block_id}"/>\n'
-            '  <html url_name="{child_blocks[1].location.block_id}"/>\n'
+            '  <html url_name="{child_blocks[0].usage_key.block_id}"/>\n'
+            '  <html url_name="{child_blocks[1].usage_key.block_id}"/>\n'
             '</split_test>\n'
         ).format(
             child_blocks=self.child_blocks,
             group_id_to_child=json.dumps(
                 {
-                    "0": str(self.child_blocks[0].location),
-                    "1": str(self.child_blocks[1].location),
+                    "0": str(self.child_blocks[0].usage_key),
+                    "1": str(self.child_blocks[1].usage_key),
                 }
             ).replace('"', '&quot;')
         )
@@ -581,7 +581,7 @@ class SplitTestBlockExportImportTest(MixedSplitTestCase):
         # And compare.
         assert exported_olx == expected_olx
 
-        runtime = DummyModuleStoreRuntime(load_error_blocks=True, course_id=split_test_block.location.course_key)
+        runtime = DummyModuleStoreRuntime(load_error_blocks=True, course_id=split_test_block.usage_key.course_key)
         runtime.resources_fs = export_fs
 
         # Now import it.

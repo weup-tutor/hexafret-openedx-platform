@@ -39,23 +39,23 @@ class TestSplitCopyTemplate(MixedSplitTestCase):
 
         if source_type == LibraryFactory:
             source_container = self.store.get_library(
-                source_container.location.library_key, remove_version=False, remove_branch=False
+                source_container.usage_key.library_key, remove_version=False, remove_branch=False
             )
         else:
             source_container = self.store.get_course(
-                source_container.location.course_key, remove_version=False, remove_branch=False
+                source_container.usage_key.course_key, remove_version=False, remove_branch=False
             )
 
         # Inherit the vertical and the problem from the library into the course:
         source_keys = [source_container.children[0]]
-        new_blocks = self.store.copy_from_template(source_keys, dest_key=course.location, user_id=self.user_id)
+        new_blocks = self.store.copy_from_template(source_keys, dest_key=course.usage_key, user_id=self.user_id)
         assert len(new_blocks) == 1
 
-        course = self.store.get_course(course.location.course_key)  # Reload from modulestore
+        course = self.store.get_course(course.usage_key.course_key)  # Reload from modulestore
 
         assert len(course.children) == 1
         vertical_block_course = self.store.get_item(course.children[0])
-        assert new_blocks[0] == vertical_block_course.location
+        assert new_blocks[0] == vertical_block_course.usage_key
         problem_block_course = self.store.get_item(vertical_block_course.children[0])
         assert problem_block_course.display_name == problem_library_display_name
 
@@ -76,10 +76,10 @@ class TestSplitCopyTemplate(MixedSplitTestCase):
         extra_block = self.make_block("html", vertical_block_course)
 
         # Repeat the copy_from_template():
-        new_blocks2 = self.store.copy_from_template(source_keys, dest_key=course.location, user_id=self.user_id)
+        new_blocks2 = self.store.copy_from_template(source_keys, dest_key=course.usage_key, user_id=self.user_id)
         assert new_blocks == new_blocks2
         # Reload problem_block_course:
-        problem_block_course = self.store.get_item(problem_block_course.location)
+        problem_block_course = self.store.get_item(problem_block_course.usage_key)
         assert problem_block_course.display_name == new_display_name
         assert problem_block_course.weight == new_weight
 
@@ -87,7 +87,7 @@ class TestSplitCopyTemplate(MixedSplitTestCase):
         vertical_block_course = self.store.get_item(new_blocks2[0])
         assert len(vertical_block_course.children) == 1
         with pytest.raises(ItemNotFoundError):
-            self.store.get_item(extra_block.location)
+            self.store.get_item(extra_block.usage_key)
 
     def test_copy_from_template_publish(self):
         """
@@ -100,14 +100,14 @@ class TestSplitCopyTemplate(MixedSplitTestCase):
         self.make_block("problem", source_library, display_name=display_name_expected)
         # Reload source_library since we need its branch and version to use copy_from_template:
         source_library = self.store.get_library(
-            source_library.location.library_key, remove_version=False, remove_branch=False
+            source_library.usage_key.library_key, remove_version=False, remove_branch=False
         )
         # And a course with a vertical:
         course = CourseFactory.create(modulestore=self.store)
         self.make_block("vertical", course)
 
         problem_key_in_course = self.store.copy_from_template(
-            source_library.children, dest_key=course.location, user_id=self.user_id
+            source_library.children, dest_key=course.usage_key, user_id=self.user_id
         )[0]
 
         # We do the following twice because different methods get used inside
@@ -140,12 +140,12 @@ class TestSplitCopyTemplate(MixedSplitTestCase):
 
         # Reload source_course since we need its branch and version to use copy_from_template:
         source_course = self.store.get_course(
-            source_course.location.course_key, remove_version=False, remove_branch=False
+            source_course.usage_key.course_key, remove_version=False, remove_branch=False
         )
 
         # Inherit the vertical and the problem from the library into the course:
-        source_keys = [block.location for block in [about, chapter, html]]
-        block_keys = self.store.copy_from_template(source_keys, dest_key=course.location, user_id=self.user_id)
+        source_keys = [block.usage_key for block in [about, chapter, html]]
+        block_keys = self.store.copy_from_template(source_keys, dest_key=course.usage_key, user_id=self.user_id)
         assert len(block_keys) == len(source_keys)
 
         # Build dict of the new blocks in 'course', keyed by category (which is a unique key in our case)
@@ -161,7 +161,7 @@ class TestSplitCopyTemplate(MixedSplitTestCase):
         def published_version_exists(block):
             """ Does a published version of block exist? """
             try:
-                self.store.get_item(block.location.for_branch(ModuleStoreEnum.BranchName.published))
+                self.store.get_item(block.usage_key.for_branch(ModuleStoreEnum.BranchName.published))
                 return True
             except ItemNotFoundError:
                 return False

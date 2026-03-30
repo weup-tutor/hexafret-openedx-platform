@@ -284,7 +284,7 @@ class CourseGradingModel:
             del block.graded
 
         modulestore().update_item(block, user.id)
-        _grading_event_and_signal(block.location.course_key, user.id)
+        _grading_event_and_signal(block.usage_key.course_key, user.id)
         return {'graderType': grader_type}
 
     @staticmethod

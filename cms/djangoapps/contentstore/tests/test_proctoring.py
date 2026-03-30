@@ -66,7 +66,7 @@ class TestProctoredExams(ModuleStoreTestCase):
             self.assertEqual(exam['hide_after_due'], sequence.hide_after_due)
 
         self.assertEqual(exam['course_id'], str(self.course.id))
-        self.assertEqual(exam['content_id'], str(sequence.location))
+        self.assertEqual(exam['content_id'], str(sequence.usage_key))
         self.assertEqual(exam['exam_name'], sequence.display_name)
         self.assertEqual(exam['time_limit_mins'], sequence.default_time_limit_minutes)
         self.assertEqual(exam['is_proctored'], sequence.is_proctored_exam)
@@ -207,7 +207,7 @@ class TestProctoredExams(ModuleStoreTestCase):
         exams = get_all_exams_for_course(str(self.course.id))
         self.assertEqual(len(exams), 1)
 
-        self.store.delete_item(chapter.location, self.user.id)
+        self.store.delete_item(chapter.usage_key, self.user.id)
 
         # republish course
         listen_for_course_publish(self, self.course.id)

@@ -239,7 +239,7 @@ class XBlockScenarioTestCaseMixin:
         with cls.store.bulk_operations(cls.course.id, emit_signals=False):
             for chapter_config in cls.test_configuration:
                 chapter = BlockFactory.create(
-                    parent_location=cls.course.location,
+                    parent_location=cls.course.usage_key,
                     display_name="ch_" + chapter_config['urlname'],
                     category='chapter'
                 )
@@ -270,7 +270,7 @@ class XBlockScenarioTestCaseMixin:
                     )
                     cls.xblocks[xblock_config['urlname']] = xblock
 
-                scenario_url = reverse('render_xblock', args=[str(section.location)])
+                scenario_url = reverse('render_xblock', args=[str(section.usage_key)])
 
                 cls.scenario_urls[chapter_config['urlname']] = scenario_url
 

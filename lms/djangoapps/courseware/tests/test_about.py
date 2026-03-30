@@ -405,7 +405,7 @@ class AboutSidebarHTMLTestCase(SharedModuleStoreTestCase):
             if itemfactory_display_name:
                 BlockFactory.create(
                     category="about",
-                    parent_location=self.course.location,
+                    parent_location=self.course.usage_key,
                     display_name=itemfactory_display_name,
                     data=itemfactory_data,
                 )

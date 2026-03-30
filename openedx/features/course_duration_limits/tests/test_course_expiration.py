@@ -57,17 +57,17 @@ class CourseExpirationTestCase(ModuleStoreTestCase, MasqueradeMixin):
         )
         self.chapter = BlockFactory.create(
             category='chapter',
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             display_name='Test Chapter'
         )
         self.sequential = BlockFactory.create(
             category='sequential',
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             display_name='Test Sequential'
         )
         BlockFactory.create(
             category='vertical',
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             display_name='Test Vertical'
         )
         self.user = UserFactory()
@@ -84,7 +84,7 @@ class CourseExpirationTestCase(ModuleStoreTestCase, MasqueradeMixin):
 
     def get_courseware(self):
         """Returns a response from a GET on a courseware section"""
-        courseware_url = reverse('render_xblock', args=[str(self.sequential.location)])
+        courseware_url = reverse('render_xblock', args=[str(self.sequential.usage_key)])
         return self.client.get(courseware_url, follow=True)
 
     def test_enrollment_mode(self):

@@ -133,7 +133,7 @@ class CourseMetadataUtilsTestCase(TestCase):
                 TestScenario((self.html_course,), "Intro to <div>html</div>"),
             ]),
             FunctionTest(number_for_course_location, [
-                TestScenario((self.html_course.location,), "CS-203"),
+                TestScenario((self.html_course.usage_key,), "CS-203"),
             ]),
             FunctionTest(has_course_started, [
                 TestScenario((self.html_course.start,), False),

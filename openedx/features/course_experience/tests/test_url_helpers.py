@@ -84,22 +84,22 @@ class GetCoursewareUrlTests(SharedModuleStoreTestCase):
         )
         with cls.store.bulk_operations(course_run.id):
             section = BlockFactory.create(
-                parent_location=course_run.location,
+                parent_location=course_run.usage_key,
                 category='chapter',
                 display_name="Generated Section",
             )
             subsection = BlockFactory.create(
-                parent_location=section.location,
+                parent_location=section.usage_key,
                 category='sequential',
                 display_name="Generated Subsection",
             )
             unit = BlockFactory.create(
-                parent_location=subsection.location,
+                parent_location=subsection.usage_key,
                 category='vertical',
                 display_name="Generated Unit",
             )
             component = BlockFactory.create(
-                parent_location=unit.location,
+                parent_location=unit.usage_key,
                 category='problem',
                 display_name="Generated Problem Component",
             )
@@ -164,7 +164,7 @@ class GetCoursewareUrlTests(SharedModuleStoreTestCase):
         """
         block = self.items[structure_level]
         with patch.object(url_helpers.configuration_helpers, 'get_value', return_value='http://learning-mfe'):
-            url = url_helpers.get_courseware_url(block.location)
+            url = url_helpers.get_courseware_url(block.usage_key)
         path = url.split('?')[0]
         assert path == expected_path
         course_run = self.items['course_run']

@@ -50,7 +50,7 @@ class CcxRestApiTest(CcxTestCase, APITestCase):
         """
         super().setUp()
         # add some info about the course for easy access
-        self.master_course_key = self.course.location.course_key
+        self.master_course_key = self.course.usage_key.course_key
         self.master_course_key_str = str(self.master_course_key)
         # OAUTH2 setup
         # create a specific user for the application

@@ -229,13 +229,13 @@ class BookmarksListViewTests(BookmarksViewsTestsBase):
         response = self.send_post(
             client=self.client,
             url=reverse('bookmarks'),
-            data={'usage_id': str(self.vertical_2.location)}
+            data={'usage_id': str(self.vertical_2.usage_key)}
         )
 
         # Assert Newly created bookmark.
-        assert response.data['id'] == (f'{self.user.username},{str(self.vertical_2.location)}')
+        assert response.data['id'] == (f'{self.user.username},{str(self.vertical_2.usage_key)}')
         assert response.data['course_id'] == self.course_id
-        assert response.data['usage_id'] == str(self.vertical_2.location)
+        assert response.data['usage_id'] == str(self.vertical_2.usage_key)
         assert response.data['created'] is not None
         assert len(response.data['path']) == 2
         assert response.data['display_name'] == self.vertical_2.display_name
@@ -303,7 +303,7 @@ class BookmarksListViewTests(BookmarksViewsTestsBase):
         response = self.send_post(
             client=self.client,
             url=reverse('bookmarks'),
-            data={'usage_id': str(blocks[-1].location)},
+            data={'usage_id': str(blocks[-1].usage_key)},
             expected_status=400
         )
         assert response.data['user_message'] == 'You can create up to {} bookmarks.' \
@@ -380,7 +380,7 @@ class BookmarksDetailViewTests(BookmarksViewsTestsBase):
             client=self.client,
             url=reverse(
                 'bookmarks_detail',
-                kwargs={'username': self.user.username, 'usage_id': str(self.sequential_1.location)}
+                kwargs={'username': self.user.username, 'usage_id': str(self.sequential_1.usage_key)}
             ),
             query_parameters=query_params
         )
@@ -396,7 +396,7 @@ class BookmarksDetailViewTests(BookmarksViewsTestsBase):
             client=self.client,
             url=reverse(
                 'bookmarks_detail',
-                kwargs={'username': self.other_user.username, 'usage_id': str(self.vertical_1.location)}
+                kwargs={'username': self.other_user.username, 'usage_id': str(self.vertical_1.usage_key)}
             ),
             expected_status=403
         )
@@ -409,7 +409,7 @@ class BookmarksDetailViewTests(BookmarksViewsTestsBase):
             client=self.client,
             url=reverse(
                 'bookmarks_detail',
-                kwargs={'username': 'non-existent', 'usage_id': str(self.vertical_1.location)}
+                kwargs={'username': 'non-existent', 'usage_id': str(self.vertical_1.usage_key)}
             ),
             expected_status=403
         )
@@ -474,7 +474,7 @@ class BookmarksDetailViewTests(BookmarksViewsTestsBase):
             client=self.client,
             url=reverse(
                 'bookmarks_detail',
-                kwargs={'username': self.user.username, 'usage_id': str(self.sequential_1.location)}
+                kwargs={'username': self.user.username, 'usage_id': str(self.sequential_1.usage_key)}
             )
         )
         response = self.send_get(client=self.client, url=reverse('bookmarks'), query_parameters=query_parameters)
@@ -490,7 +490,7 @@ class BookmarksDetailViewTests(BookmarksViewsTestsBase):
             client=self.client,
             url=reverse(
                 'bookmarks_detail',
-                kwargs={'username': 'other', 'usage_id': str(self.vertical_1.location)}
+                kwargs={'username': 'other', 'usage_id': str(self.vertical_1.usage_key)}
             ),
             expected_status=403
         )

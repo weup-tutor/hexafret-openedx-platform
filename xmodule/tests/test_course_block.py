@@ -251,12 +251,12 @@ class IsNewCourseTestCase(unittest.TestCase):
 
     def test_display_organization(self):
         block = get_dummy_course(start='2012-12-02T12:00', is_new=True)
-        assert block.location.org != block.display_org_with_default
+        assert block.usage_key.org != block.display_org_with_default
         assert block.display_org_with_default == f'{ORG}_display'
 
     def test_display_coursenumber(self):
         block = get_dummy_course(start='2012-12-02T12:00', is_new=True)
-        assert block.location.course != block.display_number_with_default
+        assert block.usage_key.course != block.display_number_with_default
         assert block.display_number_with_default == f'{COURSE}_display'
 
     def test_is_newish(self):

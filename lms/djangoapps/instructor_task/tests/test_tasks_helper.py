@@ -523,7 +523,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         student_data, _ = ProblemResponses._build_student_data(
             user_id=self.instructor.id,
             course_key=self.course.id,
-            usage_key_str_list=[str(self.course.location)],
+            usage_key_str_list=[str(self.course.usage_key)],
         )
 
         assert len(student_data) == 4
@@ -561,7 +561,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
             ProblemResponses._build_student_data(
                 user_id=self.instructor.id,
                 course_key=self.course.id,
-                usage_key_str_list=[str(problem.location)],
+                usage_key_str_list=[str(problem.usage_key)],
             )
 
         transformers = captured.get('transformers')
@@ -585,7 +585,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
             student_data, student_data_keys_list = ProblemResponses._build_student_data(
                 user_id=self.instructor.id,
                 course_key=self.course.id,
-                usage_key_str_list=[str(problem.location)],
+                usage_key_str_list=[str(problem.usage_key)],
             )
         assert len(student_data) == 1
         assert_dict_contains_subset(
@@ -619,7 +619,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         student_data, student_data_keys_list = ProblemResponses._build_student_data(
             user_id=self.instructor.id,
             course_key=self.course.id,
-            usage_key_str_list=[str(self.course.location)],
+            usage_key_str_list=[str(self.course.usage_key)],
         )
         assert len(student_data) == 2
         assert_dict_contains_subset(
@@ -668,7 +668,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         student_data, student_data_keys_list = ProblemResponses._build_student_data(
             user_id=self.instructor.id,
             course_key=self.course.id,
-            usage_key_str_list=[str(self.course.location)],
+            usage_key_str_list=[str(self.course.usage_key)],
         )
         assert len(student_data) == 2
         assert_dict_contains_subset(
@@ -708,7 +708,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         student_data, student_data_keys_list = ProblemResponses._build_student_data(
             user_id=self.instructor.id,
             course_key=self.course.id,
-            usage_key_str_list=[str(self.course.location)],
+            usage_key_str_list=[str(self.course.usage_key)],
         )
         assert len(student_data) == 1
         assert_dict_contains_subset(
@@ -740,7 +740,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         student_data, _ = ProblemResponses._build_student_data(
             user_id=self.instructor.id,
             course_key=self.course.id,
-            usage_key_str_list=[str(problem1.location), str(problem2.location)],
+            usage_key_str_list=[str(problem1.usage_key), str(problem2.usage_key)],
         )
         assert len(student_data) == 2
         for idx in range(1, 3):
@@ -773,12 +773,12 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         for idx in range(1, 6):
             self.define_option_problem(f'Problem{idx}')
             item = BlockFactory.create(
-                parent_location=self.problem_section.location,
+                parent_location=self.problem_section.usage_key,
                 parent=self.problem_section,
                 display_name=f"Item{idx}",
                 data=''
             )
-            StudentModule.save_state(self.student, self.course.id, item.location, {})
+            StudentModule.save_state(self.student, self.course.id, item.usage_key, {})
 
         for idx in range(1, 6):
             self.submit_student_answer(self.student.username, f'Problem{idx}', ['Option 1'])
@@ -786,7 +786,7 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         student_data, _ = ProblemResponses._build_student_data(
             user_id=self.instructor.id,
             course_key=self.course.id,
-            usage_key_str_list=[str(self.course.location)],
+            usage_key_str_list=[str(self.course.usage_key)],
             filter_types=filters,
         )
         assert len(student_data) == filtered_count
@@ -807,14 +807,14 @@ class TestProblemResponsesReport(TestReportMixin, InstructorTaskModuleTestCase):
         ProblemResponses._build_student_data(
             user_id=self.instructor.id,
             course_key=self.course.id,
-            usage_key_str_list=[str(problem.location)],
+            usage_key_str_list=[str(problem.usage_key)],
         )
         mock_generate_report_data.assert_called_with(ANY, ANY)
         mock_list_problem_responses.assert_called_with(self.course.id, ANY, ANY)
 
     def test_success(self):
         task_input = {
-            'problem_locations': str(self.course.location),
+            'problem_locations': str(self.course.usage_key),
             'user_id': self.instructor.id
         }
         with patch('lms.djangoapps.instructor_task.tasks_helper.runner._get_current_task'):
@@ -917,7 +917,7 @@ class TestProblemGradeReport(TestReportMixin, InstructorTaskModuleTestCase):
     @ddt.data(True, False)
     def test_single_problem(self, use_tempfile, _):
         vertical = BlockFactory.create(
-            parent_location=self.problem_section.location,
+            parent_location=self.problem_section.usage_key,
             category='vertical',
             metadata={'graded': True},
             display_name='Problem Vertical'
@@ -966,7 +966,7 @@ class TestProblemGradeReport(TestReportMixin, InstructorTaskModuleTestCase):
         ):
             student_verified = self.create_student('user_verified', mode='verified')
             vertical = BlockFactory.create(
-                parent_location=self.problem_section.location,
+                parent_location=self.problem_section.usage_key,
                 category='vertical',
                 metadata={'graded': True},
                 display_name='Problem Vertical'
@@ -991,7 +991,7 @@ class TestProblemGradeReport(TestReportMixin, InstructorTaskModuleTestCase):
         """
         inactive_student = self.create_student('inactive-student', 'inactive@example.com', enrollment_active=False)
         vertical = BlockFactory.create(
-            parent_location=self.problem_section.location,
+            parent_location=self.problem_section.usage_key,
             category='vertical',
             metadata={'graded': True},
             display_name='Problem Vertical'
@@ -1145,11 +1145,11 @@ class TestProblemReportSplitTestContent(TestReportMixin, TestConditionalContent,
             problem_section_format = 'Homework %d' % i
             problem_vertical_name = 'Problem Unit %d' % i
 
-            chapter = BlockFactory.create(parent_location=self.course.location,
+            chapter = BlockFactory.create(parent_location=self.course.usage_key,
                                           display_name=chapter_name)
 
             # Add a sequence to the course to which the problems can be added
-            problem_section = BlockFactory.create(parent_location=chapter.location,
+            problem_section = BlockFactory.create(parent_location=chapter.usage_key,
                                                   category='sequential',
                                                   metadata={'graded': True,
                                                             'format': problem_section_format},
@@ -1157,7 +1157,7 @@ class TestProblemReportSplitTestContent(TestReportMixin, TestConditionalContent,
 
             # Create a vertical
             problem_vertical = BlockFactory.create(
-                parent_location=problem_section.location,
+                parent_location=problem_section.usage_key,
                 category='vertical',
                 display_name=problem_vertical_name
             )
@@ -1191,7 +1191,7 @@ class TestProblemReportCohortedContent(TestReportMixin, ContentGroupTestCase, In
         # construct cohorted problems to work on.
         self.add_course_content()
         vertical = BlockFactory.create(
-            parent_location=self.problem_section.location,
+            parent_location=self.problem_section.usage_key,
             category='vertical',
             metadata={'graded': True},
             display_name='Problem Vertical'
@@ -2014,7 +2014,7 @@ class TestGradeReport(TestReportMixin, InstructorTaskModuleTestCase):
             student_1 = self.create_student('user_honor')
             student_verified = self.create_student('user_verified', mode='verified')
             vertical = BlockFactory.create(
-                parent_location=self.problem_section.location,
+                parent_location=self.problem_section.usage_key,
                 category='vertical',
                 metadata={'graded': True},
                 display_name='Problem Vertical'
@@ -2082,7 +2082,7 @@ class TestGradeReportEnrollmentAndCertificateInfo(TestReportMixin, InstructorTas
         args = {'choices': [False, True, False]}
         problem_xml = factory.build_xml(**args)
         BlockFactory.create(
-            parent_location=parent.location,
+            parent_location=parent.usage_key,
             parent=parent,
             category="problem",
             display_name=problem_display_name,

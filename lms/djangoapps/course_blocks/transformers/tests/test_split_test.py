@@ -191,7 +191,7 @@ class SplitTestTransformerTestCase(CourseStructureTestCase):
 
         block_structure1 = get_course_blocks(
             self.user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
         assert set(block_structure1.get_block_keys()) == set(self.get_block_key_set(self.blocks, *expected_blocks))
@@ -206,13 +206,13 @@ class SplitTestTransformerTestCase(CourseStructureTestCase):
         # calling twice should result in the same block set
         block_structure1 = get_course_blocks(
             self.user,
-            self.course.location,
+            self.course.usage_key,
             self.transformers,
         )
         with check_mongo_calls(0):
             block_structure2 = get_course_blocks(
                 self.user,
-                self.course.location,
+                self.course.usage_key,
                 self.transformers,
             )
         assert set(block_structure1.get_block_keys()) == set(block_structure2.get_block_keys())

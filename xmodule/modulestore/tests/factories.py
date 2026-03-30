@@ -144,7 +144,7 @@ class CourseFactory(XModuleFactory):
                 else:
                     new_course = store.create_course(org, number, run, user_id, fields=kwargs)
 
-                last_course.loc = new_course.location
+                last_course.loc = new_course.usage_key
                 return new_course
 
 
@@ -174,12 +174,12 @@ class SampleCourseFactory(CourseFactory):
                     fields=block_info.fields,
                 )
                 for tree in block_info.sub_tree:
-                    create_sub_tree(block.location, tree)
+                    create_sub_tree(block.usage_key, tree)
 
             for tree in block_info_tree:
-                create_sub_tree(course.location, tree)
+                create_sub_tree(course.usage_key, tree)
 
-            store.publish(course.location, user_id)
+            store.publish(course.usage_key, user_id)
         return course
 
 
@@ -329,7 +329,7 @@ class BlockFactory(XModuleFactory):
         if parent is None:
             return default_location
 
-        return parent.location
+        return parent.usage_key
 
     @classmethod
     @strip_key
@@ -409,7 +409,7 @@ class BlockFactory(XModuleFactory):
 
             block = store.create_child(
                 user_id,
-                parent.location,
+                parent.usage_key,
                 location.block_type,
                 block_id=location.block_id,
                 metadata=metadata,
@@ -441,7 +441,7 @@ class BlockFactory(XModuleFactory):
                 parent.children.append(location)
                 store.update_item(parent, user_id)
                 if publish_item:
-                    published_parent = store.publish(parent.location, user_id)
+                    published_parent = store.publish(parent.usage_key, user_id)
                     # block is last child of parent
                     return published_parent.get_children()[-1]
                 else:

@@ -295,7 +295,7 @@ def get_video_usage_path(course_key, edx_video_id):
         try:
             if video_id == edx_video_id:
                 usage_dict = {'display_location': '', 'url': ''}
-                video_location = str(video.location)
+                video_location = str(video.usage_key)
                 xblock_display_name = getattr(video, 'display_name', '')
                 unit = video.get_parent()
                 unit_location = str(video.parent)

@@ -255,7 +255,7 @@ class ContainerChildrenView(APIView, ContainerHandlerMixin):
 
         with modulestore().bulk_operations(usage_key.course_key):
             # load course once to reuse it for user_partitions query
-            course = modulestore().get_course(current_xblock.location.course_key)
+            course = modulestore().get_course(current_xblock.usage_key.course_key)
             children = []
             if current_xblock.has_children:
                 for child in current_xblock.children:
@@ -269,8 +269,8 @@ class ContainerChildrenView(APIView, ContainerHandlerMixin):
                     children.append({
                         "xblock": child_info,
                         "name": child_info.display_name_with_default,
-                        "block_id": child_info.location,
-                        "block_type": child_info.location.block_type,
+                        "block_id": child_info.usage_key,
+                        "block_type": child_info.usage_key.block_type,
                         "user_partition_info": user_partition_info,
                         "user_partitions": user_partitions,
                         "upstream_link": (

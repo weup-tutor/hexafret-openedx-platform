@@ -52,7 +52,7 @@ class TestUserStateService(ModuleStoreTestCase):
     def _create_student_module(self, state):
         StudentModuleFactory.create(
             student=self.user,
-            module_state_key=self.problem.location,
+            module_state_key=self.problem.usage_key,
             course_id=self.course.id,
             state=json.dumps(state)
         )
@@ -90,7 +90,7 @@ class TestUserStateService(ModuleStoreTestCase):
         """
         self._create_student_module(expected_state)
         state = UserStateService().get_state_as_dict(
-            self._get_email_or_username(should_use_email), self.problem.location
+            self._get_email_or_username(should_use_email), self.problem.usage_key
         )
         self.assertDictEqual(state, expected_state)
 
@@ -118,7 +118,7 @@ class TestUserStateService(ModuleStoreTestCase):
         """
         params = {
             'username_or_email': self._get_email_or_username(should_use_email),
-            'block_id': self.problem.location
+            'block_id': self.problem.usage_key
         }
         params.update(state_params)
         self._create_student_module({'key_1': 'value_1'})

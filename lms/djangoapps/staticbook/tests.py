@@ -210,7 +210,7 @@ class StaticPdfBookTest(StaticBookTest):
         response = self.client.get(url)
         self.assertNotContains(response, 'file={}'.format(PORTABLE_PDF_BOOK['chapters'][0]['url']))
         self.assertContains(response, 'file=/asset-v1:{0.org}+{0.course}+{0.run}+type@asset+block/{1}'.format(
-            self.course.location,
+            self.course.usage_key,
             PORTABLE_PDF_BOOK['chapters'][0]['url'].replace('/static/', '')))
 
     def test_static_url_map_static_asset_path(self):
@@ -222,7 +222,7 @@ class StaticPdfBookTest(StaticBookTest):
         response = self.client.get(url)
         self.assertNotContains(response, 'file={}'.format(PORTABLE_PDF_BOOK['chapters'][0]['url']))
         self.assertNotContains(response, 'file=/c4x/{0.org}/{0.course}/asset/{1}'.format(
-            self.course.location,
+            self.course.usage_key,
             PORTABLE_PDF_BOOK['chapters'][0]['url'].replace('/static/', '')))
         self.assertContains(response, 'file=/static/awesomesauce/{}'.format(
             PORTABLE_PDF_BOOK['chapters'][0]['url'].replace('/static/', '')))

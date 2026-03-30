@@ -206,25 +206,25 @@ class _BuiltInVideoBlock(
         """
         video_config_service = self.runtime.service(self, 'video_config')
         # Return False if `hls` playback feature is disabled.
-        if not self.is_hls_playback_enabled(self.location.course_key):
+        if not self.is_hls_playback_enabled(self.usage_key.course_key):
             return False
 
         # check if youtube has been deprecated and hls as primary playback
         # is enabled for this course
-        return video_config_service.is_youtube_deprecated(self.location.course_key) if video_config_service else False
+        return video_config_service.is_youtube_deprecated(self.usage_key.course_key) if video_config_service else False
 
     def youtube_disabled_for_course(self):  # lint-amnesty, pylint: disable=missing-function-docstring
-        if not self.location.context_key.is_course:
+        if not self.usage_key.context_key.is_course:
             return False  # Only courses have this flag
         request_cache = RequestCache('youtube_disabled_for_course')
-        cache_response = request_cache.get_cached_response(self.location.context_key)
+        cache_response = request_cache.get_cached_response(self.usage_key.context_key)
         if cache_response.is_found:
             return cache_response.value
 
         video_config_service = self.runtime.service(self, 'video_config')
         youtube_is_disabled = video_config_service.is_youtube_blocked_for_course(
-            self.location.course_key) if video_config_service else False
-        request_cache.set(self.location.context_key, youtube_is_disabled)
+            self.usage_key.course_key) if video_config_service else False
+        request_cache.set(self.usage_key.context_key, youtube_is_disabled)
         return youtube_is_disabled
 
     def prioritize_hls(self, youtube_streams, html5_sources):
@@ -473,8 +473,8 @@ class _BuiltInVideoBlock(
             'is_video_from_same_origin': is_video_from_same_origin,
             'handout': self.handout,
             'hide_downloads': is_public_view or is_embed,
-            'id': self.location.html_id(),
-            'block_id': str(self.location),
+            'id': self.usage_key.html_id(),
+            'block_id': str(self.usage_key),
             'course_id': str(self.context_key),
             'video_id': str(self.edx_video_id),
             'user_id': self.get_user_id(),
@@ -714,13 +714,13 @@ class _BuiltInVideoBlock(
                     try:
                         xml.set(key, str(value))
                     except UnicodeDecodeError:
-                        exception_message = format_xml_exception_message(self.location, key, value)
+                        exception_message = format_xml_exception_message(self.usage_key, key, value)
                         log.exception(exception_message)
                         # If exception is UnicodeDecodeError set value using unicode 'utf-8' scheme.
                         log.info("Setting xml value using 'utf-8' scheme.")
                         xml.set(key, str(value, 'utf-8'))
                     except ValueError:
-                        exception_message = format_xml_exception_message(self.location, key, value)
+                        exception_message = format_xml_exception_message(self.usage_key, key, value)
                         log.exception(exception_message)
                         raise
 
@@ -816,7 +816,7 @@ class _BuiltInVideoBlock(
         }
         _context.update({
             'tabs': self.tabs,
-            'html_id': self.location.html_id(),  # element_id
+            'html_id': self.usage_key.html_id(),  # element_id
             'data': self.data,
         })
 
@@ -1116,14 +1116,14 @@ class _BuiltInVideoBlock(
         # Check in VAL data first if edx_video_id exists
         if self.edx_video_id:
             video_profile_names = context.get("profiles", ["mobile_low", 'desktop_mp4', 'desktop_webm', 'mobile_high'])
-            if self.is_hls_playback_enabled(self.location.course_key) and 'hls' not in video_profile_names:
+            if self.is_hls_playback_enabled(self.usage_key.course_key) and 'hls' not in video_profile_names:
                 video_profile_names.append('hls')
 
             # get and cache bulk VAL data for course
             val_course_data = self.get_cached_val_data_for_course(
                 self.request_cache,
                 video_profile_names,
-                self.location.course_key,
+                self.usage_key.course_key,
             )
             val_video_data = val_course_data.get(self.edx_video_id, {})
 

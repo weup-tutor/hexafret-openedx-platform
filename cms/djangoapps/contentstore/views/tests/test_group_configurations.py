@@ -58,12 +58,12 @@ class HelperMethods:
         """
         sequential = BlockFactory.create(
             category='sequential',
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             display_name=f'Test Subsection {name_suffix}'
         )
         vertical = BlockFactory.create(
             category='vertical',
-            parent_location=sequential.location,
+            parent_location=sequential.usage_key,
             display_name=f'Test Unit {name_suffix}'
         )
         c0_url = self.course.id.make_usage_key("vertical", f"split_test_cond0_{name_suffix}")
@@ -71,25 +71,25 @@ class HelperMethods:
         c2_url = self.course.id.make_usage_key("vertical", f"split_test_cond2_{name_suffix}")
         split_test = BlockFactory.create(
             category='split_test',
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
             user_partition_id=cid,
             display_name=f"Test Content Experiment {name_suffix}{special_characters}",
             group_id_to_child={"0": c0_url, "1": c1_url, "2": c2_url}
         )
         BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 0 vertical",
             location=c0_url,
         )
         c1_vertical = BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 1 vertical",
             location=c1_url,
         )
         BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 2 vertical",
             location=c2_url,
@@ -99,19 +99,19 @@ class HelperMethods:
         if group_id and cid_for_problem:
             problem = BlockFactory.create(
                 category='problem',
-                parent_location=c1_vertical.location,
+                parent_location=c1_vertical.usage_key,
                 display_name="Test Problem"
             )
             self.client.ajax_post(
-                reverse_usage_url("xblock_handler", problem.location),
+                reverse_usage_url("xblock_handler", problem.usage_key),
                 data={'metadata': {'group_access': {cid_for_problem: [group_id]}}}
             )
-            c1_vertical.children.append(problem.location)
+            c1_vertical.children.append(problem.usage_key)
 
         partitions_json = [p.to_json() for p in self.course.user_partitions]
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", split_test.location),
+            reverse_usage_url("xblock_handler", split_test.usage_key),
             data={'metadata': {'user_partitions': partitions_json}}
         )
 
@@ -123,14 +123,14 @@ class HelperMethods:
         Create a problem
         Assign content group to the problem.
         """
-        vertical_parent_location = self.course.location
+        vertical_parent_location = self.course.usage_key
         if not orphan:
             subsection = BlockFactory.create(
                 category='sequential',
-                parent_location=self.course.location,
+                parent_location=self.course.usage_key,
                 display_name=f"Test Subsection {name_suffix}"
             )
-            vertical_parent_location = subsection.location
+            vertical_parent_location = subsection.usage_key
 
         vertical = BlockFactory.create(
             category='vertical',
@@ -140,19 +140,19 @@ class HelperMethods:
 
         problem = BlockFactory.create(
             category='problem',
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
             display_name=f"Test Problem {name_suffix}{special_characters}"
         )
 
         group_access_content = {'group_access': {cid: [group_id]}}
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", problem.location),
+            reverse_usage_url("xblock_handler", problem.usage_key),
             data={'metadata': group_access_content}
         )
 
         if not orphan:
-            self.course.children.append(subsection.location)
+            self.course.children.append(subsection.usage_key)
         self.save_course()
 
         return vertical, problem
@@ -748,7 +748,7 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
         expected = self._get_expected_content_group(
             usage_for_group=[
                 {
-                    'url': f"/container/{vertical.location}",
+                    'url': f"/container/{vertical.usage_key}",
                     'label': "Test Unit 0 / Test Problem 0JOSÉ ANDRÉS"
                 }
             ]
@@ -767,7 +767,7 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
 
         expected = self._get_expected_content_group(usage_for_group=[
             {
-                'url': f'/container/{vertical.location}',
+                'url': f'/container/{vertical.usage_key}',
                 'label': 'Test Unit 0 / Test Problem 0'
             }
         ])
@@ -785,7 +785,7 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
 
         # Assert that there is an orphan in the course, and that it's the vertical
         self.assertEqual(len(self.store.get_orphans(self.course.id)), 1)
-        self.assertIn(vertical.location, self.store.get_orphans(self.course.id))
+        self.assertIn(vertical.usage_key, self.store.get_orphans(self.course.id))
 
         # Get the expected content group information.
         expected = self._get_expected_content_group(usage_for_group=[])
@@ -809,11 +809,11 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
 
         expected = self._get_expected_content_group(usage_for_group=[
             {
-                'url': f'/container/{vertical1.location}',
+                'url': f'/container/{vertical1.usage_key}',
                 'label': 'Test Unit 1 / Test Problem 1'
             },
             {
-                'url': f'/container/{vertical.location}',
+                'url': f'/container/{vertical.usage_key}',
                 'label': 'Test Unit 0 / Test Problem 0'
             }
         ])
@@ -876,7 +876,7 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
             'groups': [
                 {'id': 3, 'name': 'Problem Group', 'version': 1, 'usage': [
                     {
-                        'url': f'/container/{split_test.location}',
+                        'url': f'/container/{split_test.usage_key}',
                         'label': 'Condition 1 vertical / Test Problem'
                     }
                 ]},
@@ -909,7 +909,7 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
         )
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", vertical.location),
+            reverse_usage_url("xblock_handler", vertical.usage_key),
             data={'metadata': {'group_access': {0: [0]}}}
         )
 
@@ -925,11 +925,11 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
             'groups': [
                 {'id': 0, 'name': 'Group', 'version': 1, 'usage': [
                     {
-                        'url': f"/container/{vertical.location}",
+                        'url': f"/container/{vertical.usage_key}",
                         'label': "Test Subsection 0 / Test Unit 0"
                     },
                     {
-                        'url': f"/container/{vertical.location}",
+                        'url': f"/container/{vertical.usage_key}",
                         'label': "Test Unit 0 / Test Problem 0"
                     }
                 ]},
@@ -964,7 +964,7 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
                 {'id': 2, 'name': 'Group C', 'version': 1},
             ],
             'usage': [{
-                'url': f'/container/{split_test.location}',
+                'url': f'/container/{split_test.usage_key}',
                 'label': 'Test Unit 0 / Test Content Experiment 0',
                 'validation': None,
             }],
@@ -1010,7 +1010,7 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
                 {'id': 2, 'name': 'Group C', 'version': 1},
             ],
             'usage': [{
-                'url': reverse_usage_url("container_handler", split_test.location),
+                'url': reverse_usage_url("container_handler", split_test.usage_key),
                 'label': "Test Unit 0 / Test Content Experiment 0JOSÉ ANDRÉS",
                 'validation': None,
             }],
@@ -1043,11 +1043,11 @@ class GroupConfigurationsUsageInfoTestCase(CourseTestCase, HelperMethods):
                 {'id': 2, 'name': 'Group C', 'version': 1},
             ],
             'usage': [{
-                'url': f'/container/{split_test.location}',
+                'url': f'/container/{split_test.usage_key}',
                 'label': 'Test Unit 0 / Test Content Experiment 0',
                 'validation': None,
             }, {
-                'url': f'/container/{split_test1.location}',
+                'url': f'/container/{split_test1.usage_key}',
                 'label': 'Test Unit 1 / Test Content Experiment 1',
                 'validation': None,
             }],
@@ -1172,7 +1172,7 @@ class GroupConfigurationsValidationTestCase(CourseTestCase, HelperMethods):
         self._add_user_partitions()
         split_test = self._create_content_experiment(cid=0, name_suffix='0')[1]
 
-        validation = StudioValidation(split_test.location)
+        validation = StudioValidation(split_test.usage_key)
         validation.add(mocked_message)
         mocked_validation_messages.return_value = validation
 
@@ -1207,7 +1207,7 @@ class GroupConfigurationsValidationTestCase(CourseTestCase, HelperMethods):
         self._add_user_partitions()
         split_test = self._create_content_experiment(cid=0, name_suffix='0')[1]
 
-        validation = StudioValidation(split_test.location)
+        validation = StudioValidation(split_test.usage_key)
         if mocked_message is not None:
             validation.add(mocked_message)
         mocked_validation_messages.return_value = validation

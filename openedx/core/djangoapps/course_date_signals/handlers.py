@@ -35,7 +35,7 @@ def _field_values(fields, xblock):
             except TypeError as exception:
                 exception_message = "{message}, Block-location:{location}, Field-name:{field_name}".format(
                     message=str(exception),
-                    location=str(xblock.location),
+                    location=str(xblock.usage_key),
                     field_name=field.name
                 )
                 raise TypeError(exception_message)  # lint-amnesty, pylint: disable=raise-missing-from
@@ -69,7 +69,7 @@ def _gather_graded_items(root, due):  # lint-amnesty, pylint: disable=missing-fu
             # So here we do not assign a due date to items that are ORA.
             if next_item.category != 'openassessment':
                 collected_items.append((
-                    next_item.location,
+                    next_item.usage_key,
                     {'due': due if _has_assignment_blocks(next_item) else None}
                 ))
             # TODO: This is pretty gross, and should maybe be configurable in the future,
@@ -101,7 +101,7 @@ def _get_custom_pacing_children(subsection, num_weeks):
             has_content = True
         # Open response assessment problems have their own due dates
         if next_item.category != 'openassessment':
-            section_date_items.append((next_item.location, {'due': timedelta(weeks=num_weeks)}))
+            section_date_items.append((next_item.usage_key, {'due': timedelta(weeks=num_weeks)}))
             items.extend(next_item.get_children())
             if is_problem:
                 all_problems_are_ora = False
@@ -127,7 +127,7 @@ def extract_dates_from_course(course):
         metadata = _field_values(FIELDS_TO_EXTRACT, course)
         # self-paced courses may accidentally have a course due date
         metadata.pop('due', None)
-        date_items = [(course.location, metadata)]
+        date_items = [(course.usage_key, metadata)]
 
         if SelfPacedRelativeDatesConfig.current(course_key=course.id).enabled:
             # Apply the same relative due date to all content inside a section,
@@ -149,7 +149,7 @@ def extract_dates_from_course(course):
                         section_due_date = max(section_due_date, weeks_to_complete)
                         section_date_items.extend(_gather_graded_items(subsection, weeks_to_complete))
                 if section_date_items and (section.graded or CUSTOM_RELATIVE_DATES.is_enabled(course.id)):
-                    date_items.append((section.location, {'due': section_due_date}))
+                    date_items.append((section.usage_key, {'due': section_due_date}))
                 date_items.extend(section_date_items)
     else:
         date_items = []
@@ -158,7 +158,7 @@ def extract_dates_from_course(course):
             items = store.get_items(course.id)
         log.info('Extracting dates from %d items in %s', len(items), course.id)
         for item in items:
-            date_items.append((item.location, _field_values(FIELDS_TO_EXTRACT, item)))
+            date_items.append((item.usage_key, _field_values(FIELDS_TO_EXTRACT, item)))
     return date_items
 
 

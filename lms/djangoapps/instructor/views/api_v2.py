@@ -374,7 +374,7 @@ class GradedSubsectionsView(APIView):
         formated_subsections = {"items": [
             {
                 "display_name": title_or_url(unit),
-                "subsection_id": str(unit.location)
+                "subsection_id": str(unit.usage_key)
             } for unit in graded_subsections]}
 
         return Response(formated_subsections, status=status.HTTP_200_OK)
@@ -496,13 +496,13 @@ class UnitExtensionsView(ListAPIView):
         block_id_filter = self.request.query_params.get("block_id")
 
         units = get_units_with_due_date(course)
-        units_dict = {str(u.location): u for u in units}
+        units_dict = {str(u.usage_key): u for u in units}
 
         # Fetch and normalize overrides
         if block_id_filter:
             try:
                 unit = find_unit(course, block_id_filter)
-                query_data = edx_when_api.get_overrides_for_block(course.id, unit.location)
+                query_data = edx_when_api.get_overrides_for_block(course.id, unit.usage_key)
                 unit_due_date_extensions = [
                     UnitDueDateExtension.from_block_tuple(row, unit)
                     for row in query_data

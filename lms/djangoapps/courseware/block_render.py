@@ -198,7 +198,7 @@ def toc_for_course(user, request, course, active_chapter, active_section, field_
             display_id = slugify(chapter.display_name_with_default_escaped)
             local_hide_from_toc = False
             if required_content:
-                if str(chapter.location) not in required_content:
+                if str(chapter.usage_key) not in required_content:
                     local_hide_from_toc = True
 
             # Skip the current chapter if a hide flag is tripped
@@ -274,7 +274,7 @@ def _add_timed_exam_info(user, course, section, section_context):
             timed_exam_attempt_context = get_attempt_status_summary(
                 user.id,
                 str(course.id),
-                str(section.location)
+                str(section.usage_key)
             )
         except Exception as ex:  # pylint: disable=broad-except
             # safety net in case something blows up in edx_proctoring
@@ -848,7 +848,7 @@ def _get_block_by_usage_key(usage_key):
         'module': {
             # xss-lint: disable=python-deprecated-display-name
             'display_name': block.display_name_with_default_escaped,
-            'usage_key': str(block.location),
+            'usage_key': str(block.usage_key),
         }
     }
 

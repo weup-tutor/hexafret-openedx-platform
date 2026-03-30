@@ -71,7 +71,7 @@ def register_special_exams(course_key):
     for timed_exam in timed_exams:
         msg = (
             'Found {location} as a timed-exam in course structure. Inspecting...'.format(
-                location=str(timed_exam.location)
+                location=str(timed_exam.usage_key)
             )
         )
         log.info(msg)
@@ -89,7 +89,7 @@ def register_special_exams(course_key):
         }
 
         try:
-            exam = get_exam_by_content_id(str(course_key), str(timed_exam.location))
+            exam = get_exam_by_content_id(str(course_key), str(timed_exam.usage_key))
             # update case, make sure everything is synced
             exam_metadata['exam_id'] = exam['id']
 
@@ -99,7 +99,7 @@ def register_special_exams(course_key):
 
         except ProctoredExamNotFoundException:
             exam_metadata['course_id'] = str(course_key)
-            exam_metadata['content_id'] = str(timed_exam.location)
+            exam_metadata['content_id'] = str(timed_exam.usage_key)
             exam_id = create_exam(**exam_metadata)
             msg = f'Created new timed exam {exam_id}'
             log.info(msg)
@@ -136,7 +136,7 @@ def register_special_exams(course_key):
 
             search = [
                 timed_exam for timed_exam in timed_exams if
-                str(timed_exam.location) == exam['content_id']
+                str(timed_exam.usage_key) == exam['content_id']
             ]
             if not search:
                 # This means it was turned off in Studio, we need to mark

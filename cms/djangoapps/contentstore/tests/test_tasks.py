@@ -67,7 +67,7 @@ class ExportCourseTestCase(CourseTestCase):
         """
         Verify that a routine course export task succeeds
         """
-        key = str(self.course.location.course_key)
+        key = str(self.course.usage_key.course_key)
         result = export_olx.delay(self.user.id, key, 'en')
         status = UserTaskStatus.objects.get(task_id=result.id)
         self.assertEqual(status.state, UserTaskStatus.SUCCEEDED)
@@ -81,7 +81,7 @@ class ExportCourseTestCase(CourseTestCase):
         """
         The export task should fail gracefully if an exception is thrown
         """
-        key = str(self.course.location.course_key)
+        key = str(self.course.usage_key.course_key)
         result = export_olx.delay(self.user.id, key, 'en')
         self._assert_failed(result, json.dumps({'raw_error_msg': 'Boom!'}))
 
@@ -91,7 +91,7 @@ class ExportCourseTestCase(CourseTestCase):
         Verify that attempts to export a course as an invalid user fail
         """
         user = UserFactory(id=User.objects.order_by('-id').first().pk + 100)
-        key = str(self.course.location.course_key)
+        key = str(self.course.usage_key.course_key)
         result = export_olx.delay(user.id, key, 'en')
         self._assert_failed(result, f'Unknown User ID: {user.id}')
 
@@ -100,7 +100,7 @@ class ExportCourseTestCase(CourseTestCase):
         Verify that users who aren't authors of the course are unable to export it
         """
         _, nonstaff_user = self.create_non_staff_authed_user_client()
-        key = str(self.course.location.course_key)
+        key = str(self.course.usage_key.course_key)
         result = export_olx.delay(nonstaff_user.id, key, 'en')
         self._assert_failed(result, 'Permission denied')
 
@@ -408,15 +408,15 @@ class CheckBrokenLinksTaskTest(ModuleStoreTestCase):
         """
         vertical = BlockFactory.create(
             category='vertical',
-            parent_location=self.test_course.location
+            parent_location=self.test_course.usage_key
         )
         drag_and_drop_block = BlockFactory.create(
             category='drag-and-drop-v2',
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
         )
         text_block = BlockFactory.create(
             category='html',
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
             data='Test Link -> <a href="http://example.com">Example.com</a>'
         )
 

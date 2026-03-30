@@ -44,7 +44,7 @@ class TestBlockListGetForm(FormTestMixin, SharedModuleStoreTestCase):
         CourseEnrollmentFactory.create(user=self.student, course_id=self.course.id)
         CourseEnrollmentFactory.create(user=self.student2, course_id=self.course.id)
 
-        usage_key = self.course.location
+        usage_key = self.course.usage_key
         self.initial = {'requesting_user': self.student}
         self.form_data = QueryDict(
             urlencode({

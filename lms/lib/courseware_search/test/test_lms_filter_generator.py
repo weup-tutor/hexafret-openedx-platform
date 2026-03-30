@@ -36,14 +36,14 @@ class LmsSearchFilterGeneratorTestCase(ModuleStoreTestCase):
         ]
 
         self.chapter = BlockFactory.create(
-            parent_location=self.courses[0].location,
+            parent_location=self.courses[0].usage_key,
             category='chapter',
             display_name="Week 1",
             publish_item=True,
         )
 
         self.chapter2 = BlockFactory.create(
-            parent_location=self.courses[1].location,
+            parent_location=self.courses[1].usage_key,
             category='chapter',
             display_name="Week 1",
             publish_item=True,
@@ -55,7 +55,7 @@ class LmsSearchFilterGeneratorTestCase(ModuleStoreTestCase):
         self.user = UserFactory.create(username="jack", email="jack@fake.edx.org", password='test')
 
         for course in self.courses:
-            CourseEnrollment.enroll(self.user, course.location.course_key)
+            CourseEnrollment.enroll(self.user, course.usage_key.course_key)
 
     def test_course_id_not_provided(self):
         """

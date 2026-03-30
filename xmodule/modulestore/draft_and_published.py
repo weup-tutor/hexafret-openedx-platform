@@ -162,26 +162,26 @@ class ModuleStoreDraftAndPublished(BranchSettingMixin, BulkOperationsMixin, meta
             return
 
         # Remove item from the list of children of old parent.
-        if source_item.location in old_parent_item.children:
-            old_parent_item.children.remove(source_item.location)
+        if source_item.usage_key in old_parent_item.children:
+            old_parent_item.children.remove(source_item.usage_key)
             self.update_item(old_parent_item, user_id)  # pylint: disable=no-member
             log.info(
                 '%s removed from %s children',
-                str(source_item.location),
-                str(old_parent_item.location)
+                str(source_item.usage_key),
+                str(old_parent_item.usage_key)
             )
 
         # Add item to new parent at particular location.
-        if source_item.location not in new_parent_item.children:
+        if source_item.usage_key not in new_parent_item.children:
             if insert_at is not None:
-                new_parent_item.children.insert(insert_at, source_item.location)
+                new_parent_item.children.insert(insert_at, source_item.usage_key)
             else:
-                new_parent_item.children.append(source_item.location)
+                new_parent_item.children.append(source_item.usage_key)
             self.update_item(new_parent_item, user_id)  # pylint: disable=no-member
             log.info(
                 '%s added to %s children',
-                str(source_item.location),
-                str(new_parent_item.location)
+                str(source_item.usage_key),
+                str(new_parent_item.usage_key)
             )
 
         # Update parent attribute of the item block
@@ -189,10 +189,10 @@ class ModuleStoreDraftAndPublished(BranchSettingMixin, BulkOperationsMixin, meta
         self.update_item(source_item, user_id)  # pylint: disable=no-member
         log.info(
             '%s parent updated to %s',
-            str(source_item.location),
-            str(new_parent_item.location)
+            str(source_item.usage_key),
+            str(new_parent_item.usage_key)
         )
-        return source_item.location
+        return source_item.usage_key
 
 
 class UnsupportedRevisionError(ValueError):

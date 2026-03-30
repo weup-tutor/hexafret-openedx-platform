@@ -166,7 +166,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         """ Test an HTML Block with non-default fields like editor='raw' """
         course = CourseFactory.create(display_name='test course', run="Testing_course")
         html_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="html",
             display_name="Non-default HTML Block",
             editor="raw",
@@ -178,7 +178,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <html
-                copied_from_block="{str(html_block.location)}"
+                copied_from_block="{str(html_block.usage_key)}"
                 url_name="Non-default_HTML_Block"
                 display_name="Non-default HTML Block"
                 editor="raw"
@@ -210,7 +210,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
 
         regular_problem = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="problem",
             display_name="Problem No Python",
             max_attempts=3,
@@ -218,7 +218,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
 
         python_problem = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="problem",
             display_name="Python Problem",
             data='<problem>This uses python: <script type="text/python">...</script>...</problem>',
@@ -232,7 +232,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <problem
-                copied_from_block="{regular_problem.location}"
+                copied_from_block="{regular_problem.usage_key}"
                 display_name="Problem No Python"
                 url_name="Problem_No_Python"
                 max_attempts="3"
@@ -251,7 +251,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <problem
-                copied_from_block="{python_problem.location}"
+                copied_from_block="{python_problem.usage_key}"
                 display_name="Python Problem"
                 url_name="Python_Problem"
             >
@@ -281,7 +281,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             )
 
         jsinput_problem = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="problem",
             display_name="JSInput Problem",
             data="<problem><jsinput html_file='/static/simple-question.html' /></problem>",
@@ -298,7 +298,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <problem
-                copied_from_block="{jsinput_problem.location}"
+                copied_from_block="{jsinput_problem.usage_key}"
                 display_name="JSInput Problem"
                 url_name="JSInput_Problem"
             >
@@ -313,19 +313,19 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         """
         course = CourseFactory.create(display_name='Tagged Unit Course', run="TUC")
         unit = BlockFactory(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="vertical",
             display_name="Tagged Unit",
         )
 
         # Add a bunch of tags
         tagging_api.tag_object(
-            object_id=str(unit.location),
+            object_id=str(unit.usage_key),
             taxonomy=self.taxonomy1,
             tags=["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"]
         )
         tagging_api.tag_object(
-            object_id=str(unit.location),
+            object_id=str(unit.usage_key),
             taxonomy=self.taxonomy2,
             tags=["tag", "other tag"]
         )
@@ -336,7 +336,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <vertical
-                copied_from_block="{str(unit.location)}"
+                copied_from_block="{str(unit.usage_key)}"
                 display_name="Tagged Unit"
                 url_name="Tagged_Unit"
             />
@@ -344,7 +344,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
         self.assertEqual(
             serialized.tags, {
-                str(unit.location): {
+                str(unit.usage_key): {
                     self.taxonomy1.id: ["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"],
                     self.taxonomy2.id: ["tag", "other tag"],
                 }
@@ -359,7 +359,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
 
         # Create html block
         html_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="html",
             display_name="Tagged Non-default HTML Block",
             editor="raw",
@@ -369,12 +369,12 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
 
         # Add a bunch of tags
         tagging_api.tag_object(
-            object_id=str(html_block.location),
+            object_id=str(html_block.usage_key),
             taxonomy=self.taxonomy1,
             tags=["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"]
         )
         tagging_api.tag_object(
-            object_id=str(html_block.location),
+            object_id=str(html_block.usage_key),
             taxonomy=self.taxonomy2,
             tags=["tag", "other tag"]
         )
@@ -385,7 +385,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <html
-                copied_from_block="{str(html_block.location)}"
+                copied_from_block="{str(html_block.usage_key)}"
                 url_name="Tagged_Non-default_HTML_Block"
                 display_name="Tagged Non-default HTML Block"
                 editor="raw"
@@ -397,7 +397,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
         self.assertEqual(
             serialized.tags, {
-                str(html_block.location): {
+                str(html_block.usage_key): {
                     self.taxonomy1.id: ["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"],
                     self.taxonomy2.id: ["tag", "other tag"],
                 }
@@ -418,7 +418,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
 
         regular_problem = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="problem",
             display_name="Tagged Problem No Python",
             max_attempts=3,
@@ -426,7 +426,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
 
         python_problem = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="problem",
             display_name="Tagged Python Problem",
             data='<problem>This uses python: <script type="text/python">...</script>...</problem>',
@@ -434,22 +434,22 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
 
         # Add a bunch of tags to the problem blocks
         tagging_api.tag_object(
-            object_id=str(regular_problem.location),
+            object_id=str(regular_problem.usage_key),
             taxonomy=self.taxonomy1,
             tags=["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"]
         )
         tagging_api.tag_object(
-            object_id=str(regular_problem.location),
+            object_id=str(regular_problem.usage_key),
             taxonomy=self.taxonomy2,
             tags=["tag", "other tag"]
         )
         tagging_api.tag_object(
-            object_id=str(python_problem.location),
+            object_id=str(python_problem.usage_key),
             taxonomy=self.taxonomy1,
             tags=["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"]
         )
         tagging_api.tag_object(
-            object_id=str(python_problem.location),
+            object_id=str(python_problem.usage_key),
             taxonomy=self.taxonomy2,
             tags=["tag", "other tag"]
         )
@@ -460,7 +460,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <problem
-                copied_from_block="{str(regular_problem.location)}"
+                copied_from_block="{str(regular_problem.usage_key)}"
                 display_name="Tagged Problem No Python"
                 url_name="Tagged_Problem_No_Python"
                 max_attempts="3"
@@ -471,7 +471,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
         self.assertEqual(
             serialized.tags, {
-                str(regular_problem.location): {
+                str(regular_problem.usage_key): {
                     self.taxonomy1.id: ["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"],
                     self.taxonomy2.id: ["tag", "other tag"],
                 }
@@ -483,7 +483,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <problem
-                copied_from_block="{str(python_problem.location)}"
+                copied_from_block="{str(python_problem.usage_key)}"
                 display_name="Tagged Python Problem"
                 url_name="Tagged_Python_Problem"
             >
@@ -493,7 +493,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         )
         self.assertEqual(
             serialized.tags, {
-                str(python_problem.location): {
+                str(python_problem.usage_key): {
                     self.taxonomy1.id: ["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"],
                     self.taxonomy2.id: ["tag", "other tag"],
                 }
@@ -507,16 +507,16 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         course = CourseFactory.create(display_name='Tagged Library Content course', run="TLCC")
         lib = LibraryFactory()
         lc_block = BlockFactory(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="library_content",
-            source_library_id=str(lib.location.library_key),
+            source_library_id=str(lib.usage_key.library_key),
             display_name="Tagged LC Block",
             max_count=1,
         )
 
         # Add a bunch of tags to the library content block
         tagging_api.tag_object(
-            object_id=str(lc_block.location),
+            object_id=str(lc_block.usage_key),
             taxonomy=self.taxonomy1,
             tags=["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"]
         )
@@ -527,16 +527,16 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <library_content
-                copied_from_block="{str(lc_block.location)}"
+                copied_from_block="{str(lc_block.usage_key)}"
                 display_name="Tagged LC Block"
                 max_count="1"
-                source_library_id="{str(lib.location.library_key)}"
+                source_library_id="{str(lib.usage_key.library_key)}"
                 url_name="Tagged_LC_Block"
             />
             """
         )
         self.assertEqual(serialized.tags, {
-            str(lc_block.location): {
+            str(lc_block.usage_key): {
                 self.taxonomy1.id: ["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"],
             }
         })
@@ -547,14 +547,14 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         """
         course = CourseFactory.create(display_name='Tagged Video Test course', run="TVTC")
         video_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="video",
             display_name="Tagged Video Block",
         )
 
         # Add tags to video block
         tagging_api.tag_object(
-            object_id=str(video_block.location),
+            object_id=str(video_block.usage_key),
             taxonomy=self.taxonomy1,
             tags=["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"]
         )
@@ -565,7 +565,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             serialized.olx_str,
             f"""
             <video
-                copied_from_block="{str(video_block.location)}"
+                copied_from_block="{str(video_block.usage_key)}"
                 youtube="1.00:3_yD_cEKoCk"
                 url_name="Tagged_Video_Block"
                 display_name="Tagged Video Block"
@@ -573,7 +573,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
             """
         )
         self.assertEqual(serialized.tags, {
-            str(video_block.location): {
+            str(video_block.usage_key): {
                 self.taxonomy1.id: ["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"],
             }
         })
@@ -584,14 +584,14 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         """
         course = CourseFactory.create(display_name='Tagged OpenAssessment Test course', run="TOTC")
         openassessment_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="openassessment",
             display_name="Tagged OpenAssessment Block",
         )
 
         # Add a tags to openassessment block
         tagging_api.tag_object(
-            object_id=str(openassessment_block.location),
+            object_id=str(openassessment_block.usage_key),
             taxonomy=self.taxonomy1,
             tags=["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"]
         )
@@ -604,7 +604,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         self.assertNotIn("anotherTag", serialized.olx_str)
 
         self.assertEqual(serialized.tags, {
-            str(openassessment_block.location): {
+            str(openassessment_block.usage_key): {
                 self.taxonomy1.id: ["normal tag", "<special \"'-=,. |= chars> tag", "anotherTag"],
             }
         })
@@ -616,7 +616,7 @@ class XBlockSerializationTestCase(SharedModuleStoreTestCase):
         """
         course = CourseFactory.create(display_name='Copied From False Test course', run="CFTC")
         video_block = BlockFactory.create(
-            parent_location=course.location,
+            parent_location=course.usage_key,
             category="video",
             display_name="Video Block",
         )

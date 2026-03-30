@@ -40,25 +40,25 @@ class BookmarksServiceTests(BookmarksTestsBase):
         Verifies is_bookmarked returns Bool as expected.
         """
         with self.assertNumQueries(1):
-            assert self.bookmark_service.is_bookmarked(usage_key=self.sequential_1.location)
-            assert not self.bookmark_service.is_bookmarked(usage_key=self.vertical_2.location)
-            assert self.bookmark_service.is_bookmarked(usage_key=self.sequential_2.location)
+            assert self.bookmark_service.is_bookmarked(usage_key=self.sequential_1.usage_key)
+            assert not self.bookmark_service.is_bookmarked(usage_key=self.vertical_2.usage_key)
+            assert self.bookmark_service.is_bookmarked(usage_key=self.sequential_2.usage_key)
 
-        self.bookmark_service.set_bookmarked(usage_key=self.chapter_1.location)
+        self.bookmark_service.set_bookmarked(usage_key=self.chapter_1.usage_key)
         with self.assertNumQueries(0):
-            assert self.bookmark_service.is_bookmarked(usage_key=self.chapter_1.location)
-            assert not self.bookmark_service.is_bookmarked(usage_key=self.vertical_2.location)
+            assert self.bookmark_service.is_bookmarked(usage_key=self.chapter_1.usage_key)
+            assert not self.bookmark_service.is_bookmarked(usage_key=self.vertical_2.usage_key)
 
         # Removing a bookmark should result in the cache being updated on the next request
-        self.bookmark_service.unset_bookmarked(usage_key=self.chapter_1.location)
+        self.bookmark_service.unset_bookmarked(usage_key=self.chapter_1.usage_key)
         with self.assertNumQueries(0):
-            assert not self.bookmark_service.is_bookmarked(usage_key=self.chapter_1.location)
-            assert not self.bookmark_service.is_bookmarked(usage_key=self.vertical_2.location)
+            assert not self.bookmark_service.is_bookmarked(usage_key=self.chapter_1.usage_key)
+            assert not self.bookmark_service.is_bookmarked(usage_key=self.vertical_2.usage_key)
 
         # Get bookmark that does not exist.
         bookmark_service = BookmarksService(self.other_user)
         with self.assertNumQueries(1):
-            assert not bookmark_service.is_bookmarked(usage_key=self.sequential_1.location)
+            assert not bookmark_service.is_bookmarked(usage_key=self.sequential_1.usage_key)
 
     def test_set_bookmarked(self):
         """
@@ -70,7 +70,7 @@ class BookmarksServiceTests(BookmarksTestsBase):
                 .set_bookmarked(usage_key=UsageKey.from_string('i4x://ed/ed/ed/interactive'))
 
         with self.assertNumQueries(10):
-            assert self.bookmark_service.set_bookmarked(usage_key=self.vertical_2.location)
+            assert self.bookmark_service.set_bookmarked(usage_key=self.vertical_2.usage_key)
 
     def test_unset_bookmarked(self):
         """
@@ -81,4 +81,4 @@ class BookmarksServiceTests(BookmarksTestsBase):
                 .unset_bookmarked(usage_key=UsageKey.from_string('i4x://ed/ed/ed/interactive'))
 
         with self.assertNumQueries(3):
-            assert self.bookmark_service.unset_bookmarked(usage_key=self.sequential_1.location)
+            assert self.bookmark_service.unset_bookmarked(usage_key=self.sequential_1.usage_key)

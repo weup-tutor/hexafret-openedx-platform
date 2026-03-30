@@ -188,7 +188,7 @@ def _get_asset_usage_path(course_key, assets):
                     if handout and asset_key_string in handout:
                         usage_dict = {'display_location': '', 'url': ''}
                         xblock_display_name = getattr(block, 'display_name', '')
-                        xblock_location = str(block.location)
+                        xblock_location = str(block.usage_key)
                         unit = block.get_parent()
                         unit_location = str(block.parent)
                         unit_display_name = getattr(unit, 'display_name', '')
@@ -204,7 +204,7 @@ def _get_asset_usage_path(course_key, assets):
                     if static_path in data or asset_key_string in data:
                         usage_dict = {'display_location': '', 'url': ''}
                         xblock_display_name = getattr(block, 'display_name', '')
-                        xblock_location = str(block.location)
+                        xblock_location = str(block.usage_key)
                         unit = block.get_parent()
                         unit_location = str(block.parent)
                         unit_display_name = getattr(unit, 'display_name', '')

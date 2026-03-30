@@ -96,7 +96,7 @@ class SequenceBlockTestCase(XModuleXmlImportTest):
 
         block.runtime._services['bookmarks'] = Mock()  # pylint: disable=protected-access
         block.runtime._services['user'] = StubUserService(user=Mock())  # pylint: disable=protected-access
-        block.parent = parent.location
+        block.parent = parent.usage_key
         return block
 
     def _set_up_module_system(self, block):
@@ -153,7 +153,7 @@ class SequenceBlockTestCase(XModuleXmlImportTest):
             view=view
         )
         self._assert_view_at_position(html, expected_position=1)
-        assert str(self.sequence_3_1.location) in html
+        assert str(self.sequence_3_1.usage_key) in html
         assert "'gated': False" in html
         assert "'next_url': 'NextSequential'" in html
         assert "'prev_url': 'PrevSequential'" in html
@@ -298,7 +298,7 @@ class SequenceBlockTestCase(XModuleXmlImportTest):
         html = self.get_context_dict_from_string(html)
         assert 'This section is a prerequisite. You must complete this section in order to unlock additional content.' == html['banner_text']
         assert not html['gated_content']['gated']
-        assert str(sequence.location) == html['item_id']
+        assert str(sequence.usage_key) == html['item_id']
         assert html['gated_content']['prereq_url'] is None
         assert html['gated_content']['prereq_section_name'] is None
         assert 'NextSequential' == html['next_url']
@@ -311,7 +311,7 @@ class SequenceBlockTestCase(XModuleXmlImportTest):
         assert 'seq_block.html' in html
         assert "'banner_text': None" in html
         assert "'gated': False" in html
-        assert str(sequence.location) in html
+        assert str(sequence.usage_key) in html
         assert "'prereq_url': None" in html
         assert "'prereq_section_name': None" in html
         assert "'next_url': 'NextSequential'" in html
@@ -372,7 +372,7 @@ class SequenceBlockTestCase(XModuleXmlImportTest):
             return_value=Mock(vertical_is_complete=Mock(return_value=True))
         )
         for child in self.sequence_3_1.get_children():
-            usage_key = str(child.location)
+            usage_key = str(child.usage_key)
             request = RequestFactory().post(
                 '/',
                 data=json.dumps({'usage_key': usage_key}),
@@ -398,7 +398,7 @@ class SequenceBlockTestCase(XModuleXmlImportTest):
             return_value=Mock(vertical_is_complete=Mock(return_value=True))
         )
         for child in self.sequence_3_1.get_children():
-            usage_key = str(child.location)
+            usage_key = str(child.usage_key)
             completion_return = self.sequence_3_1.handle_ajax('get_completion', {'usage_key': usage_key})
             assert json.loads(completion_return) == {'complete': True}
         self.sequence_3_1.runtime._services['completion'] = None  # pylint: disable=protected-access

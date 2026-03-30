@@ -175,7 +175,7 @@ class UnitTestLibraries(CourseTestCase):
         """
         # Create some more libraries
         libraries = [LibraryFactory.create() for _ in range(3)]
-        lib_dict = {lib.location.library_key: lib for lib in libraries}
+        lib_dict = {lib.usage_key.library_key: lib for lib in libraries}
 
         response = self.client.get_json(LIBRARY_REST_URL)
         self.assertEqual(response.status_code, 200)
@@ -285,7 +285,7 @@ class UnitTestLibraries(CourseTestCase):
         We should not be able to create multiple libraries with the same key
         """
         lib = LibraryFactory.create()
-        lib_key = lib.location.library_key
+        lib_key = lib.usage_key.library_key
         response = self.client.ajax_post(LIBRARY_REST_URL, {
             'org': lib_key.org,
             'library': lib_key.library,
@@ -337,10 +337,10 @@ class UnitTestLibraries(CourseTestCase):
         Test that we can get data about a library (in JSON format) using /library/:key/
         """
         # Create a library
-        lib_key = LibraryFactory.create().location.library_key
+        lib_key = LibraryFactory.create().usage_key.library_key
         # Re-load the library from the modulestore, explicitly including version information:
         lib = self.store.get_library(lib_key, remove_version=False, remove_branch=False)
-        version = lib.location.library_key.version_guid
+        version = lib.usage_key.library_key.version_guid
         self.assertNotEqual(version, None)
 
         response = self.client.get_json(make_url_for_lib(lib_key))
@@ -359,7 +359,7 @@ class UnitTestLibraries(CourseTestCase):
         """
         lib = LibraryFactory.create()
 
-        response = self.client.get(make_url_for_lib(lib.location.library_key))
+        response = self.client.get(make_url_for_lib(lib.usage_key.library_key))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<html")
         self.assertContains(response, lib.display_name)
@@ -378,7 +378,7 @@ class UnitTestLibraries(CourseTestCase):
         """
         lib = LibraryFactory.create()
         for verb in ("post", "delete", "put"):
-            response = getattr(self.client, verb)(make_url_for_lib(lib.location.library_key))
+            response = getattr(self.client, verb)(make_url_for_lib(lib.usage_key.library_key))
             self.assertEqual(response.status_code, 405)
 
     def test_no_access(self):
@@ -386,7 +386,7 @@ class UnitTestLibraries(CourseTestCase):
         self.client.login(username=user, password=password)
 
         lib = LibraryFactory.create()
-        response = self.client.get(make_url_for_lib(lib.location.library_key))
+        response = self.client.get(make_url_for_lib(lib.usage_key.library_key))
         self.assertEqual(response.status_code, 403)
 
     def test_get_component_templates(self):
@@ -435,7 +435,7 @@ class UnitTestLibraries(CourseTestCase):
         """
         library = LibraryFactory.create()
         extra_user, _ = self.create_non_staff_user()
-        manage_users_url = reverse_library_url('manage_library_users', str(library.location.library_key))
+        manage_users_url = reverse_library_url('manage_library_users', str(library.usage_key.library_key))
 
         response = self.client.get(manage_users_url)
         self.assertEqual(response.status_code, 200)
@@ -445,7 +445,7 @@ class UnitTestLibraries(CourseTestCase):
         # Now add extra_user to the library:
         user_details_url = reverse_course_url(
             'course_team_handler',
-            library.location.library_key, kwargs={'email': extra_user.email}
+            library.usage_key.library_key, kwargs={'email': extra_user.email}
         )
         edit_response = self.client.ajax_post(user_details_url, {"role": LibraryUserRole.ROLE})
         self.assertIn(edit_response.status_code, (200, 204))
@@ -462,7 +462,7 @@ class UnitTestLibraries(CourseTestCase):
         with self.settings(MAX_BLOCKS_PER_CONTENT_LIBRARY=1):
             library = LibraryFactory.create()
             data = {
-                'parent_locator': str(library.location),
+                'parent_locator': str(library.usage_key),
                 'category': 'html'
             }
             response = self.client.ajax_post(reverse('xblock_handler'), data)

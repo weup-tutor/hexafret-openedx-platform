@@ -174,12 +174,12 @@ class XBlockVisibilityTestCase(SharedModuleStoreTestCase):
         """Helper to create an xblock with a start date, optionally publishing it"""
 
         vertical = modulestore().create_item(
-            self.dummy_user, self.course.location.course_key, 'vertical', name,
+            self.dummy_user, self.course.usage_key.course_key, 'vertical', name,
             fields={'start': start_date, 'visible_to_staff_only': visible_to_staff_only}
         )
 
         if publish:
-            modulestore().publish(vertical.location, self.dummy_user)
+            modulestore().publish(vertical.usage_key, self.dummy_user)
 
         return vertical
 
@@ -190,14 +190,14 @@ class ReleaseDateSourceTest(CourseTestCase):
     def setUp(self):
         super().setUp()
 
-        self.chapter = BlockFactory.create(category='chapter', parent_location=self.course.location)
-        self.sequential = BlockFactory.create(category='sequential', parent_location=self.chapter.location)
-        self.vertical = BlockFactory.create(category='vertical', parent_location=self.sequential.location)
+        self.chapter = BlockFactory.create(category='chapter', parent_location=self.course.usage_key)
+        self.sequential = BlockFactory.create(category='sequential', parent_location=self.chapter.usage_key)
+        self.vertical = BlockFactory.create(category='vertical', parent_location=self.sequential.usage_key)
 
         # Read again so that children lists are accurate
-        self.chapter = self.store.get_item(self.chapter.location)
-        self.sequential = self.store.get_item(self.sequential.location)
-        self.vertical = self.store.get_item(self.vertical.location)
+        self.chapter = self.store.get_item(self.chapter.usage_key)
+        self.sequential = self.store.get_item(self.sequential.usage_key)
+        self.vertical = self.store.get_item(self.vertical.usage_key)
 
         self.date_one = datetime(1980, 1, 1, tzinfo=UTC)
         self.date_two = datetime(2020, 1, 1, tzinfo=UTC)
@@ -214,7 +214,7 @@ class ReleaseDateSourceTest(CourseTestCase):
     def _verify_release_date_source(self, item, expected_source):
         """Helper to verify that the release date source of a given item matches the expected source"""
         source = utils.find_release_date_source(item)
-        self.assertEqual(source.location, expected_source.location)
+        self.assertEqual(source.usage_key, expected_source.usage_key)
         self.assertEqual(source.start, expected_source.start)
 
     def test_chapter_source_for_vertical(self):
@@ -244,18 +244,18 @@ class StaffLockTest(CourseTestCase):
     def setUp(self):
         super().setUp()
 
-        self.chapter = BlockFactory.create(category='chapter', parent_location=self.course.location)
-        self.sequential = BlockFactory.create(category='sequential', parent_location=self.chapter.location)
-        self.vertical = BlockFactory.create(category='vertical', parent_location=self.sequential.location)
-        self.orphan = BlockFactory.create(category='vertical', parent_location=self.sequential.location)
+        self.chapter = BlockFactory.create(category='chapter', parent_location=self.course.usage_key)
+        self.sequential = BlockFactory.create(category='sequential', parent_location=self.chapter.usage_key)
+        self.vertical = BlockFactory.create(category='vertical', parent_location=self.sequential.usage_key)
+        self.orphan = BlockFactory.create(category='vertical', parent_location=self.sequential.usage_key)
 
         # Read again so that children lists are accurate
-        self.chapter = self.store.get_item(self.chapter.location)
-        self.sequential = self.store.get_item(self.sequential.location)
-        self.vertical = self.store.get_item(self.vertical.location)
+        self.chapter = self.store.get_item(self.chapter.usage_key)
+        self.sequential = self.store.get_item(self.sequential.usage_key)
+        self.vertical = self.store.get_item(self.vertical.usage_key)
 
         # Orphan the orphaned xblock
-        self.sequential.children = [self.vertical.location]
+        self.sequential.children = [self.vertical.usage_key]
         self.sequential = self.store.update_item(self.sequential, ModuleStoreEnum.UserID.test)
 
     def _set_staff_lock(self, xblock, is_locked):
@@ -283,7 +283,7 @@ class StaffLockSourceTest(StaffLockTest):
     def _verify_staff_lock_source(self, item, expected_source):
         """Helper to verify that the staff lock source of a given item matches the expected source"""
         source = utils.find_staff_lock_source(item)
-        self.assertEqual(source.location, expected_source.location)
+        self.assertEqual(source.usage_key, expected_source.usage_key)
         self.assertTrue(source.visible_to_staff_only)
 
     def test_chapter_source_for_vertical(self):
@@ -362,10 +362,10 @@ class GroupVisibilityTest(CourseTestCase):
         problem = BlockFactory.create(
             category='problem', parent=vertical, data="<problem></problem>"
         )
-        self.sequential = self.store.get_item(sequential.location)
-        self.vertical = self.store.get_item(vertical.location)
-        self.html = self.store.get_item(html.location)
-        self.problem = self.store.get_item(problem.location)
+        self.sequential = self.store.get_item(sequential.usage_key)
+        self.vertical = self.store.get_item(vertical.usage_key)
+        self.html = self.store.get_item(html.usage_key)
+        self.problem = self.store.get_item(problem.usage_key)
 
         # Add partitions to the course
         self.course.user_partitions = [
@@ -433,9 +433,9 @@ class GroupVisibilityTest(CourseTestCase):
         self.set_group_access(self.vertical, {1: []})
         self.set_group_access(self.problem, {2: [3, 4]})
         # get updated sequential/vertical/problem
-        self.sequential = self.store.get_item(self.sequential.location)
-        self.vertical = self.store.get_item(self.vertical.location)
-        self.problem = self.store.get_item(self.problem.location)
+        self.sequential = self.store.get_item(self.sequential.usage_key)
+        self.vertical = self.store.get_item(self.vertical.usage_key)
+        self.problem = self.store.get_item(self.problem.usage_key)
 
         # Note that "has_children_visible_to_specific_partition_groups" only checks immediate children.
         self.assertFalse(utils.has_children_visible_to_specific_partition_groups(self.sequential))
@@ -459,7 +459,7 @@ class GetUserPartitionInfoTest(ModuleStoreTestCase):
         """Create a dummy course. """
         super().setUp()
         self.course = CourseFactory()
-        self.block = BlockFactory.create(category="problem", parent_location=self.course.location)
+        self.block = BlockFactory.create(category="problem", parent_location=self.course.usage_key)
 
         # Set up some default partitions
         self._set_partitions([

@@ -582,13 +582,13 @@ class CourseSubmissionHistoryWithDataTest(TestSubmittingProblems):
         # set up a simple course with four problems
         homework = self.add_graded_section_to_course('homework', late=late, reset=reset, showanswer=showanswer)
         vertical = BlockFactory.create(
-            parent_location=homework.location,
+            parent_location=homework.usage_key,
             category='vertical',
             display_name='Subsection 1',
         )
-        self.add_dropdown_to_section(vertical.location, 'p1', 1)
-        self.add_dropdown_to_section(vertical.location, 'p2', 1)
-        self.add_dropdown_to_section(vertical.location, 'p3', 1)
+        self.add_dropdown_to_section(vertical.usage_key, 'p1', 1)
+        self.add_dropdown_to_section(vertical.usage_key, 'p2', 1)
+        self.add_dropdown_to_section(vertical.usage_key, 'p3', 1)
 
         self.refresh_course()
 

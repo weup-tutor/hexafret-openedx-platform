@@ -404,7 +404,7 @@ def _accessible_courses_summary_iter(request):
         Filter out unusable and inaccessible courses
         """
         # TODO remove this condition when templates purged from db
-        if course_summary.location.course == 'templates':
+        if course_summary.usage_key.course == 'templates':
             return False
 
         return has_studio_read_access(request.user, course_summary.id)
@@ -489,7 +489,7 @@ def _accessible_courses_iter(request):
             return False
 
         # TODO remove this condition when templates purged from db
-        if course.location.course == 'templates':
+        if course.usage_key.course == 'templates':
             return False
 
         return has_studio_read_access(request.user, course.id)
@@ -517,7 +517,7 @@ def _accessible_courses_iter_for_tests(request):
             return False
 
         # TODO remove this condition when templates purged from db
-        if course.location.course == 'templates':
+        if course.usage_key.course == 'templates':
             return False
 
         return has_studio_read_access(request.user, course.id)
@@ -646,7 +646,7 @@ def _accessible_libraries_iter(user, org=None):
     else:
         libraries = modulestore().get_library_summaries()
     # No need to worry about ErrorBlocks - split's get_libraries() never returns them.
-    return (lib for lib in libraries if has_studio_read_access(user, lib.location.library_key))
+    return (lib for lib in libraries if has_studio_read_access(user, lib.usage_key.library_key))
 
 
 @login_required
@@ -688,11 +688,11 @@ def format_library_for_view(library, request, migration: ModulestoreMigration | 
         }
     return {
         'display_name': library.display_name,
-        'library_key': str(library.location.library_key),
-        'url': reverse_library_url('library_handler', str(library.location.library_key)),
+        'library_key': str(library.usage_key.library_key),
+        'url': reverse_library_url('library_handler', str(library.usage_key.library_key)),
         'org': library.display_org_with_default,
         'number': library.display_number_with_default,
-        'can_edit': has_studio_write_access(request.user, library.location.library_key),
+        'can_edit': has_studio_write_access(request.user, library.usage_key.library_key),
         'is_migrated': migration is not None,
         **migration_info,
     }
@@ -791,13 +791,13 @@ def _process_courses_list(courses_iter, in_process_course_actions, split_archive
         """
         course_context = {
             'display_name': course.display_name,
-            'course_key': str(course.location.course_key),
+            'course_key': str(course.usage_key.course_key),
             'url': reverse_course_url('course_handler', course.id),
-            'lms_link': get_lms_link_for_item(course.location),
+            'lms_link': get_lms_link_for_item(course.usage_key),
             'rerun_link': _get_rerun_link_for_item(course.id),
             'org': course.display_org_with_default,
             'number': course.display_number_with_default,
-            'run': course.location.run
+            'run': course.usage_key.run
         }
         if course.id.deprecated:
             course_context.update({
@@ -1301,7 +1301,7 @@ def advanced_settings_handler(request, course_key_string):
             if use_new_advanced_settings_page(course_key):
                 return redirect(get_advanced_settings_url(course_key))
             publisher_enabled = configuration_helpers.get_value_for_org(
-                course_block.location.org,
+                course_block.usage_key.org,
                 'ENABLE_PUBLISHER',
                 settings.FEATURES.get('ENABLE_PUBLISHER', False)
             )
@@ -1783,7 +1783,7 @@ def bulk_enable_disable_discussions(request, course_key_string):
                         store.update_item(vertical, user.id)
 
                         if store.has_published_version(vertical):
-                            store.publish(vertical.location, user.id)
+                            store.publish(vertical.usage_key, user.id)
                         changed += 1
             return JsonResponse({"units_updated_and_republished": changed})
         except Exception as e:  # lint-amnesty, pylint: disable=broad-except

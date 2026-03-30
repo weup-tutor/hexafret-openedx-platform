@@ -55,7 +55,7 @@ class HomePageCoursesViewV2Test(CourseTestCase):
                 OrderedDict([
                     ("course_key", course_id),
                     ("display_name", self.course.display_name),
-                    ("lms_link", f'{settings.LMS_ROOT_URL}/courses/{course_id}/jump_to/{self.course.location}'),
+                    ("lms_link", f'{settings.LMS_ROOT_URL}/courses/{course_id}/jump_to/{self.course.usage_key}'),
                     ("cms_link", f'//{settings.CMS_BASE}{reverse_course_url("course_handler", self.course.id)}'),
                     ("number", self.course.number),
                     ("org", self.course.org),
@@ -69,7 +69,7 @@ class HomePageCoursesViewV2Test(CourseTestCase):
                     ("display_name", self.archived_course.display_name),
                     (
                         "lms_link",
-                        f'{settings.LMS_ROOT_URL}/courses/{archived_course_id}/jump_to/{self.archived_course.location}'
+                        f'{settings.LMS_ROOT_URL}/courses/{archived_course_id}/jump_to/{self.archived_course.usage_key}'
                     ),
                     (
                         "cms_link",
@@ -108,7 +108,7 @@ class HomePageCoursesViewV2Test(CourseTestCase):
         self.assertEqual(response.data["results"]["courses"], [OrderedDict([
             ("course_key", str(self.course.id)),
             ("display_name", self.course.display_name),
-            ("lms_link", f'{settings.LMS_ROOT_URL}/courses/{str(self.course.id)}/jump_to/{self.course.location}'),
+            ("lms_link", f'{settings.LMS_ROOT_URL}/courses/{str(self.course.id)}/jump_to/{self.course.usage_key}'),
             ("cms_link", f'//{settings.CMS_BASE}{reverse_course_url("course_handler", self.course.id)}'),
             ("number", self.course.number),
             ("org", self.course.org),
@@ -136,7 +136,7 @@ class HomePageCoursesViewV2Test(CourseTestCase):
                 '{url_root}/courses/{course_id}/jump_to/{location}'.format(
                     url_root=settings.LMS_ROOT_URL,
                     course_id=str(self.archived_course.id),
-                    location=self.archived_course.location
+                    location=self.archived_course.usage_key
                 ),
             ),
             ("cms_link", f'//{settings.CMS_BASE}{reverse_course_url("course_handler", self.archived_course.id)}'),
@@ -166,7 +166,7 @@ class HomePageCoursesViewV2Test(CourseTestCase):
                 '{url_root}/courses/{course_id}/jump_to/{location}'.format(
                     url_root=settings.LMS_ROOT_URL,
                     course_id=str(self.archived_course.id),
-                    location=self.archived_course.location
+                    location=self.archived_course.usage_key
                 ),
             ),
             ("cms_link", f'//{settings.CMS_BASE}{reverse_course_url("course_handler", self.archived_course.id)}'),

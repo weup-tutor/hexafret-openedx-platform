@@ -90,7 +90,7 @@ class TestDeleteOrphan(TestOrphanBase):
         orphan = self.store.create_item(
             self.user.id, course.id, 'html', "PublishedOnlyOrphan"
         )
-        self.store.publish(orphan.location, self.user.id)
+        self.store.publish(orphan.usage_key, self.user.id)
 
         # grab the published branch of the course
         published_branch = course.id.for_branch(
@@ -104,13 +104,13 @@ class TestDeleteOrphan(TestOrphanBase):
         # delete this orphan from the draft branch without
         # auto-publishing this change to the published branch
         self.store.delete_item(
-            orphan.location, self.user.id, skip_auto_publish=True
+            orphan.usage_key, self.user.id, skip_auto_publish=True
         )
 
         # now there should be no orphans in the draft branch, but
         # there should be one in published
         self.assertOrphanCount(course.id, 0)
         self.assertOrphanCount(published_branch, 1)
-        self.assertIn(orphan.location, [x.location for x in self.store.get_items(published_branch)])
+        self.assertIn(orphan.usage_key, [x.usage_key for x in self.store.get_items(published_branch)])
 
         return course, orphan

@@ -222,7 +222,7 @@ def xblock_view_handler(request, usage_key_string, view_name):
             # added to the list.
             reorderable_items = set()
             if view_name == "reorderable_container_child_preview":
-                reorderable_items.add(xblock.location)
+                reorderable_items.add(xblock.usage_key)
 
             paging = None
             try:

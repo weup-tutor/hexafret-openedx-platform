@@ -205,32 +205,32 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
         with self.store.default_store(ModuleStoreEnum.Type.split):
             ApplicationFactory(name="edx-notes")
             self.course = CourseFactory.create()
-            self.chapter = BlockFactory.create(category="chapter", parent_location=self.course.location)
-            self.chapter_2 = BlockFactory.create(category="chapter", parent_location=self.course.location)
-            self.sequential = BlockFactory.create(category="sequential", parent_location=self.chapter.location)
-            self.vertical = BlockFactory.create(category="vertical", parent_location=self.sequential.location)
-            self.html_block_1 = BlockFactory.create(category="html", parent_location=self.vertical.location)
-            self.html_block_2 = BlockFactory.create(category="html", parent_location=self.vertical.location)
+            self.chapter = BlockFactory.create(category="chapter", parent_location=self.course.usage_key)
+            self.chapter_2 = BlockFactory.create(category="chapter", parent_location=self.course.usage_key)
+            self.sequential = BlockFactory.create(category="sequential", parent_location=self.chapter.usage_key)
+            self.vertical = BlockFactory.create(category="vertical", parent_location=self.sequential.usage_key)
+            self.html_block_1 = BlockFactory.create(category="html", parent_location=self.vertical.usage_key)
+            self.html_block_2 = BlockFactory.create(category="html", parent_location=self.vertical.usage_key)
             self.vertical_with_container = BlockFactory.create(
-                category='vertical', parent_location=self.sequential.location
+                category='vertical', parent_location=self.sequential.usage_key
             )
             self.child_container = BlockFactory.create(
-                category='split_test', parent_location=self.vertical_with_container.location)
+                category='split_test', parent_location=self.vertical_with_container.usage_key)
             self.child_vertical = BlockFactory.create(
-                category='vertical', parent_location=self.child_container.location)
-            self.child_html_block = BlockFactory.create(category="html", parent_location=self.child_vertical.location)
+                category='vertical', parent_location=self.child_container.usage_key)
+            self.child_html_block = BlockFactory.create(category="html", parent_location=self.child_vertical.usage_key)
 
             # Read again so that children lists are accurate
-            self.course = self.store.get_item(self.course.location)
-            self.chapter = self.store.get_item(self.chapter.location)
-            self.chapter_2 = self.store.get_item(self.chapter_2.location)
-            self.sequential = self.store.get_item(self.sequential.location)
-            self.vertical = self.store.get_item(self.vertical.location)
+            self.course = self.store.get_item(self.course.usage_key)
+            self.chapter = self.store.get_item(self.chapter.usage_key)
+            self.chapter_2 = self.store.get_item(self.chapter_2.usage_key)
+            self.sequential = self.store.get_item(self.sequential.usage_key)
+            self.vertical = self.store.get_item(self.vertical.usage_key)
 
-            self.vertical_with_container = self.store.get_item(self.vertical_with_container.location)
-            self.child_container = self.store.get_item(self.child_container.location)
-            self.child_vertical = self.store.get_item(self.child_vertical.location)
-            self.child_html_block = self.store.get_item(self.child_html_block.location)
+            self.vertical_with_container = self.store.get_item(self.vertical_with_container.usage_key)
+            self.child_container = self.store.get_item(self.child_container.usage_key)
+            self.child_vertical = self.store.get_item(self.child_vertical.usage_key)
+            self.child_html_block = self.store.get_item(self.child_html_block.usage_key)
 
             self.user = UserFactory()
             self.client.login(username=self.user.username, password=UserFactory._DEFAULT_PASSWORD)  # lint-amnesty, pylint: disable=protected-access
@@ -321,13 +321,13 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                     {
                         "quote": "quote text",
                         "text": "text",
-                        "usage_id": str(self.html_block_1.location),
+                        "usage_id": str(self.html_block_1.usage_key),
                         "updated": datetime(2014, 11, 19, 8, 5, 16, 00000).isoformat(),
                     },
                     {
                         "quote": "quote text",
                         "text": "text",
-                        "usage_id": str(self.html_block_2.location),
+                        "usage_id": str(self.html_block_2.usage_key),
                         "updated": datetime(2014, 11, 19, 8, 6, 16, 00000).isoformat(),
                     }
                 ]
@@ -349,22 +349,22 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                         "chapter": {
                             "display_name": self.chapter.display_name_with_default,
                             "index": 0,
-                            "location": str(self.chapter.location),
-                            "children": [str(self.sequential.location)]
+                            "location": str(self.chapter.usage_key),
+                            "children": [str(self.sequential.usage_key)]
                         },
                         "section": {
                             "display_name": self.sequential.display_name_with_default,
-                            "location": str(self.sequential.location),
+                            "location": str(self.sequential.usage_key),
                             "children": [
-                                str(self.vertical.location), str(self.vertical_with_container.location)
+                                str(self.vertical.usage_key), str(self.vertical_with_container.usage_key)
                             ]
                         },
                         "unit": {
                             "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                             "display_name": self.vertical.display_name_with_default,
-                            "location": str(self.vertical.location),
+                            "location": str(self.vertical.usage_key),
                         },
-                        "usage_id": str(self.html_block_2.location),
+                        "usage_id": str(self.html_block_2.usage_key),
                         "updated": "Nov 19, 2014 at 08:06 UTC",
                     },
                     {
@@ -373,22 +373,22 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                         "chapter": {
                             "display_name": self.chapter.display_name_with_default,
                             "index": 0,
-                            "location": str(self.chapter.location),
-                            "children": [str(self.sequential.location)]
+                            "location": str(self.chapter.usage_key),
+                            "children": [str(self.sequential.usage_key)]
                         },
                         "section": {
                             "display_name": self.sequential.display_name_with_default,
-                            "location": str(self.sequential.location),
+                            "location": str(self.sequential.usage_key),
                             "children": [
-                                str(self.vertical.location),
-                                str(self.vertical_with_container.location)]
+                                str(self.vertical.usage_key),
+                                str(self.vertical_with_container.usage_key)]
                         },
                         "unit": {
                             "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                             "display_name": self.vertical.display_name_with_default,
-                            "location": str(self.vertical.location),
+                            "location": str(self.vertical.usage_key),
                         },
-                        "usage_id": str(self.html_block_1.location),
+                        "usage_id": str(self.html_block_1.usage_key),
                         "updated": "Nov 19, 2014 at 08:05 UTC",
                     },
                 ]
@@ -426,13 +426,13 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                 {
                     "quote": "quote text",
                     "text": "text",
-                    "usage_id": str(self.html_block_1.location),
+                    "usage_id": str(self.html_block_1.usage_key),
                     "updated": datetime(2014, 11, 19, 8, 5, 16, 00000).isoformat(),
                 },
                 {
                     "quote": "quote text",
                     "text": "text",
-                    "usage_id": str(self.html_block_2.location),
+                    "usage_id": str(self.html_block_2.usage_key),
                     "updated": datetime(2014, 11, 19, 8, 6, 16, 00000).isoformat(),
                 }
             ]
@@ -453,22 +453,22 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                         "chapter": {
                             "display_name": self.chapter.display_name_with_default,
                             "index": 0,
-                            "location": str(self.chapter.location),
-                            "children": [str(self.sequential.location)]
+                            "location": str(self.chapter.usage_key),
+                            "children": [str(self.sequential.usage_key)]
                         },
                         "section": {
                             "display_name": self.sequential.display_name_with_default,
-                            "location": str(self.sequential.location),
+                            "location": str(self.sequential.usage_key),
                             "children": [
-                                str(self.vertical.location),
-                                str(self.vertical_with_container.location)]
+                                str(self.vertical.usage_key),
+                                str(self.vertical_with_container.usage_key)]
                         },
                         "unit": {
                             "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                             "display_name": self.vertical.display_name_with_default,
-                            "location": str(self.vertical.location),
+                            "location": str(self.vertical.usage_key),
                         },
-                        "usage_id": str(self.html_block_2.location),
+                        "usage_id": str(self.html_block_2.usage_key),
                         "updated": "Nov 19, 2014 at 08:06 UTC",
                     },
                     {
@@ -477,22 +477,22 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                         "chapter": {
                             "display_name": self.chapter.display_name_with_default,
                             "index": 0,
-                            "location": str(self.chapter.location),
-                            "children": [str(self.sequential.location)]
+                            "location": str(self.chapter.usage_key),
+                            "children": [str(self.sequential.usage_key)]
                         },
                         "section": {
                             "display_name": self.sequential.display_name_with_default,
-                            "location": str(self.sequential.location),
+                            "location": str(self.sequential.usage_key),
                             "children": [
-                                str(self.vertical.location),
-                                str(self.vertical_with_container.location)]
+                                str(self.vertical.usage_key),
+                                str(self.vertical_with_container.usage_key)]
                         },
                         "unit": {
                             "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                             "display_name": self.vertical.display_name_with_default,
-                            "location": str(self.vertical.location),
+                            "location": str(self.vertical.usage_key),
                         },
-                        "usage_id": str(self.html_block_1.location),
+                        "usage_id": str(self.html_block_1.usage_key),
                         "updated": "Nov 19, 2014 at 08:05 UTC",
                     },
                 ]
@@ -553,7 +553,7 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
             {
                 "quote": "quote text",
                 "text": "text",
-                "usage_id": str(self.html_block_1.location),
+                "usage_id": str(self.html_block_1.usage_key),
                 "updated": datetime(2014, 11, 19, 8, 5, 16, 00000).isoformat()
             },
             {
@@ -571,20 +571,20 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                 "chapter": {
                     "display_name": self.chapter.display_name_with_default,
                     "index": 0,
-                    "location": str(self.chapter.location),
-                    "children": [str(self.sequential.location)]
+                    "location": str(self.chapter.usage_key),
+                    "children": [str(self.sequential.usage_key)]
                 },
                 "section": {
                     "display_name": self.sequential.display_name_with_default,
-                    "location": str(self.sequential.location),
-                    "children": [str(self.vertical.location), str(self.vertical_with_container.location)]
+                    "location": str(self.sequential.usage_key),
+                    "children": [str(self.vertical.usage_key), str(self.vertical_with_container.usage_key)]
                 },
                 "unit": {
                     "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                     "display_name": self.vertical.display_name_with_default,
-                    "location": str(self.vertical.location),
+                    "location": str(self.vertical.usage_key),
                 },
-                "usage_id": str(self.html_block_1.location),
+                "usage_id": str(self.html_block_1.usage_key),
                 "updated": datetime(2014, 11, 19, 8, 5, 16, 00000),
             }]) == len(helpers.preprocess_collection(self.user, self.course, initial_collection))
 
@@ -596,13 +596,13 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
             {
                 "quote": "quote text",
                 "text": "text",
-                "usage_id": str(self.html_block_1.location),
+                "usage_id": str(self.html_block_1.usage_key),
                 "updated": datetime(2014, 11, 19, 8, 5, 16, 00000).isoformat(),
             },
             {
                 "quote": "quote text",
                 "text": "text",
-                "usage_id": str(self.html_block_2.location),
+                "usage_id": str(self.html_block_2.usage_key),
                 "updated": datetime(2014, 11, 19, 8, 6, 16, 00000).isoformat(),
             },
         ]
@@ -615,20 +615,20 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                 "chapter": {
                     "display_name": self.chapter.display_name_with_default,
                     "index": 0,
-                    "location": str(self.chapter.location),
-                    "children": [str(self.sequential.location)]
+                    "location": str(self.chapter.usage_key),
+                    "children": [str(self.sequential.usage_key)]
                 },
                 "section": {
                     "display_name": self.sequential.display_name_with_default,
-                    "location": str(self.sequential.location),
-                    "children": [str(self.vertical.location), str(self.vertical_with_container.location)]
+                    "location": str(self.sequential.usage_key),
+                    "children": [str(self.vertical.usage_key), str(self.vertical_with_container.usage_key)]
                 },
                 "unit": {
                     "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                     "display_name": self.vertical.display_name_with_default,
-                    "location": str(self.vertical.location),
+                    "location": str(self.vertical.usage_key),
                 },
-                "usage_id": str(self.html_block_1.location),
+                "usage_id": str(self.html_block_1.usage_key),
                 "updated": datetime(2014, 11, 19, 8, 5, 16, 00000),
             }]) == len(helpers.preprocess_collection(self.user, self.course, initial_collection))
 
@@ -645,7 +645,7 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
         initial_collection = [{
             "quote": "quote text",
             "text": "text",
-            "usage_id": str(self.html_block_1.location),
+            "usage_id": str(self.html_block_1.usage_key),
             "updated": datetime(2014, 11, 19, 8, 5, 16, 00000).isoformat(),
         }]
 
@@ -660,13 +660,13 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
             {
                 "quote": "quote text1",
                 "text": "text1",
-                "usage_id": str(self.html_block_1.location),
+                "usage_id": str(self.html_block_1.usage_key),
                 "updated": datetime(2016, 1, 26, 8, 5, 16, 00000).isoformat(),
             },
             {
                 "quote": "quote text2",
                 "text": "text2",
-                "usage_id": str(self.html_block_2.location),
+                "usage_id": str(self.html_block_2.usage_key),
                 "updated": datetime(2016, 1, 26, 9, 6, 17, 00000).isoformat(),
             },
         ]
@@ -680,11 +680,11 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                     "unit": {
                         "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                         "display_name": self.vertical.display_name_with_default,
-                        "location": str(self.vertical.location),
+                        "location": str(self.vertical.usage_key),
                     },
                     'text': 'text1',
                     'quote': 'quote text1',
-                    'usage_id': str(self.html_block_1.location),
+                    'usage_id': str(self.html_block_1.usage_key),
                     'updated': datetime(2016, 1, 26, 8, 5, 16)
                 },
                 {
@@ -693,11 +693,11 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
                     "unit": {
                         "url": self._get_unit_url(self.course, self.chapter, self.sequential),
                         "display_name": self.vertical.display_name_with_default,
-                        "location": str(self.vertical.location),
+                        "location": str(self.vertical.usage_key),
                     },
                     'text': 'text2',
                     'quote': 'quote text2',
-                    'usage_id': str(self.html_block_2.location),
+                    'usage_id': str(self.html_block_2.usage_key),
                     'updated': datetime(2016, 1, 26, 9, 6, 17)
                 }
             ]) == len(helpers.preprocess_collection(self.user, self.course, initial_collection))
@@ -709,8 +709,8 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
         self.assertDictEqual(
             {
                 "display_name": self.sequential.display_name_with_default,
-                "location": str(self.sequential.location),
-                "children": [str(self.vertical.location), str(self.vertical_with_container.location)],
+                "location": str(self.sequential.usage_key),
+                "children": [str(self.vertical.usage_key), str(self.vertical_with_container.usage_key)],
             },
             helpers.get_block_context(self.course, self.sequential)
         )
@@ -722,7 +722,7 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
         self.assertDictEqual(
             {
                 "display_name": self.html_block_1.display_name_with_default,
-                "location": str(self.html_block_1.location),
+                "location": str(self.html_block_1.usage_key),
             },
             helpers.get_block_context(self.course, self.html_block_1)
         )
@@ -735,8 +735,8 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
             {
                 "display_name": self.chapter.display_name_with_default,
                 "index": 0,
-                "location": str(self.chapter.location),
-                "children": [str(self.sequential.location)],
+                "location": str(self.chapter.usage_key),
+                "children": [str(self.sequential.usage_key)],
             },
             helpers.get_block_context(self.course, self.chapter)
         )
@@ -744,7 +744,7 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
             {
                 "display_name": self.chapter_2.display_name_with_default,
                 "index": 1,
-                "location": str(self.chapter_2.location),
+                "location": str(self.chapter_2.usage_key),
                 "children": [],
             },
             helpers.get_block_context(self.course, self.chapter_2)
@@ -876,8 +876,8 @@ class EdxNotesHelpersTest(ModuleStoreTestCase):
         Tests `get_index` method returns unit url.
         """
         children = self.sequential.children
-        assert 0 == helpers.get_index(str(self.vertical.location), children)
-        assert 1 == helpers.get_index(str(self.vertical_with_container.location), children)
+        assert 0 == helpers.get_index(str(self.vertical.usage_key), children)
+        assert 1 == helpers.get_index(str(self.vertical_with_container.usage_key), children)
 
     @ddt.unpack
     @ddt.data(

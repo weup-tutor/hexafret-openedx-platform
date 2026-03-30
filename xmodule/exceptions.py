@@ -14,7 +14,7 @@ class InvalidVersionError(Exception):
     """
     def __init__(self, location):
         super().__init__()
-        self.location = location
+        self.usage_key = location
 
 
 class SerializationError(Exception):
@@ -23,7 +23,7 @@ class SerializationError(Exception):
     """
     def __init__(self, location, msg):
         super().__init__(msg)
-        self.location = location
+        self.usage_key = location
 
 
 class UndefinedContext(Exception):

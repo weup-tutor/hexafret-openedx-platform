@@ -1393,7 +1393,7 @@ class ModuleStoreWriteBase(ModuleStoreReadBase, ModuleStoreWrite):
         """
         item = self.create_item(user_id, parent_usage_key.course_key, block_type, block_id=block_id, fields=fields, **kwargs)  # lint-amnesty, pylint: disable=line-too-long
         parent = self.get_item(parent_usage_key)
-        parent.children.append(item.location)
+        parent.children.append(item.usage_key)
         self.update_item(parent, user_id)
 
     def _flag_library_updated_event(self, library_key):

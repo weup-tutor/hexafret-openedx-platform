@@ -2440,7 +2440,7 @@ class ProblemBlockTest(unittest.TestCase):  # pylint: disable=too-many-public-me
             mock_publish.assert_called_with(
                 block,
                 "edx.problem.hint.demandhint_displayed",
-                {"hint_index": 0, "module_id": str(block.location), "hint_text": "Demand 1", "hint_len": 2},
+                {"hint_index": 0, "module_id": str(block.usage_key), "hint_text": "Demand 1", "hint_len": 2},
             )
 
     def test_input_state_consistency(self):
@@ -2847,7 +2847,7 @@ class ProblemBlockTest(unittest.TestCase):  # pylint: disable=too-many-public-me
         block.get_problem_html()
         render_args, _ = render_template.call_args
         context = render_args[1]
-        assert context["problem"]["name"] == block.location.block_type
+        assert context["problem"]["name"] == block.usage_key.block_type
 
 
 @ddt.ddt

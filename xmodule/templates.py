@@ -30,7 +30,7 @@ def all_templates():
     course = CourseFactory.create()
 
     for category, _ in XBlock.load_classes():
-        loaded_block = BlockFactory.create(category=category, parent_location=course.location)
+        loaded_block = BlockFactory.create(category=category, parent_location=course.usage_key)
         if not hasattr(loaded_block, 'templates'):
             continue
         templates[category] = loaded_block.templates()

@@ -32,7 +32,7 @@ def strip_filenames(block):
     """
     Recursively strips 'filename' from all children's definitions.
     """
-    print(f"strip filename from {str(block.location)}")
+    print(f"strip filename from {str(block.usage_key)}")
     if block._field_data.has(block, 'filename'):  # lint-amnesty, pylint: disable=protected-access
         block._field_data.delete(block, 'filename')  # lint-amnesty, pylint: disable=protected-access
 

@@ -207,21 +207,21 @@ class GradesTransformerTestCase(CourseStructureTestCase):
             'prob_BCb': {'sub_A', 'sub_B', 'sub_C'},
         }
         blocks = self.build_complicated_hypothetical_course()
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
         for block_ref, expected_subsections in expected_subsections.items():
             actual_subsections = block_structure.get_transformer_block_field(
-                blocks[block_ref].location,
+                blocks[block_ref].usage_key,
                 self.TRANSFORMER_CLASS_TO_TEST,
                 'subsections',
             )
-            assert actual_subsections == {blocks[sub].location for sub in expected_subsections}
+            assert actual_subsections == {blocks[sub].usage_key for sub in expected_subsections}
 
     def test_unscored_block_collection(self):
         blocks = self.build_course_with_problems()
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
         self.assert_collected_xblock_fields(
             block_structure,
-            blocks['course'].location,
+            blocks['course'].usage_key,
             weight=None,
             graded=False,
             has_score=False,
@@ -230,7 +230,7 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         )
         self.assert_collected_transformer_block_fields(
             block_structure,
-            blocks['course'].location,
+            blocks['course'].usage_key,
             self.TRANSFORMER_CLASS_TO_TEST,
             max_score=None,
             explicit_graded=None,
@@ -239,11 +239,11 @@ class GradesTransformerTestCase(CourseStructureTestCase):
     def test_grades_collected_basic(self):
 
         blocks = self.build_course_with_problems()
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
 
         self.assert_collected_xblock_fields(
             block_structure,
-            blocks['problem'].location,
+            blocks['problem'].usage_key,
             weight=self.problem_metadata['weight'],
             graded=self.problem_metadata['graded'],
             has_score=True,
@@ -252,7 +252,7 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         )
         self.assert_collected_transformer_block_fields(
             block_structure,
-            blocks['problem'].location,
+            blocks['problem'].usage_key,
             self.TRANSFORMER_CLASS_TO_TEST,
             max_score=0,
             explicit_graded=True,
@@ -266,10 +266,10 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         if graded is not None:
             problem_metadata['graded'] = graded
         blocks = self.build_course_with_problems(metadata=problem_metadata)
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
         self.assert_collected_transformer_block_fields(
             block_structure,
-            blocks['problem'].location,
+            blocks['problem'].usage_key,
             self.TRANSFORMER_CLASS_TO_TEST,
             explicit_graded=graded,
         )
@@ -285,11 +285,11 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         }
 
         blocks = self.build_course_with_problems(metadata=problem_metadata)
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
 
         self.assert_collected_xblock_fields(
             block_structure,
-            blocks['problem'].location,
+            blocks['problem'].usage_key,
             weight=problem_metadata['weight'],
             graded=problem_metadata['graded'],
             has_score=True,
@@ -307,11 +307,11 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         '''
 
         blocks = self.build_course_with_problems(data=problem_data)
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
 
         self.assert_collected_transformer_block_fields(
             block_structure,
-            blocks['problem'].location,
+            blocks['problem'].usage_key,
             self.TRANSFORMER_CLASS_TO_TEST,
             max_score=1,
         )
@@ -329,11 +329,11 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         '''
 
         blocks = self.build_course_with_problems(problem_data)
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
 
         self.assert_collected_transformer_block_fields(
             block_structure,
-            blocks['problem'].location,
+            blocks['problem'].usage_key,
             self.TRANSFORMER_CLASS_TO_TEST,
             max_score=2,
         )
@@ -359,22 +359,22 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         '''
 
         blocks = self.build_course_with_problems(problem_data)
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
 
         self.assert_collected_transformer_block_fields(
             block_structure,
-            blocks['problem'].location,
+            blocks['problem'].usage_key,
             self.TRANSFORMER_CLASS_TO_TEST,
             max_score=0,
         )
 
     def test_course_version_collected_in_split(self):
         blocks = self.build_course_with_problems()
-        block_structure = get_course_blocks(self.student, blocks['course'].location, self.transformers)
-        assert block_structure.get_xblock_field(blocks['course'].location, 'course_version') is not None
+        block_structure = get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)
+        assert block_structure.get_xblock_field(blocks['course'].usage_key, 'course_version') is not None
         assert block_structure.get_xblock_field(
-            blocks['problem'].location, 'course_version'
-        ) == block_structure.get_xblock_field(blocks['course'].location, 'course_version')
+            blocks['problem'].usage_key, 'course_version'
+        ) == block_structure.get_xblock_field(blocks['course'].usage_key, 'course_version')
 
     def test_grading_policy_collected(self):
         # the calculated hash of the original and updated grading policies of the test course
@@ -384,7 +384,7 @@ class GradesTransformerTestCase(CourseStructureTestCase):
         blocks = self.build_course_with_problems()
         course_block = blocks['course']
         self._validate_grading_policy_hash(
-            course_block.location,
+            course_block.usage_key,
             original_grading_policy_hash
         )
 
@@ -397,14 +397,14 @@ class GradesTransformerTestCase(CourseStructureTestCase):
 
         self._update_course_grading_policy(course_block, grading_policy_with_updates)
         self._validate_grading_policy_hash(
-            course_block.location,
+            course_block.usage_key,
             updated_grading_policy_hash
         )
 
         # reset the grading policy and ensure the hash matches the original
         self._update_course_grading_policy(course_block, original_grading_policy)
         self._validate_grading_policy_hash(
-            course_block.location,
+            course_block.usage_key,
             original_grading_policy_hash
         )
 
@@ -466,4 +466,4 @@ class MultiProblemModulestoreAccessTestCase(CourseStructureTestCase, SharedModul
         bs_api.update_course_in_cache(blocks['course'].id)
         clear_course_from_cache(blocks['course'].id)
         with check_mongo_calls_range(max_mongo_calls, min_mongo_calls):
-            get_course_blocks(self.student, blocks['course'].location, self.transformers)
+            get_course_blocks(self.student, blocks['course'].usage_key, self.transformers)

@@ -78,6 +78,6 @@ def update_masters_access_course(sender, instance, **kwargs):  # pylint: disable
                 if verified_id in enrollment_groups and masters_id not in enrollment_groups:
                     enrollment_groups.append(masters_id)
                     item.group_access = group_access
-                    log.info("Publishing %s with Master's group access", item.location)
+                    log.info("Publishing %s with Master's group access", item.usage_key)
                     store.update_item(item, user_id)
-                    store.publish(item.location, user_id)
+                    store.publish(item.usage_key, user_id)

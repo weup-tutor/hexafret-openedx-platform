@@ -67,7 +67,7 @@ class CertificatesViewsSiteTests(ModuleStoreTestCase):
         self.course.cert_html_view_enabled = True
         self.course.save()
         self.store.update_item(self.course, self.user.id)
-        self.course_id = self.course.location.course_key
+        self.course_id = self.course.usage_key.course_key
         self.user = UserFactory.create(
             email='joe_user@edx.org',
             username='joeuser',

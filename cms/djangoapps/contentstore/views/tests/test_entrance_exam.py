@@ -42,7 +42,7 @@ class EntranceExamHandlerTests(CourseTestCase, MilestonesTestCaseMixin):
         """
         super().setUp()
         self.course_key = self.course.id
-        self.usage_key = self.course.location
+        self.usage_key = self.course.usage_key
         self.course_url = f'/course/{str(self.course.id)}'
         self.exam_url = f'/course/{str(self.course.id)}/entrance_exam/'
         self.milestone_relationship_types = milestones_helpers.get_milestone_relationship_types()
@@ -51,7 +51,7 @@ class EntranceExamHandlerTests(CourseTestCase, MilestonesTestCaseMixin):
         """
         Unit Test: test addition of entrance exam milestone content
         """
-        parent_locator = str(self.course.location)
+        parent_locator = str(self.course.usage_key)
         created_block = create_xblock(
             parent_locator=parent_locator,
             user=self.user,
@@ -62,7 +62,7 @@ class EntranceExamHandlerTests(CourseTestCase, MilestonesTestCaseMixin):
         add_entrance_exam_milestone(self.course.id, created_block)
         content_milestones = milestones_helpers.get_course_content_milestones(
             str(self.course.id),
-            str(created_block.location),
+            str(created_block.usage_key),
             self.milestone_relationship_types['FULFILLS']
         )
         self.assertTrue(len(content_milestones))
@@ -72,7 +72,7 @@ class EntranceExamHandlerTests(CourseTestCase, MilestonesTestCaseMixin):
         """
         Unit Test: test removal of entrance exam milestone content
         """
-        parent_locator = str(self.course.location)
+        parent_locator = str(self.course.usage_key)
         created_block = create_xblock(
             parent_locator=parent_locator,
             user=self.user,
@@ -83,7 +83,7 @@ class EntranceExamHandlerTests(CourseTestCase, MilestonesTestCaseMixin):
         add_entrance_exam_milestone(self.course.id, created_block)
         content_milestones = milestones_helpers.get_course_content_milestones(
             str(self.course.id),
-            str(created_block.location),
+            str(created_block.usage_key),
             self.milestone_relationship_types['FULFILLS']
         )
         self.assertEqual(len(content_milestones), 1)
@@ -93,7 +93,7 @@ class EntranceExamHandlerTests(CourseTestCase, MilestonesTestCaseMixin):
         remove_entrance_exam_milestone_reference(request, self.course.id)
         content_milestones = milestones_helpers.get_course_content_milestones(
             str(self.course.id),
-            str(created_block.location),
+            str(created_block.usage_key),
             self.milestone_relationship_types['FULFILLS']
         )
         self.assertEqual(len(content_milestones), 0)

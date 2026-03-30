@@ -203,13 +203,13 @@ def preprocess_collection(user, course, collection):
                 if not section:
                     log.debug("Section not found: %s", usage_key)
                     continue
-                if section.location in list(cache.keys()):   # lint-amnesty, pylint: disable=consider-iterating-dictionary
-                    usage_context = cache[section.location]
+                if section.usage_key in list(cache.keys()):   # lint-amnesty, pylint: disable=consider-iterating-dictionary
+                    usage_context = cache[section.usage_key]
                     usage_context.update({
                         "unit": get_block_context(course, unit),
                     })
                     model.update(usage_context)
-                    cache[usage_id] = cache[unit.location] = usage_context
+                    cache[usage_id] = cache[unit.usage_key] = usage_context
                     filtered_collection.append(model)
                     continue
 
@@ -217,14 +217,14 @@ def preprocess_collection(user, course, collection):
                 if not chapter:
                     log.debug("Chapter not found: %s", usage_key)
                     continue
-                if chapter.location in list(cache.keys()):  # lint-amnesty, pylint: disable=consider-iterating-dictionary
-                    usage_context = cache[chapter.location]
+                if chapter.usage_key in list(cache.keys()):  # lint-amnesty, pylint: disable=consider-iterating-dictionary
+                    usage_context = cache[chapter.usage_key]
                     usage_context.update({
                         "unit": get_block_context(course, unit),
                         "section": get_block_context(course, section),
                     })
                     model.update(usage_context)
-                    cache[usage_id] = cache[unit.location] = cache[section.location] = usage_context
+                    cache[usage_id] = cache[unit.usage_key] = cache[section.usage_key] = usage_context
                     filtered_collection.append(model)
                     continue
 
@@ -235,9 +235,9 @@ def preprocess_collection(user, course, collection):
             }
             model.update(usage_context)
             if include_path_info:
-                cache[section.location] = cache[chapter.location] = usage_context
+                cache[section.usage_key] = cache[chapter.usage_key] = usage_context
 
-            cache[usage_id] = cache[unit.location] = usage_context
+            cache[usage_id] = cache[unit.usage_key] = usage_context
             filtered_collection.append(model)
 
     return filtered_collection
@@ -248,7 +248,7 @@ def get_block_context(course, block):
     Returns dispay_name and url for the parent block.
     """
     block_dict = {
-        'location': str(block.location),
+        'location': str(block.usage_key),
         'display_name': Text(block.display_name_with_default),
     }
     if block.category == 'chapter' and block.get_parent():
@@ -258,7 +258,7 @@ def get_block_context(course, block):
         block_dict['index'] = get_index(block_dict['location'], course.children)
     elif block.category == 'vertical':
         # Use the MFE-aware URL generator instead of always using the legacy URL format
-        block_dict['url'] = get_courseware_url(block.location)
+        block_dict['url'] = get_courseware_url(block.usage_key)
     if block.category in ('chapter', 'sequential'):
         block_dict['children'] = [str(child) for child in block.children]
 

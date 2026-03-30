@@ -52,7 +52,7 @@ class _TestMultipleProblemTypesSubsectionScoresBase(SharedModuleStoreTestCase):
         self.client.login(username=self.student.username, password=self.TEST_PASSWORD)
         self.addCleanup(set_current_request, None)
         self.request = get_mock_request(self.student)
-        self.course_structure = get_course_blocks(self.student, self.course.location)
+        self.course_structure = get_course_blocks(self.student, self.course.usage_key)
 
     @classmethod
     def load_scoreable_course(cls):
@@ -192,7 +192,7 @@ class _TestVariedMetadataBase(ProblemSubmissionTestMixin, ModuleStoreTestCase):
         """
 
         self.submit_question_answer('problem', {'2_1': 'Correct'})
-        course_structure = get_course_blocks(self.request.user, self.course.location)
+        course_structure = get_course_blocks(self.request.user, self.course.usage_key)
         subsection_factory = SubsectionGradeFactory(
             self.request.user,
             course_structure=course_structure,
@@ -291,9 +291,9 @@ class _TestWeightedProblemsBase(SharedModuleStoreTestCase):
             for problem in self.problems:
                 problem.weight = weight
                 self.store.update_item(problem, self.user.id)
-            self.store.publish(self.course.location, self.user.id)
+            self.store.publish(self.course.usage_key, self.user.id)
 
-        course_structure = get_course_blocks(self.request.user, self.course.location)
+        course_structure = get_course_blocks(self.request.user, self.course.usage_key)
 
         # answer all problems
         for problem in self.problems:
@@ -306,7 +306,7 @@ class _TestWeightedProblemsBase(SharedModuleStoreTestCase):
 
         # verify all problem grades
         for problem in self.problems:
-            problem_score = subsection_grade.problem_scores[problem.location]
+            problem_score = subsection_grade.problem_scores[problem.usage_key]
             assert isinstance(expected_score.first_attempted, type(problem_score.first_attempted))
             expected_score.first_attempted = problem_score.first_attempted
             assert problem_score == expected_score

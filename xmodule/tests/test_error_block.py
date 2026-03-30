@@ -20,7 +20,7 @@ class SetupTestErrorBlock(unittest.TestCase):
         super().setUp()
         self.system = get_test_system()
         self.course_id = CourseLocator('org', 'course', 'run')
-        self.location = self.course_id.make_usage_key('foo', 'bar')
+        self.usage_key = self.course_id.make_usage_key('foo', 'bar')
         self.valid_xml = "<problem>ABC \N{SNOWMAN}</problem>"
         self.error_msg = "Error"
 

@@ -53,7 +53,7 @@ class TestInstructorTasks(InstructorTaskModuleTestCase):
         super().setUp()
         self.initialize_course()
         self.instructor = self.create_instructor('instructor')
-        self.location = self.problem_location(PROBLEM_URL_NAME)
+        self.usage_key = self.problem_location(PROBLEM_URL_NAME)
 
     def _create_input_entry(
             self, student_ident=None, use_problem_url=True, course_id=None, only_if_higher=False, score=None
@@ -62,7 +62,7 @@ class TestInstructorTasks(InstructorTaskModuleTestCase):
         task_id = str(uuid4())
         task_input = {'only_if_higher': only_if_higher}
         if use_problem_url:
-            task_input['problem_url'] = self.location
+            task_input['problem_url'] = self.usage_key
         if student_ident is not None:
             task_input['student'] = student_ident
         if score is not None:
@@ -155,7 +155,7 @@ class TestInstructorTasks(InstructorTaskModuleTestCase):
         for student in enrolled_students:
             StudentModuleFactory.create(
                 course_id=self.course.id,
-                module_state_key=self.location,
+                module_state_key=self.usage_key,
                 student=student,
                 grade=grade,
                 max_grade=max_grade,
@@ -181,7 +181,7 @@ class TestInstructorTasks(InstructorTaskModuleTestCase):
         for student in students:
             module = StudentModule.objects.get(course_id=self.course.id,
                                                student=student,
-                                               module_state_key=self.location)
+                                               module_state_key=self.usage_key)
             state = json.loads(module.state)
             assert state['attempts'] == num_attempts
 
@@ -435,7 +435,7 @@ class TestRescoreInstructorTask(TestInstructorTasks):
         output = json.loads(entry.task_output)
         assert output['exception'] == 'ExceptionWithTraceback'
         assert 'Specified module {} of type {} does not support rescoring.'.format(
-            self.location,
+            self.usage_key,
             mock_instance.__class__,
         ) in output['message']
 
@@ -548,7 +548,7 @@ class TestResetAttemptsInstructorTask(TestInstructorTasks):
         for student in students:
             module = StudentModule.objects.get(course_id=self.course.id,
                                                student=student,
-                                               module_state_key=self.location)
+                                               module_state_key=self.usage_key)
             state = json.loads(module.state)
             assert state['attempts'] == initial_attempts
 
@@ -574,7 +574,7 @@ class TestResetAttemptsInstructorTask(TestInstructorTasks):
         for index, student in enumerate(students):
             module = StudentModule.objects.get(course_id=self.course.id,
                                                student=student,
-                                               module_state_key=self.location)
+                                               module_state_key=self.usage_key)
             state = json.loads(module.state)
             if index == 3:
                 assert state['attempts'] == 0
@@ -621,14 +621,14 @@ class TestDeleteStateInstructorTask(TestInstructorTasks):
         for student in students:
             StudentModule.objects.get(course_id=self.course.id,
                                       student=student,
-                                      module_state_key=self.location)
+                                      module_state_key=self.usage_key)
         self._test_run_with_task(delete_problem_state, 'deleted', num_students)
         # confirm that no state can be found anymore:
         for student in students:
             with pytest.raises(StudentModule.DoesNotExist):
                 StudentModule.objects.get(course_id=self.course.id,
                                           student=student,
-                                          module_state_key=self.location)
+                                          module_state_key=self.usage_key)
 
 
 class TestCertificateGenerationnstructorTask(TestInstructorTasks):

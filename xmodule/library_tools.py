@@ -54,15 +54,15 @@ class LegacyLibraryToolsService:
             return None
         if not library:
             return None
-        # We need to know the library's version so ensure it's set in library.location.library_key.version_guid
-        assert library.location.library_key.version_guid is not None
-        return str(library.location.library_key.version_guid)
+        # We need to know the library's version so ensure it's set in library.usage_key.library_key.version_guid
+        assert library.usage_key.library_key.version_guid is not None
+        return str(library.usage_key.library_key.version_guid)
 
     def can_use_library_content(self, block):
         """
         Determines whether a modulestore holding a course_id supports libraries.
         """
-        return self.store.check_supports(block.location.course_key, 'copy_from_template')
+        return self.store.check_supports(block.usage_key.course_key, 'copy_from_template')
 
     def trigger_library_sync(self, dest_block: LegacyLibraryContentBlock, library_version: str | None) -> None:
         """
@@ -159,6 +159,6 @@ class LegacyLibraryToolsService:
         """
         user = User.objects.get(id=self.user_id)
         return [
-            (lib.location.library_key.replace(version_guid=None, branch=None), lib.display_name)
+            (lib.usage_key.library_key.replace(version_guid=None, branch=None), lib.display_name)
             for lib in self.store.get_library_summaries()
         ]

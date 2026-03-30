@@ -48,7 +48,7 @@ class BlockStructureFactory:
             # mismatch when removing inaccessible blocks in
             # CourseNavigationBlocksView.filter_inaccessible_blocks
             # while fetching course navigation.
-            location = xblock.location.for_branch(None)
+            location = xblock.usage_key.for_branch(None)
             if location in blocks_visited:
                 return
 
@@ -58,7 +58,7 @@ class BlockStructureFactory:
 
             # Add relations with its children and recurse.
             for child in xblock.get_children():
-                child_location = child.location.for_branch(None)
+                child_location = child.usage_key.for_branch(None)
                 block_structure._add_relation(location, child_location)  # pylint: disable=protected-access
                 build_block_structure(child)
 

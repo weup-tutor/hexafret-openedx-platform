@@ -14,11 +14,11 @@ class Content:
     Mock cached content
     """
     def __init__(self, location, content):
-        self.location = location
+        self.usage_key = location
         self.content = content
 
     def get_id(self):
-        return self.location.to_deprecated_son()
+        return self.usage_key.to_deprecated_son()
 
 
 class CachingTestCase(TestCase):

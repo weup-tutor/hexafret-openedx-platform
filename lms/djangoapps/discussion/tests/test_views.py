@@ -420,7 +420,7 @@ class DividedDiscussionsTestCase(CohortViewsTestCase):  # lint-amnesty, pylint: 
 
         # inline discussion
         BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id=topic_name_to_id(self.course, "Topic A"),
             discussion_category="Chapter",
@@ -428,7 +428,7 @@ class DividedDiscussionsTestCase(CohortViewsTestCase):  # lint-amnesty, pylint: 
             start=datetime.now()
         )
         # get updated course
-        self.course = self.store.get_item(self.course.location)
+        self.course = self.store.get_item(self.course.usage_key)
         # course-wide discussion
         discussion_topics = {
             "Topic B": {"id": "Topic B"},
@@ -591,7 +591,7 @@ class CourseDiscussionsHandlerTestCase(DividedDiscussionsTestCase):
         now = datetime.now()
         # inline discussion
         BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id="Topic_A",
             discussion_category="Chapter",

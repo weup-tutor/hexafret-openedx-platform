@@ -668,7 +668,7 @@ class InstructorTaskListViewTest(SharedModuleStoreTestCase):
             category='problem',
             display_name='Test Problem'
         )
-        cls.problem_location = str(cls.problem.location)
+        cls.problem_location = str(cls.problem.usage_key)
 
     def setUp(self):
         super().setUp()
@@ -1020,8 +1020,8 @@ class GradedSubsectionsViewTest(SharedModuleStoreTestCase):
         # Mock a unit with due date
         mock_unit = Mock()
         mock_unit.display_name = 'Mocked Assignment'
-        mock_unit.location = Mock()
-        mock_unit.location.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@mock')
+        mock_unit.usage_key = Mock()
+        mock_unit.usage_key.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@mock')
         mock_get_units.return_value = [mock_unit]
 
         self.client.force_authenticate(user=self.instructor)
@@ -1042,8 +1042,8 @@ class GradedSubsectionsViewTest(SharedModuleStoreTestCase):
         """
         # Mock a unit without display_name
         mock_unit = Mock()
-        mock_unit.location = Mock()
-        mock_unit.location.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@fallback')
+        mock_unit.usage_key = Mock()
+        mock_unit.usage_key.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@fallback')
         mock_get_units.return_value = [mock_unit]
         mock_title_or_url.return_value = 'block-v1:Test+Course+2024+type@sequential+block@fallback'
 
@@ -1090,14 +1090,14 @@ class ORABaseViewsTest(SharedModuleStoreTestCase, APITestCase):
         super().setUpClass()
 
         cls.course = CourseFactory.create()
-        cls.course_key = cls.course.location.course_key
+        cls.course_key = cls.course.usage_key.course_key
 
         cls.ora_block = BlockFactory.create(
             category="openassessment",
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             display_name="test",
         )
-        cls.ora_usage_key = str(cls.ora_block.location)
+        cls.ora_usage_key = str(cls.ora_block.usage_key)
 
         cls.password = "password"
         cls.staff = StaffFactory(course_key=cls.course_key, password=cls.password)
@@ -1157,7 +1157,7 @@ class ORAViewTest(ORABaseViewsTest):
         mock_store = Mock()
 
         mock_assessment_block = Mock(
-            location=self.ora_block.location,
+            location=self.ora_block.usage_key,
             parent=Mock(),
             teams_enabled=False,
             assessment_steps=["staff-assessment"],
@@ -1189,7 +1189,7 @@ class ORAViewTest(ORABaseViewsTest):
         mock_store = Mock()
 
         mock_assessment_block = Mock(
-            location=self.ora_block.location,
+            location=self.ora_block.usage_key,
             parent=Mock(),
             teams_enabled=True,
             display_name="Team Assignment",
@@ -1254,7 +1254,7 @@ class ORAViewTest(ORABaseViewsTest):
         for i in range(15):
             BlockFactory.create(
                 category="openassessment",
-                parent_location=self.course.location,
+                parent_location=self.course.usage_key,
                 display_name=f"test_{i}",
             )
 
@@ -1274,7 +1274,7 @@ class ORAViewTest(ORABaseViewsTest):
         """Test response when there are no ORA assessments."""
         # Create a new course with no ORA blocks
         empty_course = CourseFactory.create()
-        empty_course_key = empty_course.location.course_key
+        empty_course_key = empty_course.usage_key.course_key
         empty_staff = StaffFactory(course_key=empty_course_key, password="password")
 
         # Log in as staff for the empty course
@@ -1338,7 +1338,7 @@ class ORASummaryViewTest(ORABaseViewsTest):
 
         BlockFactory.create(
             category="openassessment",
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             display_name="test2",
         )
 
@@ -1517,9 +1517,9 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         date3 = datetime(2024, 12, 31, 23, 59, 59, tzinfo=UTC)
 
         items = [
-            (self.subsection.location, {'due': date1}),  # Homework 1
-            (self.vertical.location, {'due': date2}),  # Test Vertical (Should be ignored)
-            (self.problem.location, {'due': date3}),  # Test Problem (Should be ignored)
+            (self.subsection.usage_key, {'due': date1}),  # Homework 1
+            (self.vertical.usage_key, {'due': date2}),  # Test Vertical (Should be ignored)
+            (self.problem.usage_key, {'due': date3}),  # Test Problem (Should be ignored)
         ]
         set_dates_for_course(self.course_key, items)
 
@@ -1529,10 +1529,10 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         override3 = datetime(2025, 12, 31, 23, 59, 59, tzinfo=UTC)
         # Single override per user
         # Only return the top-level override per user, in this case the subsection level
-        set_date_for_block(self.course_key, self.subsection.location, 'due', override1, user=self.student1)
-        set_date_for_block(self.course_key, self.subsection.location, 'due', override2, user=self.student2)
+        set_date_for_block(self.course_key, self.subsection.usage_key, 'due', override1, user=self.student1)
+        set_date_for_block(self.course_key, self.subsection.usage_key, 'due', override2, user=self.student2)
         # Multiple overrides per user
-        set_date_for_block(self.course_key, self.subsection.location, 'due', override3, user=self.student2)
+        set_date_for_block(self.course_key, self.subsection.usage_key, 'due', override3, user=self.student2)
 
         self.client.force_authenticate(user=self.staff)
         response = self.client.get(self._get_url())
@@ -1577,8 +1577,8 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         # Mock units with due dates
         mock_unit = Mock()
         mock_unit.display_name = 'Homework 1'
-        mock_unit.location = Mock()
-        mock_unit.location.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
+        mock_unit.usage_key = Mock()
+        mock_unit.usage_key.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
         mock_get_units.return_value = [mock_unit]
 
         # Mock location for dictionary lookup
@@ -1620,8 +1620,8 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         # Mock unit
         mock_unit = Mock()
         mock_unit.display_name = 'Homework 1'
-        mock_unit.location = Mock()
-        mock_unit.location.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
+        mock_unit.usage_key = Mock()
+        mock_unit.usage_key.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
 
         mock_find_unit.return_value = mock_unit
         mock_get_units.return_value = [mock_unit]
@@ -1629,7 +1629,7 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         # Mock block-specific overrides data (username, full_name, email, location, due_date)
         extended_date = datetime(2025, 1, 15, 23, 59, 59, tzinfo=UTC)
         mock_get_overrides_block.return_value = [
-            ('student1', 'John Doe', extended_date, 'john@example.com', mock_unit.location),
+            ('student1', 'John Doe', extended_date, 'john@example.com', mock_unit.usage_key),
         ]
 
         self.client.force_authenticate(user=self.instructor)
@@ -1678,16 +1678,16 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         # Mock unit
         mock_unit = Mock()
         mock_unit.display_name = 'Homework 1'
-        mock_unit.location = Mock()
-        mock_unit.location.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
+        mock_unit.usage_key = Mock()
+        mock_unit.usage_key.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
 
         mock_find_unit.return_value = mock_unit
 
         # Mock block-specific overrides data
         extended_date = datetime(2025, 1, 15, 23, 59, 59, tzinfo=UTC)
         mock_get_overrides_block.return_value = [
-            ('student1', 'John Doe', extended_date, 'john@example.com', mock_unit.location),
-            ('student2', 'Jane Smith', extended_date, 'jane@example.com', mock_unit.location),
+            ('student1', 'John Doe', extended_date, 'john@example.com', mock_unit.usage_key),
+            ('student2', 'Jane Smith', extended_date, 'jane@example.com', mock_unit.usage_key),
         ]
 
         self.client.force_authenticate(user=self.instructor)
@@ -1723,8 +1723,8 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         # Mock units with due dates
         mock_unit = Mock()
         mock_unit.display_name = 'Homework 1'
-        mock_unit.location = Mock()
-        mock_unit.location.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
+        mock_unit.usage_key = Mock()
+        mock_unit.usage_key.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
         mock_get_units.return_value = [mock_unit]
 
         # Mock location for dictionary lookup
@@ -1792,8 +1792,8 @@ class UnitExtensionsViewTest(SharedModuleStoreTestCase):
         # Mock units with due dates
         mock_unit = Mock()
         mock_unit.display_name = 'Homework 1'
-        mock_unit.location = Mock()
-        mock_unit.location.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
+        mock_unit.usage_key = Mock()
+        mock_unit.usage_key.__str__ = Mock(return_value='block-v1:Test+Course+2024+type@sequential+block@hw1')
         mock_get_units.return_value = [mock_unit]
         mock_title_or_url.return_value = 'Homework 1'
 

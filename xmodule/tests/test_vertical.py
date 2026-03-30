@@ -195,7 +195,7 @@ class VerticalBlockTestCase(BaseVerticalBlockTest):
         Assert content has/hasn't all the bookmark info.
         """
         assertion('bookmark_id', content)
-        assertion(f'{self.username},{str(self.vertical.location)}', content)
+        assertion(f'{self.username},{str(self.vertical.usage_key)}', content)
         assertion('bookmarked', content)
         assertion('show_bookmark_button', content)
 

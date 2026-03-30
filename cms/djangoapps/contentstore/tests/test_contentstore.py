@@ -313,7 +313,7 @@ class ImportRequiredTestCases(ContentStoreTestCase):
 
         for item in items:
             filesystem = OSFS(root_dir / ('test_export/' + dirname))
-            self.assertTrue(filesystem.exists(item.location.block_id + filename_suffix))
+            self.assertTrue(filesystem.exists(item.usage_key.block_id + filename_suffix))
 
     def test_export_course_with_metadata_only_video(self):
         content_store = contentstore()
@@ -330,7 +330,7 @@ class ImportRequiredTestCases(ContentStoreTestCase):
 
         parent = verticals[0]
 
-        BlockFactory.create(parent_location=parent.location, category="video", display_name="untitled")
+        BlockFactory.create(parent_location=parent.usage_key, category="video", display_name="untitled")
 
         root_dir = path(mkdtemp_clean())
 
@@ -356,7 +356,7 @@ class ImportRequiredTestCases(ContentStoreTestCase):
 
         parent = verticals[0]
 
-        BlockFactory.create(parent_location=parent.location, category="word_cloud", display_name="untitled")
+        BlockFactory.create(parent_location=parent.usage_key, category="word_cloud", display_name="untitled")
 
         root_dir = path(mkdtemp_clean())
 
@@ -383,15 +383,15 @@ class ImportRequiredTestCases(ContentStoreTestCase):
             create_if_not_present=True
         )
         all_items = split_store.get_items(course_after_rename[0].id, qualifiers={'category': 'chapter'})
-        renamed_chapter = [item for item in all_items if item.location.block_id == 'renamed_chapter'][0]
+        renamed_chapter = [item for item in all_items if item.usage_key.block_id == 'renamed_chapter'][0]
         self.assertIsNotNone(renamed_chapter.published_on)
         self.assertIsNotNone(renamed_chapter.parent)
-        self.assertIn(renamed_chapter.location, course_after_rename[0].children)
+        self.assertIn(renamed_chapter.usage_key, course_after_rename[0].children)
         original_chapter = [item for item in all_items
-                            if item.location.block_id == 'b9870b9af59841a49e6e02765d0e3bbf'][0]
+                            if item.usage_key.block_id == 'b9870b9af59841a49e6e02765d0e3bbf'][0]
         self.assertIsNone(original_chapter.published_on)
         self.assertIsNone(original_chapter.parent)
-        self.assertNotIn(original_chapter.location, course_after_rename[0].children)
+        self.assertNotIn(original_chapter.usage_key, course_after_rename[0].children)
 
     def test_empty_data_roundtrip(self):
         """
@@ -411,7 +411,7 @@ class ImportRequiredTestCases(ContentStoreTestCase):
 
         # Create a block, and ensure that its `data` field is empty
         word_cloud = BlockFactory.create(
-            parent_location=parent.location, category="word_cloud", display_name="untitled")
+            parent_location=parent.usage_key, category="word_cloud", display_name="untitled")
         del word_cloud.data
         self.assertEqual(word_cloud.data, '')
 
@@ -498,13 +498,13 @@ class ImportRequiredTestCases(ContentStoreTestCase):
 
         # create OpenAssessmentBlock:
         open_assessment = BlockFactory.create(
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
             category="openassessment",
             display_name="untitled",
         )
         # convert it to draft
         draft_open_assessment = self.store.convert_to_draft(
-            open_assessment.location, self.user.id
+            open_assessment.usage_key, self.user.id
         )
 
         # note that it has no `xml_attributes` attribute
@@ -531,12 +531,12 @@ class MiscCourseTests(ContentStoreTestCase):
         super().setUp()
         # save locs not items b/c the items won't have the subsequently created children in them until refetched
         self.chapter_loc = self.store.create_child(
-            self.user.id, self.course.location, 'chapter', 'test_chapter'
-        ).location
+            self.user.id, self.course.usage_key, 'chapter', 'test_chapter'
+        ).usage_key
         self.seq_loc = self.store.create_child(
             self.user.id, self.chapter_loc, 'sequential', 'test_seq'
-        ).location
-        self.vert_loc = self.store.create_child(self.user.id, self.seq_loc, 'vertical', 'test_vert').location
+        ).usage_key
+        self.vert_loc = self.store.create_child(self.user.id, self.seq_loc, 'vertical', 'test_vert').usage_key
         # now create some things quasi like the toy course had
         self.problem = self.store.create_child(
             self.user.id, self.vert_loc, 'problem', 'test_problem', fields={
@@ -570,7 +570,7 @@ class MiscCourseTests(ContentStoreTestCase):
                 "answers": [{"id": "yes", "text": "Yes"}, {"id": "no", "text": "No"}],
             }
         )
-        self.course = self.store.publish(self.course.location, self.user.id)
+        self.course = self.store.publish(self.course.usage_key, self.user.id)
 
     def check_components_on_page(self, component_types, expected_types):
         """
@@ -655,7 +655,7 @@ class MiscCourseTests(ContentStoreTestCase):
         information but the draft child xblock has parent information.
         """
         # Make an existing unit a draft
-        self.problem = self.store.unpublish(self.problem.location, self.user.id)
+        self.problem = self.store.unpublish(self.problem.usage_key, self.user.id)
         root_dir = path(mkdtemp_clean())
         export_course_to_xml(self.store, None, self.course.id, root_dir, 'test_export')
 
@@ -726,20 +726,20 @@ class MiscCourseTests(ContentStoreTestCase):
         Unfortunately, None = published for the revision field, so get_items() would return
         both draft and non-draft copies.
         """
-        self.problem = self.store.unpublish(self.problem.location, self.user.id)
+        self.problem = self.store.unpublish(self.problem.usage_key, self.user.id)
 
         # Query get_items() and find the html item. This should just return back a single item (not 2).
         direct_store_items = self.store.get_items(
             self.course.id, revision=ModuleStoreEnum.RevisionOption.published_only
         )
-        items_from_direct_store = [item for item in direct_store_items if item.location == self.problem.location]
+        items_from_direct_store = [item for item in direct_store_items if item.usage_key == self.problem.usage_key]
         self.assertEqual(len(items_from_direct_store), 0)
 
         # Fetch from the draft store.
         draft_store_items = self.store.get_items(
             self.course.id, revision=ModuleStoreEnum.RevisionOption.draft_only
         )
-        items_from_draft_store = [item for item in draft_store_items if item.location == self.problem.location]
+        items_from_draft_store = [item for item in draft_store_items if item.usage_key == self.problem.usage_key]
         self.assertEqual(len(items_from_draft_store), 1)
 
     def test_draft_metadata(self):
@@ -752,31 +752,31 @@ class MiscCourseTests(ContentStoreTestCase):
         course = self.store.update_item(self.course, self.user.id)
         course.graceperiod = timedelta(days=1, hours=5, minutes=59, seconds=59)
         course = self.store.update_item(course, self.user.id)
-        problem = self.store.get_item(self.problem.location)
+        problem = self.store.get_item(self.problem.usage_key)
 
         self.assertEqual(problem.graceperiod, course.graceperiod)
         self.assertNotIn('graceperiod', own_metadata(problem))
 
-        self.store.convert_to_draft(problem.location, self.user.id)
+        self.store.convert_to_draft(problem.usage_key, self.user.id)
 
         # refetch to check metadata
-        problem = self.store.get_item(problem.location)
+        problem = self.store.get_item(problem.usage_key)
 
         self.assertEqual(problem.graceperiod, course.graceperiod)
         self.assertNotIn('graceperiod', own_metadata(problem))
 
         # publish block
-        self.store.publish(problem.location, self.user.id)
+        self.store.publish(problem.usage_key, self.user.id)
 
         # refetch to check metadata
-        problem = self.store.get_item(problem.location)
+        problem = self.store.get_item(problem.usage_key)
 
         self.assertEqual(problem.graceperiod, course.graceperiod)
         self.assertNotIn('graceperiod', own_metadata(problem))
 
         # put back in draft and change metadata and see if it's now marked as 'own_metadata'
-        self.store.convert_to_draft(problem.location, self.user.id)
-        problem = self.store.get_item(problem.location)
+        self.store.convert_to_draft(problem.usage_key, self.user.id)
+        problem = self.store.get_item(problem.usage_key)
 
         new_graceperiod = timedelta(hours=1)
 
@@ -791,17 +791,17 @@ class MiscCourseTests(ContentStoreTestCase):
         self.store.update_item(problem, self.user.id)
 
         # read back to make sure it reads as 'own-metadata'
-        problem = self.store.get_item(problem.location)
+        problem = self.store.get_item(problem.usage_key)
 
         self.assertIn('graceperiod', own_metadata(problem))
         self.assertEqual(problem.graceperiod, new_graceperiod)
 
         # republish
-        self.store.publish(problem.location, self.user.id)
+        self.store.publish(problem.usage_key, self.user.id)
 
         # and re-read and verify 'own-metadata'
-        self.store.convert_to_draft(problem.location, self.user.id)
-        problem = self.store.get_item(problem.location)
+        self.store.convert_to_draft(problem.usage_key, self.user.id)
+        problem = self.store.get_item(problem.usage_key)
 
         self.assertIn('graceperiod', own_metadata(problem))
         self.assertEqual(problem.graceperiod, new_graceperiod)
@@ -812,10 +812,10 @@ class MiscCourseTests(ContentStoreTestCase):
         self.assertEqual(num_drafts, 0)
 
         # put into draft
-        self.problem = self.store.unpublish(self.problem.location, self.user.id)
+        self.problem = self.store.unpublish(self.problem.usage_key, self.user.id)
 
         # make sure we can query that item and verify that it is a draft
-        draft_problem = self.store.get_item(self.problem.location)
+        draft_problem = self.store.get_item(self.problem.usage_key)
         self.assertEqual(self.store.has_published_version(draft_problem), False)
 
         # now requery with depth
@@ -1006,7 +1006,7 @@ class MiscCourseTests(ContentStoreTestCase):
         )
 
         # get block info (json)
-        resp = self.client.get(get_url('xblock_handler', handouts.location))
+        resp = self.client.get(get_url('xblock_handler', handouts.usage_key))
 
         # make sure we got a successful response
         self.assertEqual(resp.status_code, 200)
@@ -1397,7 +1397,7 @@ class ContentStoreTest(ContentStoreTestCase):
     def test_item_factory(self):
         """Test that the item factory works correctly."""
         course = CourseFactory.create()
-        item = BlockFactory.create(parent_location=course.location)
+        item = BlockFactory.create(parent_location=course.usage_key)
         self.assertIsInstance(item, SequenceBlock)
 
     def test_create_block(self):
@@ -1405,7 +1405,7 @@ class ContentStoreTest(ContentStoreTestCase):
         course = CourseFactory.create()
 
         section_data = {
-            'parent_locator': str(course.location),
+            'parent_locator': str(course.usage_key),
             'category': 'chapter',
             'display_name': 'Section One',
         }
@@ -1423,15 +1423,15 @@ class ContentStoreTest(ContentStoreTestCase):
     def test_hide_xblock_from_toc_via_handler(self, hide_from_toc):
         """Test that the hide_from_toc field can be set via the xblock_handler."""
         course = CourseFactory.create()
-        sequential = BlockFactory.create(parent_location=course.location)
+        sequential = BlockFactory.create(parent_location=course.usage_key)
         data = {
             "metadata": {
                 "hide_from_toc": hide_from_toc
             }
         }
 
-        response = self.client.ajax_post(get_url("xblock_handler", sequential.location), data)
-        sequential = self.store.get_item(sequential.location)
+        response = self.client.ajax_post(get_url("xblock_handler", sequential.usage_key), data)
+        sequential = self.store.get_item(sequential.usage_key)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(hide_from_toc, sequential.hide_from_toc)
@@ -1441,7 +1441,7 @@ class ContentStoreTest(ContentStoreTestCase):
         course = CourseFactory.create()
 
         problem_data = {
-            'parent_locator': str(course.location),
+            'parent_locator': str(course.usage_key),
             'category': 'problem'
         }
 
@@ -1632,10 +1632,10 @@ class ContentStoreTest(ContentStoreTestCase):
         discussion_item = self.store.create_item(self.user.id, course.id, 'discussion', 'new_component')
 
         # now fetch it from the modulestore to instantiate its descriptor
-        fetched = self.store.get_item(discussion_item.location)
+        fetched = self.store.get_item(discussion_item.usage_key)
 
         # refetch it to be safe
-        refetched = self.store.get_item(discussion_item.location)
+        refetched = self.store.get_item(discussion_item.usage_key)
 
         # and make sure the same discussion items have the same discussion ids
         self.assertEqual(fetched.discussion_id, discussion_item.discussion_id)
@@ -1662,11 +1662,11 @@ class ContentStoreTest(ContentStoreTestCase):
         # crate a new block and add it as a child to a vertical
         parent = verticals[0]
         new_block = self.store.create_child(
-            self.user.id, parent.location, 'html', 'new_component'
+            self.user.id, parent.usage_key, 'html', 'new_component'
         )
 
         # flush the cache
-        new_block = self.store.get_item(new_block.location)
+        new_block = self.store.get_item(new_block.usage_key)
 
         # check for grace period definition which should be defined at the course level
         self.assertEqual(parent.graceperiod, new_block.graceperiod)
@@ -1682,13 +1682,13 @@ class ContentStoreTest(ContentStoreTestCase):
         self.store.update_item(new_block, self.user.id)
 
         # flush the cache and refetch
-        new_block = self.store.get_item(new_block.location)
+        new_block = self.store.get_item(new_block.usage_key)
 
         self.assertEqual(timedelta(1), new_block.graceperiod)
 
     def test_default_metadata_inheritance(self):
         course = CourseFactory.create()
-        vertical = BlockFactory.create(parent_location=course.location)
+        vertical = BlockFactory.create(parent_location=course.usage_key)
         course.children.append(vertical)
         # in memory
         self.assertIsNotNone(course.start)
@@ -1698,8 +1698,8 @@ class ContentStoreTest(ContentStoreTestCase):
         self.assertIn('GRADE_CUTOFFS', course.grading_policy)
 
         # by fetching
-        fetched_course = self.store.get_item(course.location)
-        fetched_item = self.store.get_item(vertical.location)
+        fetched_course = self.store.get_item(course.usage_key)
+        fetched_item = self.store.get_item(vertical.usage_key)
         self.assertIsNotNone(fetched_course.start)
         self.assertEqual(course.start, fetched_course.start)
         self.assertEqual(fetched_course.start, fetched_item.start)
@@ -1772,7 +1772,7 @@ class MetadataSaveTestCase(ContentStoreTestCase):
         video_data = VideoBlock.parse_video_xml(video_sample_xml)
         video_data.pop('source')
         self.video_block = BlockFactory.create(
-            parent_location=course.location, category='video',
+            parent_location=course.usage_key, category='video',
             **video_data
         )
 
@@ -1794,7 +1794,7 @@ class MetadataSaveTestCase(ContentStoreTestCase):
             'track'
         }
 
-        location = self.video_block.location
+        location = self.video_block.usage_key
 
         for field_name in attrs_to_strip:
             delattr(self.video_block, field_name)
@@ -2113,7 +2113,7 @@ class ContentLicenseTest(ContentStoreTestCase):
         content_store = contentstore()
         root_dir = path(mkdtemp_clean())
         video_block = BlockFactory.create(
-            parent_location=self.course.location, category='video',
+            parent_location=self.course.usage_key, category='video',
             license="all-rights-reserved"
         )
         export_course_to_xml(self.store, content_store, self.course.id, root_dir, 'test_license')

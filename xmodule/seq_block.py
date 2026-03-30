@@ -571,12 +571,12 @@ class SequenceBlock(
 
         params = {
             'items': blocks,
-            'element_id': self.location.html_id(),
-            'item_id': str(self.location),
+            'element_id': self.usage_key.html_id(),
+            'item_id': str(self.usage_key),
             'is_time_limited': self.is_time_limited,
             'is_proctored': self.is_proctored_enabled,
             'position': self.position,
-            'tag': self.location.block_type,
+            'tag': self.usage_key.block_type,
             'next_url': context.get('next_url'),
             'prev_url': context.get('prev_url'),
             'banner_text': banner_text,
@@ -647,7 +647,7 @@ class SequenceBlock(
         if gating_service:
             user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs.get(ATTR_KEY_USER_ID)
             fulfilled = gating_service.is_gate_fulfilled(
-                self.scope_ids.usage_id.context_key, self.location, user_id
+                self.scope_ids.usage_id.context_key, self.usage_key, user_id
             )
             return fulfilled
 
@@ -663,7 +663,7 @@ class SequenceBlock(
         gating_service = self.runtime.service(self, 'gating')
         if gating_service:
             milestone = gating_service.required_prereq(
-                self.scope_ids.usage_id.context_key, self.location, 'requires'
+                self.scope_ids.usage_id.context_key, self.usage_key, 'requires'
             )
             return milestone
 
@@ -728,7 +728,7 @@ class SequenceBlock(
         gating_service = self.runtime.service(self, 'gating')
         if gating_service:
             user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs.get(ATTR_KEY_USER_ID)
-            return gating_service.compute_is_prereq_met(self.location, user_id, recalc_on_unmet)
+            return gating_service.compute_is_prereq_met(self.usage_key, user_id, recalc_on_unmet)
 
         return True, {}
 
@@ -819,7 +819,7 @@ class SequenceBlock(
                 # context['item_url'] = '/my/item/path/{usage_key}/whatever'
                 block_info['href'] = context.get('item_url', '').format(usage_key=usage_id)
             if is_user_authenticated:
-                if block.location.block_type == 'vertical' and completion_service:
+                if block.usage_key.block_type == 'vertical' and completion_service:
                     block_info['complete'] = completion_service.vertical_is_complete(block)
 
             contents.append(block_info)
@@ -837,7 +837,7 @@ class SequenceBlock(
 
         while stack:
             curr = stack.pop()
-            locations.append(curr.location)
+            locations.append(curr.usage_key)
             if curr.has_children:
                 stack.extend(curr.get_children())
 
@@ -847,7 +847,7 @@ class SequenceBlock(
         """
         Capture basic information about this sequence in telemetry.
         """
-        set_custom_attribute('seq.block_id', str(self.location))
+        set_custom_attribute('seq.block_id', str(self.usage_key))
         set_custom_attribute('seq.display_name', self.display_name or '')
         set_custom_attribute('seq.position', self.position)
         set_custom_attribute('seq.is_time_limited', self.is_time_limited)
@@ -882,7 +882,7 @@ class SequenceBlock(
         if 1 <= self.position <= len(children):
             # Basic info about the Unit...
             current = children[self.position - 1]
-            set_custom_attribute('seq.current.block_id', str(current.location))
+            set_custom_attribute('seq.current.block_id', str(current.usage_key))
             set_custom_attribute('seq.current.display_name', current.display_name or '')
 
             # Examining all blocks inside the Unit (or split_test, conditional, etc.)
@@ -918,7 +918,7 @@ class SequenceBlock(
             user_is_staff = current_user.opt_attrs.get(ATTR_KEY_USER_IS_STAFF)
             user_role_in_course = 'staff' if user_is_staff else 'student'
             course_id = self.scope_ids.usage_id.context_key
-            content_id = self.location
+            content_id = self.usage_key
             course = self._get_course()
 
             # LTI exam tools are not managed by the edx-proctoring library

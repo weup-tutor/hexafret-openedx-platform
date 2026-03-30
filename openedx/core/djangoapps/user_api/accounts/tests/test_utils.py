@@ -102,7 +102,7 @@ class CompletionUtilsTestCase(SharedModuleStoreTestCase, CompletionWaffleTestMix
         for block in self.sequential.get_children():
             models.BlockCompletion.objects.submit_completion(
                 user=self.engaged_user,
-                block_key=block.location,
+                block_key=block.usage_key,
                 completion=1.0
             )
 
@@ -121,10 +121,10 @@ class CompletionUtilsTestCase(SharedModuleStoreTestCase, CompletionWaffleTestMix
         assert block_url ==\
                'test_url:9999/courses/course-v1:{org}+{course}+{run}/jump_to/'\
                'block-v1:{org}+{course}+{run}+type@vertical+block@{vertical_id}'.format(
-                   org=self.course.location.course_key.org,
-                   course=self.course.location.course_key.course,
-                   run=self.course.location.course_key.run,
-                   vertical_id=self.vertical2.location.block_id
+                   org=self.course.usage_key.course_key.org,
+                   course=self.course.usage_key.course_key.course,
+                   run=self.course.usage_key.course_key.run,
+                   vertical_id=self.vertical2.usage_key.block_id
                )
 
         assert empty_block_url is None

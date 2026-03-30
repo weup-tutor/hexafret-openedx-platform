@@ -55,7 +55,7 @@ class Command(BaseCommand):
 
         if options['all']:
             if query_yes_no(self.CONFIRMATION_PROMPT, default="no"):
-                library_keys = [library.location.library_key.replace(branch=None) for library in store.get_libraries()]
+                library_keys = [library.usage_key.library_key.replace(branch=None) for library in store.get_libraries()]
             else:
                 return
         else:

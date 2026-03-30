@@ -338,7 +338,7 @@ def get_course_cohorts(course=None, course_id=None, assignment_type=None, orderi
     # Migrate cohort settings for this course
     if course:
         migrate_cohort_settings(course)
-        course_id = course.location.course_key
+        course_id = course.usage_key.course_key
 
     query_set = CourseUserGroup.objects.filter(
         course_id=course_id,

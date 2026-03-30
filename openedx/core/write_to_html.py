@@ -39,7 +39,7 @@ class HtmlOutlineWriter:
             border-radius: 3px;
         }
 
-        .location {
+        .usage_key {
         background-color: #edcca9
         }
 

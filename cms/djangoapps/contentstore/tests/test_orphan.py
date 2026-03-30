@@ -27,41 +27,41 @@ class TestOrphanBase(CourseTestCase):
         course = CourseFactory.create(default_store=default_store)
 
         # create chapters and add them to course tree
-        chapter1 = self.store.create_child(self.user.id, course.location, 'chapter', "Chapter1")
-        self.store.publish(chapter1.location, self.user.id)
+        chapter1 = self.store.create_child(self.user.id, course.usage_key, 'chapter', "Chapter1")
+        self.store.publish(chapter1.usage_key, self.user.id)
 
-        chapter2 = self.store.create_child(self.user.id, course.location, 'chapter', "Chapter2")
-        self.store.publish(chapter2.location, self.user.id)
+        chapter2 = self.store.create_child(self.user.id, course.usage_key, 'chapter', "Chapter2")
+        self.store.publish(chapter2.usage_key, self.user.id)
 
         # orphan chapter
         orphan_chapter = self.store.create_item(self.user.id, course.id, 'chapter', "OrphanChapter")
-        self.store.publish(orphan_chapter.location, self.user.id)
+        self.store.publish(orphan_chapter.usage_key, self.user.id)
 
         # create vertical and add it as child to chapter1
-        vertical1 = self.store.create_child(self.user.id, chapter1.location, 'vertical', "Vertical1")
-        self.store.publish(vertical1.location, self.user.id)
+        vertical1 = self.store.create_child(self.user.id, chapter1.usage_key, 'vertical', "Vertical1")
+        self.store.publish(vertical1.usage_key, self.user.id)
 
         # create orphan vertical
         orphan_vertical = self.store.create_item(self.user.id, course.id, 'vertical', "OrphanVert")
-        self.store.publish(orphan_vertical.location, self.user.id)
+        self.store.publish(orphan_vertical.usage_key, self.user.id)
 
         # create component and add it to vertical1
-        html1 = self.store.create_child(self.user.id, vertical1.location, 'html', "Html1")
-        self.store.publish(html1.location, self.user.id)
+        html1 = self.store.create_child(self.user.id, vertical1.usage_key, 'html', "Html1")
+        self.store.publish(html1.usage_key, self.user.id)
 
         # create component and add it as a child to vertical1 and orphan_vertical
-        multi_parent_html = self.store.create_child(self.user.id, vertical1.location, 'html', "multi_parent_html")
-        self.store.publish(multi_parent_html.location, self.user.id)
+        multi_parent_html = self.store.create_child(self.user.id, vertical1.usage_key, 'html', "multi_parent_html")
+        self.store.publish(multi_parent_html.usage_key, self.user.id)
 
-        orphan_vertical.children.append(multi_parent_html.location)
+        orphan_vertical.children.append(multi_parent_html.usage_key)
         self.store.update_item(orphan_vertical, self.user.id)
 
         # create an orphaned html block
         orphan_html = self.store.create_item(self.user.id, course.id, 'html', "OrphanHtml")
-        self.store.publish(orphan_html.location, self.user.id)
+        self.store.publish(orphan_html.usage_key, self.user.id)
 
-        self.store.create_child(self.user.id, course.location, 'static_tab', "staticuno")
-        self.store.create_child(self.user.id, course.location, 'course_info', "updates")
+        self.store.create_child(self.user.id, course.usage_key, 'static_tab', "staticuno")
+        self.store.create_child(self.user.id, course.usage_key, 'course_info', "updates")
 
         return course
 
@@ -92,11 +92,11 @@ class TestOrphan(TestOrphanBase):
             ).content.decode('utf-8')
         )
         self.assertEqual(len(orphans), 3, f"Wrong # {orphans}")
-        location = course.location.replace(category='chapter', name='OrphanChapter')
+        location = course.usage_key.replace(category='chapter', name='OrphanChapter')
         self.assertIn(str(location), orphans)
-        location = course.location.replace(category='vertical', name='OrphanVert')
+        location = course.usage_key.replace(category='vertical', name='OrphanVert')
         self.assertIn(str(location), orphans)
-        location = course.location.replace(category='html', name='OrphanHtml')
+        location = course.usage_key.replace(category='html', name='OrphanHtml')
         self.assertIn(str(location), orphans)
 
     def test_delete_orphans(self):
@@ -155,24 +155,24 @@ class TestOrphan(TestOrphanBase):
         multi_parent_html = self.store.get_item(BlockUsageLocator(course.id, 'html', 'multi_parent_html'))
 
         # Verify `OrphanVert` is an orphan
-        self.assertIn(orphan_vertical.location, self.store.get_orphans(course.id))
+        self.assertIn(orphan_vertical.usage_key, self.store.get_orphans(course.id))
 
         # Verify `multi_parent_html` is child of both `Vertical1` and `OrphanVert`
-        self.assertIn(multi_parent_html.location, orphan_vertical.children)
-        self.assertIn(multi_parent_html.location, vertical1.children)
+        self.assertIn(multi_parent_html.usage_key, orphan_vertical.children)
+        self.assertIn(multi_parent_html.usage_key, vertical1.children)
 
         # HTML component has `vertical1` as its parent.
-        html_parent = self.store.get_parent_location(multi_parent_html.location)
-        self.assertNotEqual(str(html_parent), str(orphan_vertical.location))
-        self.assertEqual(str(html_parent), str(vertical1.location))
+        html_parent = self.store.get_parent_location(multi_parent_html.usage_key)
+        self.assertNotEqual(str(html_parent), str(orphan_vertical.usage_key))
+        self.assertEqual(str(html_parent), str(vertical1.usage_key))
 
         # Get path of the `multi_parent_html` & verify path_to_location returns a expected path
-        path = path_to_location(self.store, multi_parent_html.location)
+        path = path_to_location(self.store, multi_parent_html.usage_key)
         expected_path = (
             course.id,
-            chapter1.location.block_id,
-            vertical1.location.block_id,
-            multi_parent_html.location.block_id,
+            chapter1.usage_key.block_id,
+            vertical1.usage_key.block_id,
+            multi_parent_html.usage_key.block_id,
             "",
             path[-1]
         )
@@ -201,38 +201,38 @@ class TestOrphan(TestOrphanBase):
         vertical1 = self.store.get_item(BlockUsageLocator(course.id, 'vertical', 'Vertical1'))
 
         # Verify `OrhanChapter` is an orphan
-        self.assertIn(orphan_chapter.location, self.store.get_orphans(course.id))
+        self.assertIn(orphan_chapter.usage_key, self.store.get_orphans(course.id))
 
         # Create a vertical (`Vertical0`) in orphan chapter (`OrphanChapter`).
         # OrphanChapter -> Vertical0
-        vertical0 = self.store.create_child(self.user.id, orphan_chapter.location, 'vertical', "Vertical0")
-        self.store.publish(vertical0.location, self.user.id)
+        vertical0 = self.store.create_child(self.user.id, orphan_chapter.usage_key, 'vertical', "Vertical0")
+        self.store.publish(vertical0.usage_key, self.user.id)
 
         # Create a component in `Vertical0`
         # OrphanChapter -> Vertical0 -> Html
-        html = self.store.create_child(self.user.id, vertical0.location, 'html', "HTML0")
-        self.store.publish(html.location, self.user.id)
+        html = self.store.create_child(self.user.id, vertical0.usage_key, 'html', "HTML0")
+        self.store.publish(html.usage_key, self.user.id)
 
         # Verify chapter1 is parent of vertical1.
-        vertical1_parent = self.store.get_parent_location(vertical1.location)
-        self.assertEqual(str(vertical1_parent), str(chapter1.location))
+        vertical1_parent = self.store.get_parent_location(vertical1.usage_key)
+        self.assertEqual(str(vertical1_parent), str(chapter1.usage_key))
 
         # Make `Vertical1` the parent of `HTML0`. So `HTML0` will have to parents (`Vertical0` & `Vertical1`)
-        vertical1.children.append(html.location)
+        vertical1.children.append(html.usage_key)
         self.store.update_item(vertical1, self.user.id)
 
         # Get parent location & verify its either of the two verticals. As both parents are non-orphan,
         # alphabetically least is returned
-        html_parent = self.store.get_parent_location(html.location)
-        self.assertEqual(str(html_parent), str(vertical1.location))
+        html_parent = self.store.get_parent_location(html.usage_key)
+        self.assertEqual(str(html_parent), str(vertical1.usage_key))
 
         # verify path_to_location returns a expected path
-        path = path_to_location(self.store, html.location)
+        path = path_to_location(self.store, html.usage_key)
         expected_path = (
             course.id,
-            chapter1.location.block_id,
-            vertical1.location.block_id,
-            html.location.block_id,
+            chapter1.usage_key.block_id,
+            vertical1.usage_key.block_id,
+            html.usage_key.block_id,
             "",
             path[-1]
         )

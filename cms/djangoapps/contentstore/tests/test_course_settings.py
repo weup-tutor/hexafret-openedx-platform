@@ -952,8 +952,8 @@ class CourseGradingTest(CourseTestCase):
     def test_update_section_grader_type(self, send_signal, tracker, uuid):
         uuid.return_value = 'mockUUID'
         # Get the block and the section_grader_type and assert they are the default values
-        block = modulestore().get_item(self.course.location)
-        section_grader_type = CourseGradingModel.get_section_grader_type(self.course.location)
+        block = modulestore().get_item(self.course.usage_key)
+        section_grader_type = CourseGradingModel.get_section_grader_type(self.course.usage_key)
 
         self.assertEqual('notgraded', section_grader_type['graderType'])
         self.assertEqual(None, block.format)
@@ -961,8 +961,8 @@ class CourseGradingTest(CourseTestCase):
 
         # Change the default grader type to Homework, which should also mark the section as graded
         CourseGradingModel.update_section_grader_type(self.course, 'Homework', self.user)
-        block = modulestore().get_item(self.course.location)
-        section_grader_type = CourseGradingModel.get_section_grader_type(self.course.location)
+        block = modulestore().get_item(self.course.usage_key)
+        section_grader_type = CourseGradingModel.get_section_grader_type(self.course.usage_key)
         grading_policy_1 = self._grading_policy_hash_for_course()
 
         self.assertEqual('Homework', section_grader_type['graderType'])
@@ -971,8 +971,8 @@ class CourseGradingTest(CourseTestCase):
 
         # Change the grader type back to notgraded, which should also unmark the section as graded
         CourseGradingModel.update_section_grader_type(self.course, 'notgraded', self.user)
-        block = modulestore().get_item(self.course.location)
-        section_grader_type = CourseGradingModel.get_section_grader_type(self.course.location)
+        block = modulestore().get_item(self.course.usage_key)
+        section_grader_type = CourseGradingModel.get_section_grader_type(self.course.usage_key)
         grading_policy_2 = self._grading_policy_hash_for_course()
 
         self.assertEqual('notgraded', section_grader_type['graderType'])
@@ -1077,7 +1077,7 @@ class CourseGradingTest(CourseTestCase):
         # see if test makes sense
         self.assertGreater(len(sections), 0, "No sections found")
         section = sections[0]  # just take the first one
-        return reverse_usage_url('xblock_handler', section.location)
+        return reverse_usage_url('xblock_handler', section.usage_key)
 
     def test_set_get_section_grader_ajax(self):
         """

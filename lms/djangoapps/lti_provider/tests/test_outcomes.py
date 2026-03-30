@@ -338,7 +338,7 @@ class TestAssignmentsForProblem(ModuleStoreTestCase):
         assignment = GradedAssignment(
             user=self.user,
             course_key=self.course.id,
-            usage_key=desc.location,
+            usage_key=desc.usage_key,
             outcome_service=outcome_service,
             lis_result_sourcedid=result_id,
             version_number=0

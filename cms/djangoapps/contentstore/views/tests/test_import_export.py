@@ -445,31 +445,31 @@ class ImportTestCase(CourseTestCase):
         """
         # Create some blocks to overwrite
         library = LibraryFactory.create(modulestore=self.store)
-        lib_key = library.location.library_key
+        lib_key = library.usage_key.library_key
         test_block = BlockFactory.create(
             category="vertical",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user.id,
             publish_item=False,
         )
         test_block2 = BlockFactory.create(
             category="vertical",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user.id,
             publish_item=False
         )
         # Create a library and blocks that should remain unmolested.
         unchanged_lib = LibraryFactory.create()
-        unchanged_key = unchanged_lib.location.library_key
+        unchanged_key = unchanged_lib.usage_key.library_key
         test_block3 = BlockFactory.create(
             category="vertical",
-            parent_location=unchanged_lib.location,
+            parent_location=unchanged_lib.usage_key,
             user_id=self.user.id,
             publish_item=False
         )
         test_block4 = BlockFactory.create(
             category="vertical",
-            parent_location=unchanged_lib.location,
+            parent_location=unchanged_lib.usage_key,
             user_id=self.user.id,
             publish_item=False
         )
@@ -505,7 +505,7 @@ class ImportTestCase(CourseTestCase):
         finally:
             shutil.rmtree(extract_dir)
 
-        self.assertEqual(lib_key, library_items[0].location.library_key)
+        self.assertEqual(lib_key, library_items[0].usage_key.library_key)
         library = self.store.get_library(lib_key)
         children = [self.store.get_item(child).url_name for child in library.children]
         self.assertEqual(len(children), 3)
@@ -529,7 +529,7 @@ class ImportTestCase(CourseTestCase):
         """
         with self.store.branch_setting(branch_setting):
             library = LibraryFactory.create(modulestore=self.store)
-            lib_key = library.location.library_key
+            lib_key = library.usage_key.library_key
             extract_dir = path(tempfile.mkdtemp(dir=settings.DATA_DIR))
             # the extract_dir needs to be passed as a relative dir to
             # import_library_from_xml
@@ -804,10 +804,10 @@ class ExportTestCase(CourseTestCase):
         Export unknown XBlock type (i.e. we uninstalled the XBlock), top level.
         """
         fake_xblock = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='not_a_real_block_type'
         )
-        self.store.publish(fake_xblock.location, self.user.id)
+        self.store.publish(fake_xblock.usage_key, self.user.id)
 
         # Now check the resulting export
         tar_ball = self.test_export_async()
@@ -839,15 +839,15 @@ class ExportTestCase(CourseTestCase):
         Export unknown XBlock type deeper in the course.
         """
         vertical = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='vertical',
             display_name='sample_vertical',
         )
         fake_xblock = BlockFactory.create(
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
             category='not_a_real_block_type',
         )
-        self.store.publish(fake_xblock.location, self.user.id)
+        self.store.publish(fake_xblock.usage_key, self.user.id)
 
         # Now check the resulting export
         tar_ball = self.test_export_async()
@@ -905,13 +905,13 @@ class ExportTestCase(CourseTestCase):
         library = LibraryFactory.create(modulestore=self.store)
         video_block = BlockFactory.create(
             category="video",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user.id,
             publish_item=False,
             youtube_id_1_0=youtube_id
         )
         name = library.url_name
-        lib_key = library.location.library_key
+        lib_key = library.usage_key.library_key
         root_dir = path(tempfile.mkdtemp())
         try:
             export_library_to_xml(self.store, contentstore(), lib_key, root_dir, name)
@@ -935,10 +935,10 @@ class ExportTestCase(CourseTestCase):
         """
         xml_string = '<impl>slides</impl>'
         vertical = BlockFactory.create(
-            parent_location=self.course.location, category='vertical', display_name='foo'
+            parent_location=self.course.usage_key, category='vertical', display_name='foo'
         )
         BlockFactory.create(
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
             category='customtag',
             display_name='custom_tag_foo',
             data=xml_string
@@ -1076,9 +1076,9 @@ class TestLibraryImportExport(CourseTestCase):
 
     def test_content_library_export_import(self):
         library1 = LibraryFactory.create(modulestore=self.store)
-        source_library1_key = library1.location.library_key
+        source_library1_key = library1.usage_key.library_key
         library2 = LibraryFactory.create(modulestore=self.store)
-        source_library2_key = library2.location.library_key
+        source_library2_key = library2.usage_key.library_key
 
         import_library_from_xml(
             self.store,
@@ -1134,7 +1134,7 @@ class TestCourseExportImport(LibraryTestCase):
         # Create a problem in library
         BlockFactory.create(
             category="problem",
-            parent_location=self.library.location,
+            parent_location=self.library.usage_key,
             user_id=self.user.id,
             publish_item=False,
             display_name='Test Problem',
@@ -1150,18 +1150,18 @@ class TestCourseExportImport(LibraryTestCase):
         Sets up course with library content.
         """
         chapter = BlockFactory.create(
-            parent_location=self.source_course.location,
+            parent_location=self.source_course.usage_key,
             category='chapter',
             display_name='Test Section'
         )
         sequential = BlockFactory.create(
-            parent_location=chapter.location,
+            parent_location=chapter.usage_key,
             category='sequential',
             display_name='Test Sequential'
         )
         vertical = BlockFactory.create(
             category='vertical',
-            parent_location=sequential.location,
+            parent_location=sequential.usage_key,
             display_name='Test Unit'
         )
         lc_block = self._add_library_content_block(
@@ -1225,7 +1225,7 @@ class TestCourseExportImport(LibraryTestCase):
         export_course_to_xml(
             self.store,
             contentstore(),
-            self.source_course.location.course_key,
+            self.source_course.usage_key.course_key,
             self.export_dir,
             'exported_source_course',
         )
@@ -1237,15 +1237,15 @@ class TestCourseExportImport(LibraryTestCase):
             self.export_dir,
             ['exported_source_course'],
             static_content_store=contentstore(),
-            target_id=dest_course.location.course_key,
+            target_id=dest_course.usage_key.course_key,
             load_error_blocks=False,
             raise_on_failure=True,
             create_if_not_present=True,
         )
 
         self.assert_problem_display_names(
-            self.source_course.location,
-            dest_course.location,
+            self.source_course.usage_key,
+            dest_course.usage_key,
             publish_item
         )
 
@@ -1268,18 +1268,18 @@ class TestCourseExportImportProblem(CourseTestCase):
         Sets up course with problem content.
         """
         chapter = BlockFactory.create(
-            parent_location=self.source_course.location,
+            parent_location=self.source_course.usage_key,
             category='chapter',
             display_name='Test Section'
         )
         sequential = BlockFactory.create(
-            parent_location=chapter.location,
+            parent_location=chapter.usage_key,
             category='sequential',
             display_name='Test Sequential'
         )
         vertical = BlockFactory.create(
             category='vertical',
-            parent_location=sequential.location,
+            parent_location=sequential.usage_key,
             display_name='Test Unit'
         )
 
@@ -1356,7 +1356,7 @@ class TestCourseExportImportProblem(CourseTestCase):
         export_course_to_xml(
             self.store,
             contentstore(),
-            self.source_course.location.course_key,
+            self.source_course.usage_key.course_key,
             self.export_dir,
             'exported_source_course',
         )
@@ -1367,13 +1367,13 @@ class TestCourseExportImportProblem(CourseTestCase):
             self.export_dir,
             ['exported_source_course'],
             static_content_store=contentstore(),
-            target_id=dest_course.location.course_key,
+            target_id=dest_course.usage_key.course_key,
             load_error_blocks=False,
             raise_on_failure=True,
             create_if_not_present=True,
         )
 
-        self.assert_problem_definition(dest_course.location, expected_problem_content)
+        self.assert_problem_definition(dest_course.usage_key, expected_problem_content)
 
 
 class ImportAuthzTest(CourseAuthzTestMixin, BaseCourseViewTest):

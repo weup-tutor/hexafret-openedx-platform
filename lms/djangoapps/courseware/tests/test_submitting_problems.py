@@ -202,13 +202,13 @@ class TestSubmittingProblems(ModuleStoreTestCase, LoginEnrollmentTestCase, Probl
         # if we don't already have a chapter create a new one
         if not hasattr(self, 'chapter'):
             self.chapter = BlockFactory.create(
-                parent_location=self.course.location,
+                parent_location=self.course.usage_key,
                 category='chapter'
             )
 
         if late:
             section = BlockFactory.create(
-                parent_location=self.chapter.location,
+                parent_location=self.chapter.usage_key,
                 display_name=name,
                 category='sequential',
                 metadata={
@@ -219,7 +219,7 @@ class TestSubmittingProblems(ModuleStoreTestCase, LoginEnrollmentTestCase, Probl
             )
         elif reset:
             section = BlockFactory.create(
-                parent_location=self.chapter.location,
+                parent_location=self.chapter.usage_key,
                 display_name=name,
                 category='sequential',
                 rerandomize='always',
@@ -231,7 +231,7 @@ class TestSubmittingProblems(ModuleStoreTestCase, LoginEnrollmentTestCase, Probl
 
         elif showanswer:
             section = BlockFactory.create(
-                parent_location=self.chapter.location,
+                parent_location=self.chapter.usage_key,
                 display_name=name,
                 category='sequential',
                 showanswer='never',
@@ -243,7 +243,7 @@ class TestSubmittingProblems(ModuleStoreTestCase, LoginEnrollmentTestCase, Probl
 
         else:
             section = BlockFactory.create(
-                parent_location=self.chapter.location,
+                parent_location=self.chapter.usage_key,
                 display_name=name,
                 category='sequential',
                 metadata={'graded': True, 'format': section_format}
@@ -313,7 +313,7 @@ class TestCourseGrades(TestSubmittingProblems):
     def setUp(self):
         super().setUp()
         self.homework = self.add_graded_section_to_course('homework')
-        self.problem = self.add_dropdown_to_section(self.homework.location, 'p1', 1)
+        self.problem = self.add_dropdown_to_section(self.homework.usage_key, 'p1', 1)
 
     def _submit_correct_answer(self):
         """
@@ -370,9 +370,9 @@ class TestCourseGrader(TestSubmittingProblems):
 
         # set up a simple course with four problems
         self.homework = self.add_graded_section_to_course('homework', late=late, reset=reset, showanswer=showanswer)
-        self.add_dropdown_to_section(self.homework.location, 'p1', 1)
-        self.add_dropdown_to_section(self.homework.location, 'p2', 1)
-        self.add_dropdown_to_section(self.homework.location, 'p3', 1)
+        self.add_dropdown_to_section(self.homework.usage_key, 'p1', 1)
+        self.add_dropdown_to_section(self.homework.usage_key, 'p2', 1)
+        self.add_dropdown_to_section(self.homework.usage_key, 'p3', 1)
         self.refresh_course()
 
     def weighted_setup(self, hw_weight=0.25, final_weight=0.75):
@@ -384,9 +384,9 @@ class TestCourseGrader(TestSubmittingProblems):
 
         # set up a structure of 1 homework and 1 final
         self.homework = self.add_graded_section_to_course('homework')
-        self.problem = self.add_dropdown_to_section(self.homework.location, 'H1P1')
+        self.problem = self.add_dropdown_to_section(self.homework.usage_key, 'H1P1')
         self.final = self.add_graded_section_to_course('Final Section', 'Final')
-        self.final_question = self.add_dropdown_to_section(self.final.location, 'FinalQuestion')
+        self.final_question = self.add_dropdown_to_section(self.final.usage_key, 'FinalQuestion')
 
     def set_weighted_policy(self, hw_weight=0.25, final_weight=0.75):
         """
@@ -445,12 +445,12 @@ class TestCourseGrader(TestSubmittingProblems):
         self.homework2 = self.add_graded_section_to_course('homework2')
         self.homework3 = self.add_graded_section_to_course('homework3')
 
-        self.add_dropdown_to_section(self.homework1.location, self.hw1_names[0], 1)
-        self.add_dropdown_to_section(self.homework1.location, self.hw1_names[1], 1)
-        self.add_dropdown_to_section(self.homework2.location, self.hw2_names[0], 1)
-        self.add_dropdown_to_section(self.homework2.location, self.hw2_names[1], 1)
-        self.add_dropdown_to_section(self.homework3.location, self.hw3_names[0], 1)
-        self.add_dropdown_to_section(self.homework3.location, self.hw3_names[1], 1)
+        self.add_dropdown_to_section(self.homework1.usage_key, self.hw1_names[0], 1)
+        self.add_dropdown_to_section(self.homework1.usage_key, self.hw1_names[1], 1)
+        self.add_dropdown_to_section(self.homework2.usage_key, self.hw2_names[0], 1)
+        self.add_dropdown_to_section(self.homework2.usage_key, self.hw2_names[1], 1)
+        self.add_dropdown_to_section(self.homework3.usage_key, self.hw3_names[0], 1)
+        self.add_dropdown_to_section(self.homework3.usage_key, self.hw3_names[1], 1)
 
     def test_submission_late(self):
         """Test problem for due date in the past"""
@@ -775,7 +775,7 @@ class ProblemWithUploadedFilesTest(TestSubmittingProblems):
             allowed_files=files, required_files=files,
         )
         BlockFactory.create(
-            parent_location=self.section.location,
+            parent_location=self.section.usage_key,
             category='problem',
             display_name=name,
             data=xmldata
@@ -922,7 +922,7 @@ class TestPythonGradedResponse(TestSubmittingProblems):
 
         xmldata = SchematicResponseXMLFactory().build_xml(answer=script)
         BlockFactory.create(
-            parent_location=self.section.location,
+            parent_location=self.section.usage_key,
             category='problem',
             display_name=name,
             data=xmldata
@@ -945,7 +945,7 @@ class TestPythonGradedResponse(TestSubmittingProblems):
         cfn_problem_xml = CustomResponseXMLFactory().build_xml(script=test_csv, cfn='test_csv', expect=expect)
 
         BlockFactory.create(
-            parent_location=self.section.location,
+            parent_location=self.section.usage_key,
             category='problem',
             data=cfn_problem_xml,
             display_name=name
@@ -968,7 +968,7 @@ class TestPythonGradedResponse(TestSubmittingProblems):
         computed_xml = CustomResponseXMLFactory().build_xml(answer=script)
 
         BlockFactory.create(
-            parent_location=self.section.location,
+            parent_location=self.section.usage_key,
             category='problem',
             data=computed_xml,
             display_name=name
@@ -1101,7 +1101,7 @@ class TestConditionalContent(TestSubmittingProblems):
         self.add_grading_policy(grading_policy)
 
         self.homework_all = self.add_graded_section_to_course('homework1')
-        self.p1_all_html_id = self.add_dropdown_to_section(self.homework_all.location, 'H1P1', 2).location.html_id()
+        self.p1_all_html_id = self.add_dropdown_to_section(self.homework_all.usage_key, 'H1P1', 2).usage_key.html_id()
 
         self.homework_conditional = self.add_graded_section_to_course('homework2')
 
@@ -1120,7 +1120,7 @@ class TestConditionalContent(TestSubmittingProblems):
             group_id_to_child[str(index)] = url
 
         split_test = BlockFactory.create(
-            parent_location=self.homework_conditional.location,
+            parent_location=self.homework_conditional.usage_key,
             category="split_test",
             display_name="Split test",
             user_partition_id=0,
@@ -1128,14 +1128,14 @@ class TestConditionalContent(TestSubmittingProblems):
         )
 
         vertical_0 = BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 0 vertical",
             location=vertical_0_url,
         )
 
         vertical_1 = BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 1 vertical",
             location=vertical_1_url,
@@ -1166,11 +1166,11 @@ class TestConditionalContent(TestSubmittingProblems):
         vertical_0, vertical_1 = self.split_setup(user_partition_group)
 
         # Group 0 will have 2 problems in the section, worth a total of 4 points.
-        self.add_dropdown_to_section(vertical_0.location, 'H2P1_GROUP0', 1).location.html_id()
-        self.add_dropdown_to_section(vertical_0.location, 'H2P2_GROUP0', 3).location.html_id()
+        self.add_dropdown_to_section(vertical_0.usage_key, 'H2P1_GROUP0', 1).usage_key.html_id()
+        self.add_dropdown_to_section(vertical_0.usage_key, 'H2P2_GROUP0', 3).usage_key.html_id()
 
         # Group 1 will have 1 problem in the section, worth a total of 1 point.
-        self.add_dropdown_to_section(vertical_1.location, 'H2P1_GROUP1', 1).location.html_id()
+        self.add_dropdown_to_section(vertical_1.usage_key, 'H2P1_GROUP1', 1).usage_key.html_id()
 
         # Submit answers for problem in Section 1, which is visible to all students.
         self.submit_question_answer('H1P1', {'2_1': 'Correct', '2_2': 'Incorrect'})
@@ -1228,7 +1228,7 @@ class TestConditionalContent(TestSubmittingProblems):
         [_, vertical_1] = self.split_setup(user_partition_group)
 
         # Group 1 will have 1 problem in the section, worth a total of 1 point.
-        self.add_dropdown_to_section(vertical_1.location, 'H2P1_GROUP1', 1).location.html_id()
+        self.add_dropdown_to_section(vertical_1.usage_key, 'H2P1_GROUP1', 1).usage_key.html_id()
 
         self.submit_question_answer('H1P1', {'2_1': 'Correct'})
 

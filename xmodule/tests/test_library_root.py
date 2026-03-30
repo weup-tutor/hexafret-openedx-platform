@@ -37,13 +37,13 @@ class TestLibraryRoot(MixedSplitTestCase):
         # Add one HTML block to the library:
         BlockFactory.create(
             category="html",
-            parent_location=library.location,
+            parent_location=library.usage_key,
             user_id=self.user_id,
             publish_item=False,
             modulestore=self.store,
             data=message
         )
-        library = self.store.get_library(library.location.library_key)
+        library = self.store.get_library(library.usage_key.library_key)
 
         context = {'reorderable_items': set(), }
         # Patch the HTML block to always render "Hello world"
@@ -62,7 +62,7 @@ class TestLibraryRoot(MixedSplitTestCase):
         blocks = [
             BlockFactory.create(
                 category="html",
-                parent_location=library.location,
+                parent_location=library.usage_key,
                 user_id=self.user_id,
                 publish_item=False,
                 modulestore=self.store,
@@ -70,7 +70,7 @@ class TestLibraryRoot(MixedSplitTestCase):
             )
             for i in range(5)
         ]
-        library = self.store.get_library(library.location.library_key)
+        library = self.store.get_library(library.usage_key.library_key)
 
         def render_and_check_contents(page, page_size):
             """ Renders block and asserts on returned content """

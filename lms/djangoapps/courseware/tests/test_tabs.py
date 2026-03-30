@@ -244,7 +244,7 @@ class StaticTabDateTestCase(LoginEnrollmentTestCase, SharedModuleStoreTestCase):
         super().setUpClass()
         cls.course = CourseFactory.create()
         cls.page = BlockFactory.create(
-            category="static_tab", parent_location=cls.course.location,
+            category="static_tab", parent_location=cls.course.usage_key,
             data="OOGIE BLOOGIE", display_name="new_tab"
         )
         cls.course.tabs.append(xmodule_tabs.CourseTab.load('static_tab', name='New Tab', url_slug='new_tab'))
@@ -348,11 +348,11 @@ class EntranceExamsTabsTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, Mi
 
         self.course = CourseFactory.create()
         self.extra_tab_2 = BlockFactory.create(
-            category="static_tab", parent_location=self.course.location,
+            category="static_tab", parent_location=self.course.usage_key,
             data="Extra Tab", display_name="Extra Tab 2"
         )
         self.extra_tab_3 = BlockFactory.create(
-            category="static_tab", parent_location=self.course.location,
+            category="static_tab", parent_location=self.course.usage_key,
             data="Extra Tab", display_name="Extra Tab 3"
         )
         self.setup_user()
@@ -367,7 +367,7 @@ class EntranceExamsTabsTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, Mi
         """
         entrance_exam = BlockFactory.create(
             category="chapter",
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             display_name="Entrance Exam",
             is_entrance_exam=True
         )
@@ -378,7 +378,7 @@ class EntranceExamsTabsTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, Mi
         }
         self.user.is_staff = False
         self.course.entrance_exam_enabled = True
-        self.course.entrance_exam_id = str(entrance_exam.location)
+        self.course.entrance_exam_id = str(entrance_exam.usage_key)
         milestone = add_milestone(milestone)
         add_course_milestone(
             str(self.course.id),
@@ -387,7 +387,7 @@ class EntranceExamsTabsTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase, Mi
         )
         add_course_content_milestone(
             str(self.course.id),
-            str(entrance_exam.location),
+            str(entrance_exam.usage_key),
             self.relationship_types['FULFILLS'],
             milestone
         )

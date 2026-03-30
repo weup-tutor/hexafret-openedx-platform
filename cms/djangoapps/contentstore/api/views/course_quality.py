@@ -218,12 +218,12 @@ class CourseQualityView(DeveloperErrorViewMixin, GenericAPIView):
 
                 for unit in visible_units:
                     leaf_blocks = cls._get_leaf_blocks(unit)
-                    unit_dict[unit.location] = dict(
+                    unit_dict[unit.usage_key] = dict(
                         num_leaf_blocks=len(leaf_blocks),
-                        leaf_block_types={block.location.block_type for block in leaf_blocks},
+                        leaf_block_types={block.usage_key.block_type for block in leaf_blocks},
                     )
 
-                subsection_dict[subsection.location] = unit_dict
+                subsection_dict[subsection.usage_key] = unit_dict
         return subsection_dict
 
     @classmethod
@@ -257,7 +257,7 @@ class CourseQualityView(DeveloperErrorViewMixin, GenericAPIView):
     def _get_leaf_blocks(cls, unit):  # lint-amnesty, pylint: disable=missing-function-docstring
         def leaf_filter(block):
             return (
-                block.location.block_type not in ('chapter', 'sequential', 'vertical') and
+                block.usage_key.block_type not in ('chapter', 'sequential', 'vertical') and
                 len(cls._get_children(block)) == 0
             )
 

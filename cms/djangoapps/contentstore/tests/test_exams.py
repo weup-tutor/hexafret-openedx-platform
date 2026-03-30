@@ -120,7 +120,7 @@ class TestExamService(ModuleStoreTestCase):
 
         expected_exams = [{
             'course_id': self.course_key,
-            'content_id': str(sequence.location),
+            'content_id': str(sequence.usage_key),
             'exam_name': sequence.display_name,
             'time_limit_mins': sequence.default_time_limit_minutes,
             'due_date': expected_due_date,
@@ -155,7 +155,7 @@ class TestExamService(ModuleStoreTestCase):
             is_proctored_enabled=True,
             hide_after_due=False,
         )
-        self.store.delete_item(self.chapter.location, self.user.id)
+        self.store.delete_item(self.chapter.usage_key, self.user.id)
 
         listen_for_course_publish(self, self.course.id)
         mock_patch_course_exams.assert_called_once_with([], self.course_key)

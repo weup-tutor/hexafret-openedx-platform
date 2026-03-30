@@ -1236,7 +1236,7 @@ class CourseTopicsViewTest(DiscussionAPIViewTestMixin, CommentsServiceMockMixin,
         # add some discussion xblocks
         for i in range(blocks_count):
             BlockFactory.create(
-                parent_location=course.location,
+                parent_location=course.usage_key,
                 category='discussion',
                 discussion_id=f'id_module_{i}',
                 discussion_category=f'Category {i}',
@@ -1250,7 +1250,7 @@ class CourseTopicsViewTest(DiscussionAPIViewTestMixin, CommentsServiceMockMixin,
         Build a discussion xblock in self.course
         """
         BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="discussion",
             discussion_id=topic_id,
             discussion_category=category,
@@ -1372,19 +1372,19 @@ class CourseTopicsViewTest(DiscussionAPIViewTestMixin, CommentsServiceMockMixin,
         (For mobile compatibility)
         """
         chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name="Week 1",
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         sequential = BlockFactory.create(
-            parent_location=chapter.location,
+            parent_location=chapter.usage_key,
             category='sequential',
             display_name="Lesson 1",
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         BlockFactory.create(
-            parent_location=sequential.location,
+            parent_location=sequential.usage_key,
             category='vertical',
             display_name='vertical',
             start=datetime(2015, 4, 1, tzinfo=UTC),
@@ -1433,20 +1433,20 @@ class CourseTopicsViewV3Test(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             }}
         )
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name="Week 1",
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name="Lesson 1",
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         self.verticals = [
             BlockFactory.create(
-                parent_location=self.sequential.location,
+                parent_location=self.sequential.usage_key,
                 category='vertical',
                 display_name='vertical',
                 start=datetime(2015, 4, 1, tzinfo=UTC),
@@ -2450,7 +2450,7 @@ class CourseDiscussionSettingsAPIViewTest(APITestCase, UrlResetMixin, ModuleStor
 
         now = datetime.now()
         BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='discussion',
             discussion_id='Topic_A',
             discussion_category='Chapter',

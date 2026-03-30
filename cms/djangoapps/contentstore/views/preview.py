@@ -162,7 +162,7 @@ def _prepare_runtime_for_preview(request, block):
     block: An XBlock
     """
 
-    course_id = block.location.course_key
+    course_id = block.usage_key.course_key
     display_name_only = (block.category == 'static_tab')
 
     wrappers = [
@@ -298,7 +298,7 @@ def _is_xblock_reorderable(xblock, context):
     otherwise returns false.
     """
     try:
-        return xblock.location in context['reorderable_items']
+        return xblock.usage_key in context['reorderable_items']
     except KeyError:
         return False
 
@@ -313,12 +313,12 @@ def _studio_wrap_xblock(xblock, view, frag, context, display_name_only=False):
     # Only add the Studio wrapper when on the container page. The "Pages" page will remain as is for now.
     if not context.get('is_pages_view', None) and view in PREVIEW_VIEWS:
         root_xblock = context.get('root_xblock')
-        is_root = root_xblock and xblock.location == root_xblock.location
+        is_root = root_xblock and xblock.usage_key == root_xblock.usage_key
         is_reorderable = _is_xblock_reorderable(xblock, context)
         selected_groups_label = get_visibility_partition_info(xblock)['selected_groups_label']
         if selected_groups_label:
             selected_groups_label = _('Access restricted to: {list_of_groups}').format(list_of_groups=selected_groups_label)  # lint-amnesty, pylint: disable=line-too-long
-        course = modulestore().get_course(xblock.location.course_key)
+        course = modulestore().get_course(xblock.usage_key.course_key)
 
         can_edit = context.get('can_edit', True)
         can_add = context.get('can_add', True)
@@ -344,7 +344,7 @@ def _studio_wrap_xblock(xblock, view, frag, context, display_name_only=False):
         tags_count_map = context.get('tags_count_map')
         tags_count = 0
         if tags_count_map:
-            tags_count = tags_count_map.get(str(xblock.location), 0)
+            tags_count = tags_count_map.get(str(xblock.usage_key), 0)
         template_context = {
             'xblock_context': context,
             'xblock': xblock,

@@ -139,7 +139,7 @@ class GroupConfiguration:
 
         unit_url = reverse_usage_url(
             'container_handler',
-            course.location.course_key.make_usage_key(unit_for_url.location.block_type, unit_for_url.location.block_id)
+            course.usage_key.course_key.make_usage_key(unit_for_url.usage_key.block_type, unit_for_url.usage_key.block_id)
         )
 
         usage_dict = {'label': f"{unit.display_name} / {block.display_name}", 'url': unit_url}
@@ -194,7 +194,7 @@ class GroupConfiguration:
         for split_test in split_tests:
             unit = split_test.get_parent()
             if not unit:
-                log.warning("Unable to find parent for split_test %s", split_test.location)
+                log.warning("Unable to find parent for split_test %s", split_test.usage_key)
                 # Make sure that this user_partition appears in the output even though it has no content
                 usage_info[split_test.user_partition_id] = []
                 continue
@@ -234,7 +234,7 @@ class GroupConfiguration:
         for block, partition_id, group_id in GroupConfiguration._iterate_items_and_group_ids(course, items):
             unit = block.get_parent()
             if not unit:
-                log.warning("Unable to find parent for component %s", block.location)
+                log.warning("Unable to find parent for component %s", block.usage_key)
                 continue
 
             usage_info[partition_id][group_id].append(GroupConfiguration._get_usage_dict(

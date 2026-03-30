@@ -244,7 +244,7 @@ def _update_node_tree_and_dictionary(block, link, link_state, node_tree, diction
 
     # Traverse the path and build the tree structure
     for xblock in path:
-        xblock_id = xblock.location
+        xblock_id = xblock.usage_key
         updated_dictionary.setdefault(
             xblock_id,
             {
@@ -258,7 +258,7 @@ def _update_node_tree_and_dictionary(block, link, link_state, node_tree, diction
     # Add block-level details for the last xblock in the path (URL and broken/locked links)
     updated_dictionary[xblock_id].setdefault(
         'url',
-        f'/course/{block.course_id}/editor/{block.category}/{block.location}'
+        f'/course/{block.course_id}/editor/{block.category}/{block.usage_key}'
     )
 
     # The link_state == True condition is maintained for backward compatibility.
@@ -358,7 +358,7 @@ def sort_course_sections(course_key, data):
     if not course_blocks or 'LinkCheckOutput' not in data or 'sections' not in data['LinkCheckOutput']:
         return data
 
-    sorted_section_ids = [section.location for section in course_blocks[0].get_children()]
+    sorted_section_ids = [section.usage_key for section in course_blocks[0].get_children()]
     sections_map = {section['id']: section for section in data['LinkCheckOutput']['sections']}
     data['LinkCheckOutput']['sections'] = [
         sections_map[section_id]

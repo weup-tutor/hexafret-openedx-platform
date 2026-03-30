@@ -72,7 +72,7 @@ class GraderTest(unittest.TestCase):
         def __init__(self, graded_total, location, display_name):
             self.graded_total = graded_total
             self.display_name = display_name
-            self.location = location
+            self.usage_key = location
 
         @property
         def percent_graded(self):

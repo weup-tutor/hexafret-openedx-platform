@@ -57,7 +57,7 @@ def update_discussions_map(context):
     course_key = CourseKey.from_string(context['course_id'])
     discussion_blocks = get_accessible_discussion_xblocks_by_course_id(course_key, include_all=True)
     discussions_id_map = {
-        discussion_block.discussion_id: str(discussion_block.location)
+        discussion_block.discussion_id: str(discussion_block.usage_key)
         for discussion_block in discussion_blocks
     }
     DiscussionsIdMapping.update_mapping(course_key, discussions_id_map)

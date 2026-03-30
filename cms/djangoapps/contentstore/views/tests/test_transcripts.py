@@ -89,7 +89,7 @@ class BaseTranscripts(CourseTestCase):
 
         # Add video block
         data = {
-            'parent_locator': str(self.course.location),
+            'parent_locator': str(self.course.usage_key),
             'category': 'video',
             'type': 'video'
         }
@@ -145,7 +145,7 @@ class BaseTranscripts(CourseTestCase):
         Setup non video block for tests.
         """
         data = {
-            'parent_locator': str(self.course.location),
+            'parent_locator': str(self.course.usage_key),
             'category': 'problem',
             'type': 'problem'
         }
@@ -1077,7 +1077,7 @@ class TestCheckTranscripts(BaseTranscripts):
     def test_fail_for_non_video_block(self):
         # Not video block: setup
         data = {
-            'parent_locator': str(self.course.location),
+            'parent_locator': str(self.course.usage_key),
             'category': 'problem',
             'type': 'problem'
         }

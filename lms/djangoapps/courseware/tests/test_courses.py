@@ -72,7 +72,7 @@ class CoursesTest(ModuleStoreTestCase):
 
         cms_url = f"//{CMS_BASE_TEST}/course/{str(self.course.id)}"
         assert cms_url == get_cms_course_link(self.course)
-        cms_url = f"//{CMS_BASE_TEST}/course/{str(self.course.location)}"
+        cms_url = f"//{CMS_BASE_TEST}/course/{str(self.course.usage_key)}"
         assert cms_url == get_cms_block_link(self.course, 'course')
 
     @ddt.data(GET_COURSE_WITH_ACCESS, GET_COURSE_OVERVIEW_WITH_ACCESS)
@@ -212,21 +212,21 @@ class MongoCourseImageTestCase(ModuleStoreTestCase):
     def test_get_image_url(self):
         """Test image URL formatting."""
         course = CourseFactory.create()
-        key = course.location
+        key = course.usage_key
         assert course_image_url(course) ==\
                f'/asset-v1:{key.org}+{key.course}+{key.run}+type@asset+block@{course.course_image}'
 
     def test_non_ascii_image_name(self):
         # Verify that non-ascii image names are cleaned
         course = CourseFactory.create(course_image='before_\N{SNOWMAN}_after.jpg')
-        key = course.location
+        key = course.usage_key
         assert course_image_url(course) ==\
                f'/asset-v1:{key.org}+{key.course}+{key.run}+type@asset+block@before___after.jpg'
 
     def test_spaces_in_image_name(self):
         # Verify that image names with spaces in them are cleaned
         course = CourseFactory.create(course_image='before after.jpg')
-        key = course.location
+        key = course.usage_key
         assert course_image_url(course) ==\
                f'/asset-v1:{key.org}+{key.course}+{key.run}+type@asset+block@before_after.jpg'
 
@@ -421,7 +421,7 @@ class TestGetCourseChapters(ModuleStoreTestCase):
         course = CourseFactory()
         BlockFactory(parent=course, category='chapter')
         BlockFactory(parent=course, category='chapter')
-        course_chapter_ids = get_course_chapter_ids(course.location.course_key)
+        course_chapter_ids = get_course_chapter_ids(course.usage_key.course_key)
         assert len(course_chapter_ids) == 2
         assert course_chapter_ids == [str(child) for child in course.children]
 
@@ -443,9 +443,9 @@ class TestGetCourseAssignments(CompletionWaffleTestMixin, ModuleStoreTestCase):
         BlockFactory(parent=sequential, category='video', has_score=False)
 
         self.override_waffle_switch(True)
-        BlockCompletion.objects.submit_completion(self.user, problem.location, 1)
+        BlockCompletion.objects.submit_completion(self.user, problem.usage_key, 1)
 
-        assignments = get_course_assignments(course.location.context_key, self.user, None)
+        assignments = get_course_assignments(course.usage_key.context_key, self.user, None)
         assert len(assignments) == 1
         assert assignments[0].complete
 
@@ -459,7 +459,7 @@ class TestGetCourseAssignments(CompletionWaffleTestMixin, ModuleStoreTestCase):
         chapter = BlockFactory(parent=course, category='chapter', graded=True, due=datetime.datetime.now())
         BlockFactory(parent=chapter, category='sequential')
 
-        assignments = get_course_assignments(course.location.context_key, self.user, None)
+        assignments = get_course_assignments(course.usage_key.context_key, self.user, None)
         assert len(assignments) == 1
         assert not assignments[0].complete
 
@@ -476,9 +476,9 @@ class TestGetCourseAssignments(CompletionWaffleTestMixin, ModuleStoreTestCase):
         BlockFactory(parent=sequential, category='video', has_score=False)
 
         self.override_waffle_switch(True)
-        BlockCompletion.objects.submit_completion(self.user, problem.location, 1)
+        BlockCompletion.objects.submit_completion(self.user, problem.usage_key, 1)
 
-        assignments = get_course_assignments(course.location.context_key, self.user, None)
+        assignments = get_course_assignments(course.usage_key.context_key, self.user, None)
         assert len(assignments) == 1
         assert not assignments[0].complete
 
@@ -588,10 +588,10 @@ class TestGetCourseAssignmentsORA(CompletionWaffleTestMixin, ModuleStoreTestCase
          """
         assert len(assignments) == 4
 
-        assert assignments[0].block_key == self.subsection.location
-        assert assignments[1].block_key == self.openassessment.location
-        assert assignments[2].block_key == self.openassessment.location
-        assert assignments[3].block_key == self.openassessment.location
+        assert assignments[0].block_key == self.subsection.usage_key
+        assert assignments[1].block_key == self.openassessment.usage_key
+        assert assignments[2].block_key == self.openassessment.usage_key
+        assert assignments[3].block_key == self.openassessment.usage_key
 
         assert 'Submission' in assignments[1].title
         assert 'Peer' in assignments[2].title
@@ -608,7 +608,7 @@ class TestGetCourseAssignmentsORA(CompletionWaffleTestMixin, ModuleStoreTestCase
         """
         self._setup_course()
         self.assert_ora_course_assignments(
-            get_course_assignments(self.course.location.context_key, self.user, None),
+            get_course_assignments(self.course.usage_key.context_key, self.user, None),
             self.submission_due,
             self.peer_due,
             self.self_due
@@ -620,7 +620,7 @@ class TestGetCourseAssignmentsORA(CompletionWaffleTestMixin, ModuleStoreTestCase
         """
         self._setup_course(date_config_type='subsection')
         self.assert_ora_course_assignments(
-            get_course_assignments(self.course.location.context_key, self.user, None),
+            get_course_assignments(self.course.usage_key.context_key, self.user, None),
             self.subsection_due,
             self.subsection_due,
             self.subsection_due,
@@ -632,7 +632,7 @@ class TestGetCourseAssignmentsORA(CompletionWaffleTestMixin, ModuleStoreTestCase
         """
         self._setup_course(date_config_type='course_end')
         self.assert_ora_course_assignments(
-            get_course_assignments(self.course.location.context_key, self.user, None),
+            get_course_assignments(self.course.usage_key.context_key, self.user, None),
             self.course_end,
             self.course_end,
             self.course_end,
@@ -647,9 +647,9 @@ class TestGetCourseAssignmentsORA(CompletionWaffleTestMixin, ModuleStoreTestCase
             course_dates=(self._date(-1), None),
             date_config_type='course_end'
         )
-        assignments = get_course_assignments(self.course.location.context_key, self.user, None)
+        assignments = get_course_assignments(self.course.usage_key.context_key, self.user, None)
         assert len(assignments) == 1
-        assert assignments[0].block_key == self.subsection.location
+        assert assignments[0].block_key == self.subsection.usage_key
 
     def test_subsection_none(self):
         """
@@ -669,9 +669,9 @@ class TestGetCourseAssignmentsORA(CompletionWaffleTestMixin, ModuleStoreTestCase
             start=self._date(2),
             due=self._date(3),
         )
-        assignments = get_course_assignments(self.course.location.context_key, self.user, None)
+        assignments = get_course_assignments(self.course.usage_key.context_key, self.user, None)
         assert len(assignments) == 1
-        assert assignments[0].block_key == subsection_2.location
+        assert assignments[0].block_key == subsection_2.usage_key
 
     @ddt.data('manual', 'subsection', 'course_end')
     def test_ora_steps_with_no_due_date(self, config_type):
@@ -693,9 +693,9 @@ class TestGetCourseAssignmentsORA(CompletionWaffleTestMixin, ModuleStoreTestCase
         )
 
         # There are no dates for these other steps
-        assignments = get_course_assignments(self.course.location.context_key, self.user, None)
+        assignments = get_course_assignments(self.course.usage_key.context_key, self.user, None)
         assert len(assignments) == 4
-        assert assignments[0].block_key == self.subsection.location
+        assert assignments[0].block_key == self.subsection.usage_key
         assert 'Submission' in assignments[1].title
         assert 'Peer' in assignments[2].title
         assert 'Self' in assignments[3].title

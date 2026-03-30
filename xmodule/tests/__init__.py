@@ -439,24 +439,24 @@ class CourseComparisonTest(TransactionTestCase):
         def map_key(usage_key):
             return (usage_key.block_type, usage_key.block_id)
         actual_item_map = {
-            map_key(item.location): item
+            map_key(item.usage_key): item
             for item in actual_items
         }
         # Split Mongo and Old-Mongo disagree about what the block_id of courses is, so skip those in
         # this comparison
         self.assertCountEqual(
-            [map_key(item.location) for item in expected_items if item.scope_ids.block_type != 'course'],
+            [map_key(item.usage_key) for item in expected_items if item.scope_ids.block_type != 'course'],
             [key for key in actual_item_map.keys() if key[0] != 'course'],
         )
         for expected_item in expected_items:
-            actual_item_location = actual_course_key.make_usage_key(expected_item.category, expected_item.location.block_id)  # lint-amnesty, pylint: disable=line-too-long
+            actual_item_location = actual_course_key.make_usage_key(expected_item.category, expected_item.usage_key.block_id)  # lint-amnesty, pylint: disable=line-too-long
             # split and old mongo use different names for the course root but we don't know which
             # modulestore actual's come from here; so, assume old mongo and if that fails, assume split
-            if expected_item.location.block_type == 'course':
+            if expected_item.usage_key.block_type == 'course':
                 actual_item_location = actual_item_location.replace(name=actual_item_location.run)
             actual_item = actual_item_map.get(map_key(actual_item_location))
             # must be split
-            if actual_item is None and expected_item.location.block_type == 'course':
+            if actual_item is None and expected_item.usage_key.block_type == 'course':
                 actual_item_location = actual_item_location.replace(name='course')
                 actual_item = actual_item_map.get(map_key(actual_item_location))
             # Formatting the message slows down tests of large courses significantly, so only do it if it would be used
@@ -478,12 +478,12 @@ class CourseComparisonTest(TransactionTestCase):
             assert expected_item.has_children == actual_item.has_children
             if expected_item.has_children:
                 expected_children = [
-                    (expected_item_child.location.block_type, expected_item_child.location.block_id)
+                    (expected_item_child.usage_key.block_type, expected_item_child.usage_key.block_id)
                     # get_children() rather than children to strip privates from public parents
                     for expected_item_child in expected_item.get_children()
                 ]
                 actual_children = [
-                    (item_child.location.block_type, item_child.location.block_id)
+                    (item_child.usage_key.block_type, item_child.usage_key.block_id)
                     # get_children() rather than children to strip privates from public parents
                     for item_child in actual_item.get_children()
                 ]

@@ -65,7 +65,7 @@ class TestRecommender(SharedModuleStoreTestCase, LoginEnrollmentTestCase):
                 display_name='recommender_second'
             )
 
-        cls.course_url = reverse('render_xblock', args=[str(cls.section.location)])
+        cls.course_url = reverse('render_xblock', args=[str(cls.section.usage_key)])
 
         cls.resource_urls = [
             (

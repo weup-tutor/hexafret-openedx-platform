@@ -118,13 +118,13 @@ class CourseStructureTestCase(TransformerRegistryTestMixin, ModuleStoreTestCase)
         store = modulestore()
         parents = block_hierarchy.get('#parents', [])
         if parents:
-            block_key = block_map[block_hierarchy['#ref']].location
+            block_key = block_map[block_hierarchy['#ref']].usage_key
 
             # First remove the block from the course.
             # It would be re-added to the course if the course was
             # explicitly listed in parents.
             with store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, block_map['course'].id):
-                course = store.get_item(block_map['course'].location)
+                course = store.get_item(block_map['course'].usage_key)
             if block_key in course.children:
                 course.children.remove(block_key)
                 block_map['course'] = update_block(course)
@@ -132,7 +132,7 @@ class CourseStructureTestCase(TransformerRegistryTestMixin, ModuleStoreTestCase)
             # Add this to block to each listed parent.
             for parent_ref in parents:
                 with store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, course.id):
-                    parent_block = store.get_item(block_map[parent_ref].location)
+                    parent_block = store.get_item(block_map[parent_ref].usage_key)
                 parent_block.children.append(block_key)
                 block_map[parent_ref] = update_block(parent_block)
 
@@ -202,7 +202,7 @@ class CourseStructureTestCase(TransformerRegistryTestMixin, ModuleStoreTestCase)
         Returns: set[UsageKey]
         """
         xblocks = (blocks[ref] for ref in refs)
-        return {xblock.location for xblock in xblocks}  # lint-amnesty, pylint: disable=consider-using-set-comprehension
+        return {xblock.usage_key for xblock in xblocks}  # lint-amnesty, pylint: disable=consider-using-set-comprehension
 
 
 class BlockParentsMapTestCase(TransformerRegistryTestMixin, ModuleStoreTestCase):
@@ -231,7 +231,7 @@ class BlockParentsMapTestCase(TransformerRegistryTestMixin, ModuleStoreTestCase)
 
         # an ordered list of block locations, where the index
         # corresponds to the block's index in the parents_map.
-        self.xblock_keys = [self.course.location]
+        self.xblock_keys = [self.course.usage_key]
 
         # create all other blocks in the course
         for i, parents_index in enumerate(self.parents_map):
@@ -242,7 +242,7 @@ class BlockParentsMapTestCase(TransformerRegistryTestMixin, ModuleStoreTestCase)
                 BlockFactory.create(
                     parent=self.get_block(parents_index[0]),
                     category="vertical",
-                ).location
+                ).usage_key
             )
 
             # add additional parents
@@ -321,7 +321,7 @@ class BlockParentsMapTestCase(TransformerRegistryTestMixin, ModuleStoreTestCase)
         """
 
         self.client.login(username=user.username, password=self.password)
-        block_structure = get_course_blocks(user, self.course.location, transformers)
+        block_structure = get_course_blocks(user, self.course.usage_key, transformers)
 
         for i, xblock_key in enumerate(self.xblock_keys):
 
@@ -363,7 +363,7 @@ def publish_course(course):
     """
     store = modulestore()
     with store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, course.id):
-        store.publish(course.location, ModuleStoreEnum.UserID.test)
+        store.publish(course.usage_key, ModuleStoreEnum.UserID.test)
 
 
 def create_location(org, course, run, block_type, block_id):

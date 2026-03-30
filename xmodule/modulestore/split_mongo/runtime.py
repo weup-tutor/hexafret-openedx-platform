@@ -337,10 +337,10 @@ class SplitModuleStoreRuntime(ModuleStoreRuntime, EditInfoRuntimeMixin):  # pyli
         """
         # pylint: disable=protected-access
         if not hasattr(xblock, '_subtree_edited_by'):
-            block_data = self.module_data[BlockKey.from_usage_key(xblock.location)]
+            block_data = self.module_data[BlockKey.from_usage_key(xblock.usage_key)]
             if block_data.edit_info._subtree_edited_by is None:
                 self._compute_subtree_edited_internal(
-                    block_data, xblock.location.course_key
+                    block_data, xblock.usage_key.course_key
                 )
             xblock._subtree_edited_by = block_data.edit_info._subtree_edited_by
 
@@ -352,10 +352,10 @@ class SplitModuleStoreRuntime(ModuleStoreRuntime, EditInfoRuntimeMixin):  # pyli
         """
         # pylint: disable=protected-access
         if not hasattr(xblock, '_subtree_edited_on'):
-            block_data = self.module_data[BlockKey.from_usage_key(xblock.location)]
+            block_data = self.module_data[BlockKey.from_usage_key(xblock.usage_key)]
             if block_data.edit_info._subtree_edited_on is None:
                 self._compute_subtree_edited_internal(
-                    block_data, xblock.location.course_key
+                    block_data, xblock.usage_key.course_key
                 )
             xblock._subtree_edited_on = block_data.edit_info._subtree_edited_on
 

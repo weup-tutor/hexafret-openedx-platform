@@ -49,7 +49,7 @@ class OverrideSubsectionGradeTests(ModuleStoreTestCase):
         self.grade = PersistentSubsectionGrade.update_or_create_grade(
             user_id=self.user.id,
             course_id=self.course.id,
-            usage_key=self.subsection.location,
+            usage_key=self.subsection.usage_key,
             first_attempted=None,
             visible_blocks=[],
             earned_all=6.0,
@@ -67,7 +67,7 @@ class OverrideSubsectionGradeTests(ModuleStoreTestCase):
         api.override_subsection_grade(
             self.user.id,
             self.course.id,
-            self.subsection.location,
+            self.subsection.usage_key,
             overrider=self.overriding_user,
             earned_graded=earned_graded,
             comment='Test Override Comment',
@@ -75,7 +75,7 @@ class OverrideSubsectionGradeTests(ModuleStoreTestCase):
         override_obj = api.get_subsection_grade_override(
             self.user.id,
             self.course.id,
-            self.subsection.location
+            self.subsection.usage_key
         )
         assert override_obj is not None
         assert override_obj.earned_graded_override == earned_graded
@@ -89,7 +89,7 @@ class OverrideSubsectionGradeTests(ModuleStoreTestCase):
         api.override_subsection_grade(
             self.user.id,
             self.course.id,
-            self.subsection.location,
+            self.subsection.usage_key,
             overrider=self.overriding_user,
             earned_graded=earned_graded,
             comment='Test Override Comment 2',
@@ -97,7 +97,7 @@ class OverrideSubsectionGradeTests(ModuleStoreTestCase):
         override_obj = api.get_subsection_grade_override(
             self.user.id,
             self.course.id,
-            self.subsection.location
+            self.subsection.usage_key
         )
 
         assert override_obj is not None
@@ -135,7 +135,7 @@ class ClearGradeTests(ModuleStoreTestCase):
         self.grade = PersistentSubsectionGrade.update_or_create_grade(
             user_id=self.user.id,
             course_id=self.course.id,
-            usage_key=self.subsection.location,
+            usage_key=self.subsection.usage_key,
             first_attempted=None,
             visible_blocks=[],
             earned_all=6.0,
@@ -161,7 +161,7 @@ class ClearGradeTests(ModuleStoreTestCase):
         api.override_subsection_grade(
             self.user.id,
             self.course.id,
-            self.subsection.location,
+            self.subsection.usage_key,
             overrider=self.overriding_user,
             earned_graded=0.0,
             comment='Test Override Comment',
@@ -169,7 +169,7 @@ class ClearGradeTests(ModuleStoreTestCase):
         override_obj = api.get_subsection_grade_override(
             self.user.id,
             self.course.id,
-            self.subsection.location
+            self.subsection.usage_key
         )
         course_grade = PersistentCourseGrade.read(self.user.id, self.course.id)
         self.assertIsNotNone(course_grade)
@@ -184,7 +184,7 @@ class ClearGradeTests(ModuleStoreTestCase):
             api.get_subsection_grade_override(
                 self.user.id,
                 self.course.id,
-                self.subsection.location
+                self.subsection.usage_key
             )
 
     def _create_and_get_user_grades(self, user_id):
@@ -192,7 +192,7 @@ class ClearGradeTests(ModuleStoreTestCase):
         api.override_subsection_grade(
             user_id,
             self.course.id,
-            self.subsection.location,
+            self.subsection.usage_key,
             overrider=self.overriding_user,
             earned_graded=0.0,
             comment='Test Override Comment',
@@ -200,7 +200,7 @@ class ClearGradeTests(ModuleStoreTestCase):
         return api.get_subsection_grade_override(
             user_id,
             self.course.id,
-            self.subsection.location
+            self.subsection.usage_key
         )
 
     def test_clear_other_user_course_grades(self):
@@ -226,7 +226,7 @@ class ClearGradeTests(ModuleStoreTestCase):
         after_clear_override_obj = api.get_subsection_grade_override(
             self.user.id,
             self.course.id,
-            self.subsection.location
+            self.subsection.usage_key
         )
         after_clear_user_course_grade = PersistentCourseGrade.read(self.user.id, self.course.id)
         with self.assertRaises(PersistentCourseGrade.DoesNotExist):

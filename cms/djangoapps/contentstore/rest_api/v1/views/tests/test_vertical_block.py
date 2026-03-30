@@ -64,19 +64,19 @@ class BaseXBlockContainer(CourseTestCase, ContentLibrariesRestApiTest):
         self._publish_library_block(self.html_block["id"])
 
         self.chapter = self.create_block(
-            parent=self.course.location,
+            parent=self.course.usage_key,
             category="chapter",
             display_name="Week 1",
         )
 
         self.sequential = self.create_block(
-            parent=self.chapter.location,
+            parent=self.chapter.usage_key,
             category="sequential",
             display_name="Lesson 1",
         )
 
         self.vertical = self.create_block(
-            self.sequential.location,
+            self.sequential.usage_key,
             "vertical",
             "Unit",
             upstream=self.unit["id"],
@@ -84,13 +84,13 @@ class BaseXBlockContainer(CourseTestCase, ContentLibrariesRestApiTest):
         )
 
         self.html_unit_first = self.create_block(
-            parent=self.vertical.location,
+            parent=self.vertical.usage_key,
             category="html",
             display_name="Html Content 1",
         )
 
         self.html_unit_second = self.create_block(
-            parent=self.vertical.location,
+            parent=self.vertical.usage_key,
             category="html",
             display_name="Html Content 2",
             upstream=self.html_block["id"],
@@ -146,7 +146,7 @@ class ContainerHandlerViewTest(BaseXBlockContainer):
         """
         Check that endpoint is valid and success response.
         """
-        url = self.get_reverse_url(self.vertical.location)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -155,8 +155,8 @@ class ContainerHandlerViewTest(BaseXBlockContainer):
         Check if the ancestor_xblocks are returned as expected.
         """
         course_key_str = str(self.course.id)
-        chapter_usage_key = str(self.chapter.location)
-        sequential_usage_key = str(self.sequential.location)
+        chapter_usage_key = str(self.chapter.usage_key)
+        sequential_usage_key = str(self.sequential.usage_key)
 
         # URL encode the usage keys for the URLs
         chapter_encoded = quote(chapter_usage_key, safe='')
@@ -187,7 +187,7 @@ class ContainerHandlerViewTest(BaseXBlockContainer):
             }
         ]
 
-        url = self.get_reverse_url(self.vertical.location)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(url)
         response_ancestor_xblocks = response.json().get("ancestor_xblocks", [])
 
@@ -222,7 +222,7 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         """
         Check that endpoint returns valid response data.
         """
-        url = self.get_reverse_url(self.vertical.location)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -236,7 +236,7 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         """
         Check that endpoint returns valid response data using `get_upstream_info` query param
         """
-        url = self.get_reverse_url(self.vertical.location)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(f"{url}?get_upstream_info=true")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -256,8 +256,8 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         """
         Check that published xBlock container returns.
         """
-        self.publish_item(self.store, self.vertical.location)
-        url = self.get_reverse_url(self.vertical.location)
+        self.publish_item(self.store, self.vertical.usage_key)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(url)
         self.assertTrue(response.data["is_published"])
 
@@ -265,7 +265,7 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         """
         Check that returns valid response with children of vertical container.
         """
-        url = self.get_reverse_url(self.vertical.location)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(url)
 
         expected_user_partition_info = {
@@ -288,8 +288,8 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         expected_response = [
             {
                 "name": self.html_unit_first.display_name_with_default,
-                "block_id": str(self.html_unit_first.location),
-                "block_type": self.html_unit_first.location.block_type,
+                "block_id": str(self.html_unit_first.usage_key),
+                "block_type": self.html_unit_first.usage_key.block_type,
                 "upstream_link": None,
                 "user_partition_info": expected_user_partition_info,
                 "user_partitions": expected_user_partitions,
@@ -306,8 +306,8 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
             },
             {
                 "name": self.html_unit_second.display_name_with_default,
-                "block_id": str(self.html_unit_second.location),
-                "block_type": self.html_unit_second.location.block_type,
+                "block_id": str(self.html_unit_second.usage_key),
+                "block_type": self.html_unit_second.usage_key.block_type,
                 "actions": {
                     "can_copy": True,
                     "can_duplicate": True,
@@ -352,7 +352,7 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         """
         Check that action manage_tags for each child item has the same value as taxonomy flag.
         """
-        url = self.get_reverse_url(self.vertical.location)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(url)
         for children in response.data["children"]:
             self.assertFalse(children["actions"]["can_manage_tags"])
@@ -372,8 +372,8 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         self.store.update_item(self.course, self.user.id)
 
         user_partition = self.course.user_partitions[0]
-        vertical = self.store.get_item(self.vertical.location)
-        html_unit_first = self.store.get_item(self.html_unit_first.location)
+        vertical = self.store.get_item(self.vertical.usage_key)
+        html_unit_first = self.store.get_item(self.html_unit_first.usage_key)
 
         group_first = user_partition.groups[0]
         group_second = user_partition.groups[1]
@@ -383,10 +383,10 @@ class ContainerVerticalViewTest(BaseXBlockContainer):
         self.set_group_access(html_unit_first, {user_partition.id: [group_first.id]})
 
         # update vertical/html
-        vertical = self.store.get_item(self.vertical.location)
-        html_unit_first = self.store.get_item(self.html_unit_first.location)
+        vertical = self.store.get_item(self.vertical.usage_key)
+        html_unit_first = self.store.get_item(self.html_unit_first.usage_key)
 
-        url = self.get_reverse_url(self.vertical.location)
+        url = self.get_reverse_url(self.vertical.usage_key)
         response = self.client.get(url)
         children_response = response.data["children"]
 

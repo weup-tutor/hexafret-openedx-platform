@@ -67,9 +67,9 @@ class AuthoringMixinTestCase(ModuleStoreTestCase):
             parent=vertical,
             display_name='Test Pure'
         )
-        self.vertical_location = vertical.location
-        self.video_location = video.location
-        self.pure_location = pure.location
+        self.vertical_location = vertical.usage_key
+        self.video_location = video.usage_key
+        self.pure_location = pure.usage_key
         self.pet_groups = [Group(1, 'Cat Lovers'), Group(2, 'Dog Lovers')]
 
     def create_content_groups(self, content_groups):

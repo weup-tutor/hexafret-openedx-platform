@@ -44,7 +44,7 @@ class TestReindexLibrary(ModuleStoreTestCase):
 
     def _get_lib_key(self, library):
         """ Get's library key as it is passed to indexer """
-        return library.location.library_key
+        return library.usage_key.library_key
 
     def _build_calls(self, *libraries):
         """ BUilds a list of mock.call instances representing calls to reindexing method """

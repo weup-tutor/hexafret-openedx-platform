@@ -432,8 +432,8 @@ def create_export_tarball(course_block, course_key, context, status=None):
         LOGGER.exception('There was an error exporting %s', course_key, exc_info=True)
         parent = None
         try:
-            failed_item = modulestore().get_item(exc.location)
-            parent_loc = modulestore().get_parent_location(failed_item.location)
+            failed_item = modulestore().get_item(exc.usage_key)
+            parent_loc = modulestore().get_parent_location(failed_item.usage_key)
 
             if parent_loc is not None:
                 parent = modulestore().get_item(parent_loc)
@@ -444,7 +444,7 @@ def create_export_tarball(course_block, course_key, context, status=None):
         context.update({
             'in_err': True,
             'raw_err_msg': str(exc),
-            'edit_unit_url': reverse_usage_url("container_handler", parent.location) if parent else "",
+            'edit_unit_url': reverse_usage_url("container_handler", parent.usage_key) if parent else "",
         })
         if status:
             status.fail(json.dumps({'raw_error_msg': context['raw_err_msg'],
@@ -741,7 +741,7 @@ def import_olx(self, user_id, course_key_string, archive_path, archive_name, lan
             verbose=True,
         )
 
-        new_location = courselike_items[0].location
+        new_location = courselike_items[0].usage_key
         LOGGER.debug('new course at %s', new_location)
 
         LOGGER.info(f'{log_prefix}: Course import successful')
@@ -765,7 +765,7 @@ def import_olx(self, user_id, course_key_string, archive_path, archive_name, lan
                     settings={'is_entrance_exam': True}
                 )[0]
 
-                metadata = {'entrance_exam_id': str(entrance_exam_chapter.location)}
+                metadata = {'entrance_exam_id': str(entrance_exam_chapter.usage_key)}
                 CourseMetadata.update_from_dict(metadata, course, user)
                 from .views.entrance_exam import add_entrance_exam_milestone
                 add_entrance_exam_milestone(course.id, entrance_exam_chapter)
@@ -1020,7 +1020,7 @@ def replace_all_library_source_blocks_ids_for_course(course_key_string, v1_to_v2
             for branch in [ModuleStoreEnum.BranchName.draft, ModuleStoreEnum.BranchName.published]
         ]
 
-        published_dict = {block.location: block for block in published_blocks}
+        published_dict = {block.usage_key: block for block in published_blocks}
 
         for draft_library_source_block in draft_blocks:
             try:
@@ -1038,19 +1038,19 @@ def replace_all_library_source_blocks_ids_for_course(course_key_string, v1_to_v2
             # This way, if authors "discard changes," they won't be reverted back to the V1 lib.
             # However, we also don't want to publish the draft branch.
             try:
-                if published_dict[draft_library_source_block.location] is not None:
+                if published_dict[draft_library_source_block.usage_key] is not None:
                     #temporarily set the published version to be the draft & publish it.
-                    temp = published_dict[draft_library_source_block.location]
+                    temp = published_dict[draft_library_source_block.usage_key]
                     temp.source_library_id = new_source_id
                     store.update_item(temp, None)
-                    store.publish(temp.location, None)
+                    store.publish(temp.usage_key, None)
                     draft_library_source_block.source_library_id = new_source_id
                     store.update_item(draft_library_source_block, None)
             except KeyError:
                 #Warn, but just update the draft block if no published block for draft block.
                 LOGGER.warning(
                     'No matching published block for draft block %s',
-                    str(draft_library_source_block.location)
+                    str(draft_library_source_block.usage_key)
                 )
                 draft_library_source_block.source_library_id = new_source_id
                 store.update_item(draft_library_source_block, None)
@@ -1078,7 +1078,7 @@ def undo_all_library_source_blocks_ids_for_course(course_key_string, v1_to_v2_li
         for branch in [ModuleStoreEnum.BranchName.draft, ModuleStoreEnum.BranchName.published]
     ]
 
-    published_dict = {block.location: block for block in published_blocks}
+    published_dict = {block.usage_key: block for block in published_blocks}
 
     for draft_library_source_block in draft_blocks:
         try:
@@ -1096,19 +1096,19 @@ def undo_all_library_source_blocks_ids_for_course(course_key_string, v1_to_v2_li
         # This way, if authors "discard changes," they won't be reverted back to the V1 lib.
         # However, we also don't want to publish the draft branch.
         try:
-            if published_dict[draft_library_source_block.location] is not None:
+            if published_dict[draft_library_source_block.usage_key] is not None:
                 #temporarily set the published version to be the draft & publish it.
-                temp = published_dict[draft_library_source_block.location]
+                temp = published_dict[draft_library_source_block.usage_key]
                 temp.source_library_id = new_source_id
                 store.update_item(temp, None)
-                store.publish(temp.location, None)
+                store.publish(temp.usage_key, None)
                 draft_library_source_block.source_library_id = new_source_id
                 store.update_item(draft_library_source_block, None)
         except KeyError:
             #Warn, but just update the draft block if no published block for draft block.
             LOGGER.warning(
                 'No matching published block for draft block %s',
-                str(draft_library_source_block.location)
+                str(draft_library_source_block.usage_key)
             )
             draft_library_source_block.source_library_id = new_source_id
             store.update_item(draft_library_source_block, None)
@@ -1258,7 +1258,7 @@ def _scan_course_for_links(course_key):
         # and it doesn't contain user-facing links to scan.
         if block.category == 'drag-and-drop-v2':
             continue
-        block_id = str(block.location)
+        block_id = str(block.usage_key)
         block_info = get_block_info(block)
         block_data = block_info['data']
         url_list = extract_content_URLs_from_course(block_data)
@@ -2105,7 +2105,7 @@ def _update_course_content_link(block_id, old_url, new_url, course_key, user):
         if hasattr(block, "data") and old_url in block.data:
             block.data = block.data.replace(old_url, new_url)
             store.update_item(block, user.id)
-            store.publish(block.location, user.id)
+            store.publish(block.usage_key, user.id)
             LOGGER.info(
                 f"Updated block {block_id} data with new URL: {old_url} -> {new_url}"
             )

@@ -185,7 +185,7 @@ class Bookmark(TimeStampedModel):
                     except ItemNotFoundError:
                         return []  # No valid path can be found.
                     path_data.append(
-                        PathItem(usage_key=block.location, display_name=block.display_name_with_default)
+                        PathItem(usage_key=block.usage_key, display_name=block.display_name_with_default)
                     )
 
         return path_data

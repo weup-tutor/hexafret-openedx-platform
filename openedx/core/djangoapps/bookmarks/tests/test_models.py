@@ -86,44 +86,44 @@ class BookmarksTestsBase(ModuleStoreTestCase):
             )
 
         self.path = [
-            PathItem(self.chapter_1.location, self.chapter_1.display_name),
-            PathItem(self.sequential_2.location, self.sequential_2.display_name),
+            PathItem(self.chapter_1.usage_key, self.chapter_1.display_name),
+            PathItem(self.sequential_2.usage_key, self.sequential_2.display_name),
         ]
 
         self.bookmark_1 = BookmarkFactory.create(
             user=self.user,
             course_key=self.course_id,
-            usage_key=self.sequential_1.location,
+            usage_key=self.sequential_1.usage_key,
             xblock_cache=XBlockCache.create({
                 'display_name': self.sequential_1.display_name,
-                'usage_key': self.sequential_1.location,
+                'usage_key': self.sequential_1.usage_key,
             }),
         )
         self.bookmark_2 = BookmarkFactory.create(
             user=self.user,
             course_key=self.course_id,
-            usage_key=self.sequential_2.location,
+            usage_key=self.sequential_2.usage_key,
             xblock_cache=XBlockCache.create({
                 'display_name': self.sequential_2.display_name,
-                'usage_key': self.sequential_2.location,
+                'usage_key': self.sequential_2.usage_key,
             }),
         )
         self.bookmark_3 = BookmarkFactory.create(
             user=self.user,
             course_key=self.course_id,
-            usage_key=self.vertical_3.location,
+            usage_key=self.vertical_3.usage_key,
             xblock_cache=XBlockCache.create({
                 'display_name': self.vertical_3.display_name,
-                'usage_key': self.vertical_3.location,
+                'usage_key': self.vertical_3.usage_key,
             }),
         )
         self.bookmark_4 = BookmarkFactory.create(
             user=self.user,
             course_key=self.course_id,
-            usage_key=self.chapter_2.location,
+            usage_key=self.chapter_2.usage_key,
             xblock_cache=XBlockCache.create({
                 'display_name': self.chapter_2.display_name,
-                'usage_key': self.chapter_2.location,
+                'usage_key': self.chapter_2.usage_key,
             }),
         )
 
@@ -148,17 +148,17 @@ class BookmarksTestsBase(ModuleStoreTestCase):
             )
 
             # self.other_vertical_1 has two parents
-            self.other_sequential_2.children.append(self.other_vertical_1.location)
+            self.other_sequential_2.children.append(self.other_vertical_1.usage_key)
             with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, self.course.id):
                 self.store.update_item(self.other_sequential_2, self.admin.id)
 
         self.other_bookmark_1 = BookmarkFactory.create(
             user=self.user,
             course_key=str(self.other_course.id),
-            usage_key=self.other_vertical_1.location,
+            usage_key=self.other_vertical_1.usage_key,
             xblock_cache=XBlockCache.create({
                 'display_name': self.other_vertical_1.display_name,
-                'usage_key': self.other_vertical_1.location,
+                'usage_key': self.other_vertical_1.usage_key,
             }),
         )
 
@@ -180,7 +180,7 @@ class BookmarksTestsBase(ModuleStoreTestCase):
                 for block in blocks_at_current_level:
                     for __ in range(children_per_block):
                         blocks_at_next_level += [BlockFactory.create(
-                            parent_location=block.location, display_name=str(display_name)
+                            parent_location=block.usage_key, display_name=str(display_name)
                         )]
                         display_name += 1
 
@@ -202,10 +202,10 @@ class BookmarksTestsBase(ModuleStoreTestCase):
             bookmarks = [BookmarkFactory.create(
                 user=self.user,
                 course_key=course.id,
-                usage_key=block.location,
+                usage_key=block.usage_key,
                 xblock_cache=XBlockCache.create({
                     'display_name': block.display_name,
-                    'usage_key': block.location,
+                    'usage_key': block.usage_key,
                 }),
             ) for block in blocks]
 
@@ -263,8 +263,8 @@ class BookmarkModelTests(BookmarksTestsBase):
         """
         return {
             'user': user or self.user,
-            'usage_key': block.location,
-            'course_key': block.location.course_key,
+            'usage_key': block.usage_key,
+            'course_key': block.usage_key.course_key,
             'display_name': block.display_name,
         }
 
@@ -287,7 +287,7 @@ class BookmarkModelTests(BookmarksTestsBase):
         user = UserFactory.create()
 
         expected_path = [PathItem(
-            usage_key=getattr(self, ancestor_attr).location, display_name=getattr(self, ancestor_attr).display_name
+            usage_key=getattr(self, ancestor_attr).usage_key, display_name=getattr(self, ancestor_attr).display_name
         ) for ancestor_attr in ancestors_attrs]
 
         bookmark_data = self.get_bookmark_data(getattr(self, block_to_bookmark), user=user)
@@ -383,7 +383,7 @@ class BookmarkModelTests(BookmarksTestsBase):
             block = children[-1]
 
         with check_mongo_calls(expected_mongo_calls):
-            path = Bookmark.get_path(block.location)
+            path = Bookmark.get_path(block.usage_key)
             assert len(path) == (depth - 2)
 
     def test_get_path_in_case_of_exceptions(self):

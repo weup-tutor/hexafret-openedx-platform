@@ -186,11 +186,11 @@ def get_course_enrollments(user, org_whitelist, org_blacklist, course_limit=None
             continue
 
         # Filter out anything that is not in the whitelist.
-        if org_whitelist and course_overview.location.org not in org_whitelist:
+        if org_whitelist and course_overview.usage_key.org not in org_whitelist:
             continue
 
         # Conversely, filter out any enrollments in the blacklist.
-        elif org_blacklist and course_overview.location.org in org_blacklist:
+        elif org_blacklist and course_overview.usage_key.org in org_blacklist:
             continue
 
         # Else, include the enrollment.

@@ -1929,11 +1929,11 @@ class ProgramCourseEnrollmentOverviewGetTests(
         mock_path = 'lms.djangoapps.course_api.api.get_dates_for_course'
         with mock.patch(mock_path) as mock_get_dates, freeze_time(now_time):
             mock_get_dates.return_value = {
-                (section_1.location, 'due'): section_1.due,
-                (section_1.location, 'start'): section_1.start,
-                (subsection_1.location, 'due'): subsection_1.due,
-                (subsection_2.location, 'due'): subsection_2.due,
-                (unit_1.location, 'due'): unit_1.due,
+                (section_1.usage_key, 'due'): section_1.due,
+                (section_1.usage_key, 'start'): section_1.start,
+                (subsection_1.usage_key, 'due'): subsection_1.due,
+                (subsection_2.usage_key, 'due'): subsection_2.due,
+                (unit_1.usage_key, 'due'): unit_1.due,
             }
 
             self.log_in()

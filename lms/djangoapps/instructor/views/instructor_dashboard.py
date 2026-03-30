@@ -617,7 +617,7 @@ def _section_extensions(course):
     section_data = {
         'section_key': 'extensions',
         'section_display_name': _('Extensions'),
-        'units_with_due_dates': [(title_or_url(unit), str(unit.location))
+        'units_with_due_dates': [(title_or_url(unit), str(unit.usage_key))
                                  for unit in get_units_with_due_date(course)],
         'change_due_date_url': reverse('change_due_date', kwargs={'course_id': str(course.id)}),
         'reset_due_date_url': reverse('reset_due_date', kwargs={'course_id': str(course.id)}),
@@ -770,7 +770,7 @@ def _section_open_response_assessment(request, course, openassessment_blocks, ac
 
     for block in openassessment_blocks:
         block_parent_id = str(block.parent)
-        result_item_id = str(block.location)
+        result_item_id = str(block.usage_key)
         if block_parent_id not in parents:
             parents[block_parent_id] = modulestore().get_item(block.parent)
         assessment_name = _("Team") + " : " + block.display_name if block.teams_enabled else block.display_name
@@ -782,18 +782,18 @@ def _section_open_response_assessment(request, course, openassessment_blocks, ac
             'staff_assessment': 'staff-assessment' in block.assessment_steps,
             'peer_assessment': 'peer-assessment' in block.assessment_steps,
             'team_assignment': block.teams_enabled,
-            'url_base': reverse('xblock_view', args=[course.id, block.location, 'student_view']),
-            'url_grade_available_responses': reverse('xblock_view', args=[course.id, block.location,
+            'url_base': reverse('xblock_view', args=[course.id, block.usage_key, 'student_view']),
+            'url_grade_available_responses': reverse('xblock_view', args=[course.id, block.usage_key,
                                                                           'grade_available_responses_view']),
             'url_waiting_step_details': reverse(
                 'xblock_view',
-                args=[course.id, block.location, 'waiting_step_details_view'],
+                args=[course.id, block.usage_key, 'waiting_step_details_view'],
             ),
         })
 
     openassessment_block = openassessment_blocks[0]
     block, __ = get_block_by_usage_id(
-        request, str(course_key), str(openassessment_block.location),
+        request, str(course_key), str(openassessment_block.usage_key),
         disable_staff_debug_info=True, course=course
     )
     section_data = {

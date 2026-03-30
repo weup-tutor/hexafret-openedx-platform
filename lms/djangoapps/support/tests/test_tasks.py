@@ -84,14 +84,14 @@ class ResetStudentCourse(TestSubmittingProblems):
         # set up a simple course with four problems
         homework = self.add_graded_section_to_course('homework')
         vertical = BlockFactory.create(
-            parent_location=homework.location,
+            parent_location=homework.usage_key,
             category='vertical',
             display_name='Unit 1',
         )
 
-        self.p1 = self.add_dropdown_to_section(vertical.location, 'p1', 1)
-        self.p2 = self.add_dropdown_to_section(vertical.location, 'p2', 1)
-        self.p3 = self.add_dropdown_to_section(vertical.location, 'p3', 1)
+        self.p1 = self.add_dropdown_to_section(vertical.usage_key, 'p1', 1)
+        self.p2 = self.add_dropdown_to_section(vertical.usage_key, 'p2', 1)
+        self.p3 = self.add_dropdown_to_section(vertical.usage_key, 'p3', 1)
         video_sample_xml = """
         <video display_name="Test Video"
                 youtube="1.0:p2Q6BrNhdh8,0.75:izygArpw-Qo,1.25:1EeWXzPdhSA,1.5:rABDYkeK0x8"
@@ -106,7 +106,7 @@ class ResetStudentCourse(TestSubmittingProblems):
         video_data.pop('source')
         self.video = BlockFactory.create(
             category='video',
-            parent_location=vertical.location,
+            parent_location=vertical.usage_key,
             **video_data
         )
 
@@ -138,7 +138,7 @@ class ResetStudentCourse(TestSubmittingProblems):
                 call(
                     self.course.id,
                     self.student_user,
-                    self.p1.location,
+                    self.p1.usage_key,
                     self.user,
                     delete_module=True,
                     emit_signals_and_events=False,
@@ -146,7 +146,7 @@ class ResetStudentCourse(TestSubmittingProblems):
                 call(
                     self.course.id,
                     self.student_user,
-                    self.p2.location,
+                    self.p2.usage_key,
                     self.user,
                     delete_module=True,
                     emit_signals_and_events=False,
@@ -154,7 +154,7 @@ class ResetStudentCourse(TestSubmittingProblems):
                 call(
                     self.course.id,
                     self.student_user,
-                    self.p3.location,
+                    self.p3.usage_key,
                     self.user,
                     delete_module=True,
                     emit_signals_and_events=False,
@@ -162,7 +162,7 @@ class ResetStudentCourse(TestSubmittingProblems):
                 call(
                     self.course.id,
                     self.student_user,
-                    self.video.location,
+                    self.video.usage_key,
                     self.user,
                     delete_module=True,
                     emit_signals_and_events=False,
@@ -191,7 +191,7 @@ class ResetStudentCourse(TestSubmittingProblems):
                 call(
                     self.course.id,
                     self.student_user,
-                    self.p1.location,
+                    self.p1.usage_key,
                     self.user,
                     delete_module=True,
                     emit_signals_and_events=False,
@@ -199,7 +199,7 @@ class ResetStudentCourse(TestSubmittingProblems):
                 call(
                     self.course.id,
                     self.student_user,
-                    self.p2.location,
+                    self.p2.usage_key,
                     self.user,
                     delete_module=True,
                     emit_signals_and_events=False,
@@ -207,7 +207,7 @@ class ResetStudentCourse(TestSubmittingProblems):
                 call(
                     self.course.id,
                     self.student_user,
-                    self.p3.location,
+                    self.p3.usage_key,
                     self.user,
                     delete_module=True,
                     emit_signals_and_events=False,

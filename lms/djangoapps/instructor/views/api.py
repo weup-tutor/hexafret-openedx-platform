@@ -3176,9 +3176,9 @@ def _display_unit(unit):
     """
     name = getattr(unit, 'display_name', None)
     if name:
-        return f'{name} ({str(unit.location)})'
+        return f'{name} ({str(unit.usage_key)})'
     else:
-        return str(unit.location)
+        return str(unit.usage_key)
 
 
 @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True), name='dispatch')
@@ -3268,7 +3268,7 @@ class ResetDueDate(APIView):
 
         version = getattr(course, 'course_version', None)
 
-        original_due_date = get_date_for_block(course_id, unit.location, published_version=version)
+        original_due_date = get_date_for_block(course_id, unit.usage_key, published_version=version)
 
         try:
             set_due_date_extension(course, unit, student, None, request.user, reason=reason)

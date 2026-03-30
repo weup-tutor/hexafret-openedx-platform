@@ -47,12 +47,12 @@ class SplitTestBase(ModuleStoreTestCase):
             user_partitions=[self.partition]
         )
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="chapter",
             display_name="test chapter",
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category="sequential",
             display_name="Split Test Tests",
         )
@@ -70,7 +70,7 @@ class SplitTestBase(ModuleStoreTestCase):
         that is intended to be displayed to group ``group``.
         """
         return BlockFactory.create(
-            parent_location=parent.location,
+            parent_location=parent.usage_key,
             category="video",
             display_name=f"Group {group} Sees This Video",
         )
@@ -81,7 +81,7 @@ class SplitTestBase(ModuleStoreTestCase):
         that is intended to be displayed to group ``group``.
         """
         return BlockFactory.create(
-            parent_location=parent.location,
+            parent_location=parent.usage_key,
             category="problem",
             display_name=f"Group {group} Sees This Problem",
             data="<h1>No Problem Defined Yet!</h1>",
@@ -93,7 +93,7 @@ class SplitTestBase(ModuleStoreTestCase):
         that is intended to be displayed to group ``group``.
         """
         return BlockFactory.create(
-            parent_location=parent.location,
+            parent_location=parent.usage_key,
             category="html",
             display_name=f"Group {group} Sees This HTML",
             data=f"Some HTML for group {group}",
@@ -115,7 +115,7 @@ class SplitTestBase(ModuleStoreTestCase):
             value=str(user_tag)
         )
 
-        resp = self.client.get(reverse('render_xblock', args=[str(self.sequential.location)]))
+        resp = self.client.get(reverse('render_xblock', args=[str(self.sequential.usage_key)]))
         unicode_content = resp.content.decode(resp.charset)
 
         # Assert we see the proper icon in the top display
@@ -167,7 +167,7 @@ class TestSplitTestVert(SplitTestBase):
         c1_url = self.course.id.make_usage_key("vertical", "split_test_cond1")
 
         split_test = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category="split_test",
             display_name="Split test",
             user_partition_id=0,
@@ -175,7 +175,7 @@ class TestSplitTestVert(SplitTestBase):
         )
 
         cond0vert = BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 0 vertical",
             location=c0_url,
@@ -184,7 +184,7 @@ class TestSplitTestVert(SplitTestBase):
         problem0 = self._problem(cond0vert, 0)
 
         cond1vert = BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 1 vertical",
             location=c1_url,
@@ -193,13 +193,13 @@ class TestSplitTestVert(SplitTestBase):
         html1 = self._html(cond1vert, 1)
 
         self.included_usage_keys = [
-            [video0.location, problem0.location],
-            [video1.location, html1.location],
+            [video0.usage_key, problem0.usage_key],
+            [video1.usage_key, html1.usage_key],
         ]
 
         self.excluded_usage_keys = [
-            [video1.location, html1.location],
-            [video0.location, problem0.location],
+            [video1.usage_key, html1.usage_key],
+            [video0.usage_key, problem0.usage_key],
         ]
 
 
@@ -232,7 +232,7 @@ class TestVertSplitTestVert(SplitTestBase):
         super().setUp()
 
         vert1 = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category="vertical",
             display_name="Split test vertical",
         )
@@ -240,7 +240,7 @@ class TestVertSplitTestVert(SplitTestBase):
         c1_url = self.course.id.make_usage_key("vertical", "split_test_cond1")
 
         split_test = BlockFactory.create(
-            parent_location=vert1.location,
+            parent_location=vert1.usage_key,
             category="split_test",
             display_name="Split test",
             user_partition_id=0,
@@ -248,7 +248,7 @@ class TestVertSplitTestVert(SplitTestBase):
         )
 
         cond0vert = BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 0 Vertical",
             location=c0_url
@@ -257,7 +257,7 @@ class TestVertSplitTestVert(SplitTestBase):
         problem0 = self._problem(cond0vert, 0)
 
         cond1vert = BlockFactory.create(
-            parent_location=split_test.location,
+            parent_location=split_test.usage_key,
             category="vertical",
             display_name="Condition 1 Vertical",
             location=c1_url
@@ -266,13 +266,13 @@ class TestVertSplitTestVert(SplitTestBase):
         html1 = self._html(cond1vert, 1)
 
         self.included_usage_keys = [
-            [video0.location, problem0.location],
-            [video1.location, html1.location],
+            [video0.usage_key, problem0.usage_key],
+            [video1.usage_key, html1.usage_key],
         ]
 
         self.excluded_usage_keys = [
-            [video1.location, html1.location],
-            [video0.location, problem0.location],
+            [video1.usage_key, html1.usage_key],
+            [video0.usage_key, problem0.usage_key],
         ]
 
 
@@ -299,7 +299,7 @@ class SplitTestPosition(SharedModuleStoreTestCase):
         )
 
         cls.chapter = BlockFactory.create(
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             category="chapter",
             display_name="test chapter",
         )

@@ -52,7 +52,7 @@ class MockXBlock:
     capabilities needed by the block cache framework.
     """
     def __init__(self, location, field_map=None, children=None, modulestore=None):
-        self.location = location
+        self.usage_key = location
         self.field_map = field_map or {}
 
         self.children = children or []

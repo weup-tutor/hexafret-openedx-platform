@@ -144,7 +144,7 @@ class ErrorBlock(
             block.runtime,
             str(block),
             error_msg,
-            location=block.location,
+            location=block.usage_key,
             for_parent=block.get_parent() if block.has_cached_parent else None
         )
 

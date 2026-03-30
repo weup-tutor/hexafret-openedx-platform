@@ -49,12 +49,12 @@ class TestOverrideDataTransformer(ModuleStoreTestCase):
         section = course.get_children()[0]
         subsection = section.get_children()[0]
         self.block = self.store.create_child(
-            self.learner.id, subsection.location, 'html', 'new_component'
+            self.learner.id, subsection.usage_key, 'html', 'new_component'
         )
         CourseEnrollmentFactory.create(user=self.learner, course_id=self.course_key, is_active=True)
         CourseEnrollmentFactory.create(user=self.learner2, course_id=self.course_key, is_active=True)
         self.block = self.store.create_child(
-            self.learner2.id, subsection.location, 'html', 'new_component_2'
+            self.learner2.id, subsection.usage_key, 'html', 'new_component_2'
         )
 
     @ddt.data(*REQUESTED_FIELDS)

@@ -105,7 +105,7 @@ class CourseGradeBase:
                 if subsection_grade.graded and is_visible:
                     graded_total = subsection_grade.graded_total
                     if graded_total.possible > 0:
-                        subsections_by_format[subsection_grade.format][subsection_grade.location] = subsection_grade
+                        subsections_by_format[subsection_grade.format][subsection_grade.usage_key] = subsection_grade
         return subsections_by_format
 
     @lazy
@@ -118,7 +118,7 @@ class CourseGradeBase:
         """
         course_structure = self.course_data.structure
         grades = OrderedDict()
-        for chapter_key in course_structure.get_children(self.course_data.location):
+        for chapter_key in course_structure.get_children(self.course_data.usage_key):
             grades[chapter_key] = self._get_chapter_grade_info(course_structure[chapter_key], course_structure)
         return grades
 
@@ -131,7 +131,7 @@ class CourseGradeBase:
         subsection_grades = defaultdict(OrderedDict)
         for chapter in self.chapter_grades.values():
             for subsection_grade in chapter['sections']:
-                subsection_grades[subsection_grade.location] = subsection_grade
+                subsection_grades[subsection_grade.usage_key] = subsection_grade
         return subsection_grades
 
     @lazy
@@ -239,7 +239,7 @@ class CourseGradeBase:
         """
         Helper that returns a dictionary of chapter grade information.
         """
-        chapter_subsection_grades = self._get_subsection_grades(course_structure, chapter.location)
+        chapter_subsection_grades = self._get_subsection_grades(course_structure, chapter.usage_key)
         return {
             'display_name': block_metadata_utils.display_name_with_default(chapter),
             'url_name': chapter.usage_key.block_id,

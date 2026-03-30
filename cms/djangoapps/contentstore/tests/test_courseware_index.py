@@ -51,7 +51,7 @@ def create_children(store, parent, category, load_factor):
     created_count = 0
     for child_index in range(load_factor):
         child_object = BlockFactory.create(
-            parent_location=parent.location,
+            parent_location=parent.usage_key,
             category=category,
             display_name=f"{category} {child_index} {time.clock()}",  # lint-amnesty, pylint: disable=no-member
             modulestore=store,
@@ -153,7 +153,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
         )
 
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name="Week 1",
             modulestore=store,
@@ -161,7 +161,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name="Lesson 1",
             modulestore=store,
@@ -169,7 +169,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         self.vertical = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category='vertical',
             display_name='Subsection 1',
             modulestore=store,
@@ -178,7 +178,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
         )
         # unspecified start - should inherit from container
         self.html_unit = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category="html",
             display_name="Html Content",
             modulestore=store,
@@ -213,7 +213,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
         self.assertEqual(response["total"], 3)
 
         # Publish the vertical as is, and any unpublished children should now be available
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         self.reindex_course(store)
         response = self.search()
         self.assertEqual(response["total"], 4)
@@ -221,14 +221,14 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
     def _test_not_indexing_unpublished_content(self, store):
         """ add a new one, only appers in index once added """
         # Publish the vertical to start with
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         self.reindex_course(store)
         response = self.search()
         self.assertEqual(response["total"], 4)
 
         # Now add a new unit to the existing vertical
         BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category="html",
             display_name="Some other content",
             publish_item=False,
@@ -240,7 +240,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
 
         # Now publish it and we should find it
         # Publish the vertical as is, and everything should be available
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         self.reindex_course(store)
         response = self.search()
         self.assertEqual(response["total"], 5)
@@ -265,19 +265,19 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
     def _test_deleting_item(self, store):
         """ test deleting an item """
         # Publish the vertical to start with
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         self.reindex_course(store)
         response = self.search()
         self.assertEqual(response["total"], 4)
 
         # just a delete should not change anything
-        self.delete_item(store, self.html_unit.location)
+        self.delete_item(store, self.html_unit.usage_key)
         self.reindex_course(store)
         response = self.search()
         self.assertEqual(response["total"], 4)
 
         # but after publishing, we should no longer find the html_unit
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         self.reindex_course(store)
         response = self.search()
         self.assertEqual(response["total"], 3)
@@ -288,17 +288,17 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
         later_date = self.vertical.start
 
         # Publish the vertical
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         self.reindex_course(store)
         response = self.search()
         self.assertEqual(response["total"], 4)
 
         results = response["results"]
         date_map = {
-            str(self.chapter.location): early_date,
-            str(self.sequential.location): early_date,
-            str(self.vertical.location): later_date,
-            str(self.html_unit.location): later_date,
+            str(self.chapter.usage_key): early_date,
+            str(self.sequential.usage_key): early_date,
+            str(self.vertical.usage_key): later_date,
+            str(self.html_unit.usage_key): later_date,
         }
         for result in results:
             self.assertEqual(result["data"]["start_date"], date_map[result["data"]["id"]])
@@ -311,13 +311,13 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
 
     def _test_time_based_index(self, store):
         """ Make sure that a time based request to index does not index anything too old """
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         indexed_count = self.reindex_course(store)
         self.assertEqual(indexed_count, 4)
 
         # Add a new sequential
         sequential2 = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name='Section 2',
             modulestore=store,
@@ -327,14 +327,14 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
 
         # add a new vertical
         vertical2 = BlockFactory.create(
-            parent_location=sequential2.location,
+            parent_location=sequential2.usage_key,
             category='vertical',
             display_name='Subsection 2',
             modulestore=store,
             publish_item=True,
         )
         BlockFactory.create(
-            parent_location=vertical2.location,
+            parent_location=vertical2.usage_key,
             category="html",
             display_name="Some other content",
             publish_item=False,
@@ -342,7 +342,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
         )
 
         before_time = datetime.now(UTC)
-        self.publish_item(store, vertical2.location)
+        self.publish_item(store, vertical2.usage_key)
         # index based on time, will include an index of the origin sequential
         # because it is in a common subtree but not of the original vertical
         # because the original sequential's subtree is too old
@@ -415,7 +415,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
 
     def _test_course_location_info(self, store):
         """ Test that course location information is added to index """
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         self.reindex_course(store)
         response = self.search(query_string="Html Content")
         self.assertEqual(response["total"], 1)
@@ -427,7 +427,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
     def _test_course_location_null(self, store):
         """ Test that course location information is added to index """
         sequential2 = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name=None,
             modulestore=store,
@@ -436,14 +436,14 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
         )
         # add a new vertical
         vertical2 = BlockFactory.create(
-            parent_location=sequential2.location,
+            parent_location=sequential2.usage_key,
             category='vertical',
             display_name='Subsection 2',
             modulestore=store,
             publish_item=True,
         )
         BlockFactory.create(
-            parent_location=vertical2.location,
+            parent_location=vertical2.usage_key,
             category="html",
             display_name="Find Me",
             publish_item=True,
@@ -460,7 +460,7 @@ class TestCoursewareSearchIndexer(MixedWithOptionsTestCase):
     @patch('django.conf.settings.SEARCH_ENGINE', 'search.tests.utils.ErroringIndexEngine')
     def _test_exception(self, store):
         """ Test that exception within indexing yields a SearchIndexingError """
-        self.publish_item(store, self.vertical.location)
+        self.publish_item(store, self.vertical.usage_key)
         with self.assertRaises(SearchIndexingError):
             self.reindex_course(store)
 
@@ -547,7 +547,7 @@ class TestLargeCourseDeletions(MixedWithOptionsTestCase):
         """ Test that deleting items from a course works even when present within a very large course """
         def id_list(top_parent_object):
             """ private function to get ids from object down the tree """
-            list_of_ids = [str(top_parent_object.location)]
+            list_of_ids = [str(top_parent_object.usage_key)]
             for child in top_parent_object.get_children():
                 list_of_ids.extend(id_list(child))
             return list_of_ids
@@ -565,7 +565,7 @@ class TestLargeCourseDeletions(MixedWithOptionsTestCase):
 
         # delete the first chapter
         chapter_to_delete = course.get_children()[0]
-        self.delete_item(store, chapter_to_delete.location)
+        self.delete_item(store, chapter_to_delete.usage_key)
 
         # index and check correctness
         CoursewareSearchIndexer.do_course_reindex(store, course.id)
@@ -608,21 +608,21 @@ class TestTaskExecution(SharedModuleStoreTestCase):
         cls.course = CourseFactory.create(start=datetime(2015, 3, 1, tzinfo=UTC))
 
         cls.chapter = BlockFactory.create(
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             category='chapter',
             display_name="Week 1",
             publish_item=True,
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         cls.sequential = BlockFactory.create(
-            parent_location=cls.chapter.location,
+            parent_location=cls.chapter.usage_key,
             category='sequential',
             display_name="Lesson 1",
             publish_item=True,
             start=datetime(2015, 3, 1, tzinfo=UTC),
         )
         cls.vertical = BlockFactory.create(
-            parent_location=cls.sequential.location,
+            parent_location=cls.sequential.usage_key,
             category='vertical',
             display_name='Subsection 1',
             publish_item=True,
@@ -630,7 +630,7 @@ class TestTaskExecution(SharedModuleStoreTestCase):
         )
         # unspecified start - should inherit from container
         cls.html_unit = BlockFactory.create(
-            parent_location=cls.vertical.location,
+            parent_location=cls.vertical.usage_key,
             category="html",
             display_name="Html Content",
             publish_item=False,
@@ -639,14 +639,14 @@ class TestTaskExecution(SharedModuleStoreTestCase):
         cls.library = LibraryFactory.create()
 
         cls.library_block1 = BlockFactory.create(
-            parent_location=cls.library.location,
+            parent_location=cls.library.usage_key,
             category="html",
             display_name="Html Content",
             publish_item=False,
         )
 
         cls.library_block2 = BlockFactory.create(
-            parent_location=cls.library.location,
+            parent_location=cls.library.usage_key,
             category="html",
             display_name="Html Content 2",
             publish_item=False,
@@ -680,11 +680,11 @@ class TestTaskExecution(SharedModuleStoreTestCase):
     def test_task_library_update(self):
         """ Making sure that the receiver correctly fires off the task when invoked by signal """
         searcher = SearchEngine.get_search_engine(LibrarySearchIndexer.INDEX_NAME)
-        library_search_key = str(normalize_key_for_search(self.library.location.library_key))
+        library_search_key = str(normalize_key_for_search(self.library.usage_key.library_key))
         response = searcher.search(field_dictionary={"library": library_search_key})
         self.assertEqual(response["total"], 0)
 
-        listen_for_library_update(self, self.library.location.library_key)
+        listen_for_library_update(self, self.library.usage_key.library_key)
 
         # Note that this test will only succeed if celery is working in inline mode
         response = searcher.search(field_dictionary={"library": library_search_key})
@@ -727,7 +727,7 @@ class TestLibrarySearchIndexer(MixedWithOptionsTestCase):
         self.library = LibraryFactory.create(modulestore=store)
 
         self.html_unit1 = BlockFactory.create(
-            parent_location=self.library.location,
+            parent_location=self.library.usage_key,
             category="html",
             display_name="Html Content",
             modulestore=store,
@@ -735,7 +735,7 @@ class TestLibrarySearchIndexer(MixedWithOptionsTestCase):
         )
 
         self.html_unit2 = BlockFactory.create(
-            parent_location=self.library.location,
+            parent_location=self.library.usage_key,
             category="html",
             display_name="Html Content 2",
             modulestore=store,
@@ -746,11 +746,11 @@ class TestLibrarySearchIndexer(MixedWithOptionsTestCase):
 
     def _get_default_search(self):
         """ Returns field_dictionary for default search """
-        return {"library": str(self.library.location.library_key.replace(version_guid=None, branch=None))}
+        return {"library": str(self.library.usage_key.library_key.replace(version_guid=None, branch=None))}
 
     def reindex_library(self, store):
         """ kick off complete reindex of the course """
-        return LibrarySearchIndexer.do_library_reindex(store, self.library.location.library_key)
+        return LibrarySearchIndexer.do_library_reindex(store, self.library.usage_key.library_key)
 
     def _get_contents(self, response):
         """ Extracts contents from search response """
@@ -776,7 +776,7 @@ class TestLibrarySearchIndexer(MixedWithOptionsTestCase):
         # updating a library item causes immediate reindexing
         data = "Some data"
         BlockFactory.create(
-            parent_location=self.library.location,
+            parent_location=self.library.usage_key,
             category="html",
             display_name="Html Content 3",
             data=data,
@@ -813,7 +813,7 @@ class TestLibrarySearchIndexer(MixedWithOptionsTestCase):
         self.assertEqual(response["total"], 2)
 
         # deleting a library item causes immediate reindexing
-        self.delete_item(store, self.html_unit1.location)
+        self.delete_item(store, self.html_unit1.usage_key)
         self.reindex_library(store)
         response = self.search()
         self.assertEqual(response["total"], 1)
@@ -876,7 +876,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         Set up course with html content in it.
         """
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name="Week 1",
             modulestore=self.store,
@@ -885,7 +885,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         )
 
         self.sequential = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name="Lesson 1",
             modulestore=self.store,
@@ -894,7 +894,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         )
 
         self.sequential2 = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name="Lesson 2",
             modulestore=self.store,
@@ -903,7 +903,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         )
 
         self.vertical = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category='vertical',
             display_name='Subsection 1',
             modulestore=self.store,
@@ -912,7 +912,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         )
 
         self.vertical2 = BlockFactory.create(
-            parent_location=self.sequential.location,
+            parent_location=self.sequential.usage_key,
             category='vertical',
             display_name='Subsection 2',
             modulestore=self.store,
@@ -921,7 +921,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         )
 
         self.vertical3 = BlockFactory.create(
-            parent_location=self.sequential2.location,
+            parent_location=self.sequential2.usage_key,
             category='vertical',
             display_name='Subsection 3',
             modulestore=self.store,
@@ -931,7 +931,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
 
         # unspecified start - should inherit from container
         self.html_unit1 = BlockFactory.create(
-            parent_location=self.vertical.location,
+            parent_location=self.vertical.usage_key,
             category="html",
             display_name="Html Content 1",
             modulestore=self.store,
@@ -940,7 +940,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         self.html_unit1.parent = self.vertical
 
         self.html_unit2 = BlockFactory.create(
-            parent_location=self.vertical2.location,
+            parent_location=self.vertical2.usage_key,
             category="html",
             display_name="Html Content 2",
             modulestore=self.store,
@@ -949,7 +949,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         self.html_unit2.parent = self.vertical2
 
         self.html_unit3 = BlockFactory.create(
-            parent_location=self.vertical2.location,
+            parent_location=self.vertical2.usage_key,
             category="html",
             display_name="Html Content 3",
             modulestore=self.store,
@@ -966,7 +966,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         c2_url = self.course.id.make_usage_key("vertical", "condition_2_vertical")
 
         self.split_test_unit = BlockFactory.create(
-            parent_location=self.vertical3.location,
+            parent_location=self.vertical3.usage_key,
             category='split_test',
             user_partition_id=0,
             display_name="Test Content Experiment 1",
@@ -974,7 +974,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         )
 
         self.condition_0_vertical = BlockFactory.create(
-            parent_location=self.split_test_unit.location,
+            parent_location=self.split_test_unit.usage_key,
             category="vertical",
             display_name="Group ID 2",
             location=c0_url,
@@ -982,7 +982,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         self.condition_0_vertical.parent = self.vertical3
 
         self.condition_1_vertical = BlockFactory.create(
-            parent_location=self.split_test_unit.location,
+            parent_location=self.split_test_unit.usage_key,
             category="vertical",
             display_name="Group ID 3",
             location=c1_url,
@@ -990,7 +990,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         self.condition_1_vertical.parent = self.vertical3
 
         self.condition_2_vertical = BlockFactory.create(
-            parent_location=self.split_test_unit.location,
+            parent_location=self.split_test_unit.usage_key,
             category="vertical",
             display_name="Group ID 4",
             location=c2_url,
@@ -998,7 +998,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         self.condition_2_vertical.parent = self.vertical3
 
         self.html_unit4 = BlockFactory.create(
-            parent_location=self.condition_0_vertical.location,
+            parent_location=self.condition_0_vertical.usage_key,
             category="html",
             display_name="Split A",
             publish_item=True,
@@ -1006,7 +1006,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         self.html_unit4.parent = self.condition_0_vertical
 
         self.html_unit5 = BlockFactory.create(
-            parent_location=self.condition_1_vertical.location,
+            parent_location=self.condition_1_vertical.usage_key,
             category="html",
             display_name="Split B",
             publish_item=True,
@@ -1014,7 +1014,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         self.html_unit5.parent = self.condition_1_vertical
 
         self.html_unit6 = BlockFactory.create(
-            parent_location=self.condition_2_vertical.location,
+            parent_location=self.condition_2_vertical.usage_key,
             category="html",
             display_name="Split C",
             publish_item=True,
@@ -1080,7 +1080,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         """
         return {
             'course_name': self.course.display_name,
-            'id': str(html_unit.location),
+            'id': str(html_unit.usage_key),
             'content': {'html_content': '', 'display_name': html_unit.display_name},
             'course': str(self.course.id),
             'location': [
@@ -1100,7 +1100,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         """
         return {
             'course_name': self.course.display_name,
-            'id': str(html_unit.location),
+            'id': str(html_unit.usage_key),
             'content': {'html_content': '', 'display_name': html_unit.display_name},
             'course': str(self.course.id),
             'location': [
@@ -1129,7 +1129,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
             ],
             'content_type': 'Sequence',
             'content_groups': content_groups,
-            'id': str(vertical.location),
+            'id': str(vertical.usage_key),
             'course_name': self.course.display_name,
             'org': self.course.org
         }
@@ -1140,7 +1140,7 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         """
         return {
             'course_name': self.course.display_name,
-            'id': str(html_unit.location),
+            'id': str(html_unit.usage_key),
             'content': {'html_content': '', 'display_name': html_unit.display_name},
             'course': str(self.course.id),
             'location': [
@@ -1180,12 +1180,12 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         group_access_content = {'group_access': {666: [1]}}
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit1.location),
+            reverse_usage_url("xblock_handler", self.html_unit1.usage_key),
             data={'metadata': group_access_content}
         )
 
-        self.publish_item(self.store, self.html_unit1.location)
-        self.publish_item(self.store, self.split_test_unit.location)
+        self.publish_item(self.store, self.html_unit1.usage_key)
+        self.publish_item(self.store, self.split_test_unit.usage_key)
 
         with patch(settings.SEARCH_ENGINE + '.index') as mock_index:
             self.reindex_course(self.store)
@@ -1250,11 +1250,11 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         group_access_content = {'group_access': {666: [1]}}
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit1.location),
+            reverse_usage_url("xblock_handler", self.html_unit1.usage_key),
             data={'metadata': group_access_content}
         )
 
-        self.publish_item(self.store, self.html_unit1.location)
+        self.publish_item(self.store, self.html_unit1.usage_key)
 
         # Checking group indexed correctly
         with patch(settings.SEARCH_ENGINE + '.index') as mock_index:
@@ -1267,11 +1267,11 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         empty_group_access = {'group_access': {}}
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit1.location),
+            reverse_usage_url("xblock_handler", self.html_unit1.usage_key),
             data={'metadata': empty_group_access}
         )
 
-        self.publish_item(self.store, self.html_unit1.location)
+        self.publish_item(self.store, self.html_unit1.usage_key)
 
         # Checking group removed and not indexed any more
         with patch(settings.SEARCH_ENGINE + '.index') as mock_index:
@@ -1285,11 +1285,11 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         """ indexing course with content groups assigned to one of multiple html units """
         group_access_content = {'group_access': {666: [1]}}
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit1.location),
+            reverse_usage_url("xblock_handler", self.html_unit1.usage_key),
             data={'metadata': group_access_content}
         )
 
-        self.publish_item(self.store, self.html_unit1.location)
+        self.publish_item(self.store, self.html_unit1.usage_key)
 
         with patch(settings.SEARCH_ENGINE + '.index') as mock_index:
             self.reindex_course(self.store)
@@ -1305,16 +1305,16 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         group_access_content_2 = {'group_access': {666: [0]}}
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit1.location),
+            reverse_usage_url("xblock_handler", self.html_unit1.usage_key),
             data={'metadata': group_access_content_1}
         )
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit2.location),
+            reverse_usage_url("xblock_handler", self.html_unit2.usage_key),
             data={'metadata': group_access_content_2}
         )
 
-        self.publish_item(self.store, self.html_unit1.location)
-        self.publish_item(self.store, self.html_unit2.location)
+        self.publish_item(self.store, self.html_unit1.usage_key)
+        self.publish_item(self.store, self.html_unit2.usage_key)
 
         with patch(settings.SEARCH_ENGINE + '.index') as mock_index:
             self.reindex_course(self.store)
@@ -1334,16 +1334,16 @@ class GroupConfigurationSearchSplit(CourseTestCase, MixedWithOptionsTestCase):
         group_access_content_2 = {'group_access': {666: [0]}}
 
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit2.location),
+            reverse_usage_url("xblock_handler", self.html_unit2.usage_key),
             data={'metadata': group_access_content_1}
         )
         self.client.ajax_post(
-            reverse_usage_url("xblock_handler", self.html_unit3.location),
+            reverse_usage_url("xblock_handler", self.html_unit3.usage_key),
             data={'metadata': group_access_content_2}
         )
 
-        self.publish_item(self.store, self.html_unit2.location)
-        self.publish_item(self.store, self.html_unit3.location)
+        self.publish_item(self.store, self.html_unit2.usage_key)
+        self.publish_item(self.store, self.html_unit3.usage_key)
 
         with patch(settings.SEARCH_ENGINE + '.index') as mock_index:
             self.reindex_course(self.store)

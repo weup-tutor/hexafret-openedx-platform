@@ -37,25 +37,25 @@ class TestSubsectionGating(CourseTestCase):
 
         # create a chapter
         self.chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category='chapter',
             display_name='untitled chapter'
         )
 
         # create 2 sequentials
         self.seq1 = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name='untitled sequential 1'
         )
-        self.seq1_url = reverse_usage_url('xblock_handler', self.seq1.location)
+        self.seq1_url = reverse_usage_url('xblock_handler', self.seq1.usage_key)
 
         self.seq2 = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name='untitled sequential 2'
         )
-        self.seq2_url = reverse_usage_url('xblock_handler', self.seq2.location)
+        self.seq2_url = reverse_usage_url('xblock_handler', self.seq2.usage_key)
 
     @patch('cms.djangoapps.contentstore.xblock_storage_handlers.view_handlers.gating_api.add_prerequisite')
     def test_add_prerequisite(self, mock_add_prereq):
@@ -67,7 +67,7 @@ class TestSubsectionGating(CourseTestCase):
             self.seq1_url,
             data={'isPrereq': True}
         )
-        mock_add_prereq.assert_called_with(self.course.id, self.seq1.location)
+        mock_add_prereq.assert_called_with(self.course.id, self.seq1.usage_key)
 
     @patch('cms.djangoapps.contentstore.xblock_storage_handlers.view_handlers.gating_api.remove_prerequisite')
     def test_remove_prerequisite(self, mock_remove_prereq):
@@ -79,7 +79,7 @@ class TestSubsectionGating(CourseTestCase):
             self.seq1_url,
             data={'isPrereq': False}
         )
-        mock_remove_prereq.assert_called_with(self.seq1.location)
+        mock_remove_prereq.assert_called_with(self.seq1.usage_key)
 
     @patch('cms.djangoapps.contentstore.xblock_storage_handlers.view_handlers.gating_api.set_required_content')
     def test_add_gate(self, mock_set_required_content):
@@ -89,13 +89,13 @@ class TestSubsectionGating(CourseTestCase):
 
         self.client.ajax_post(
             self.seq2_url,
-            data={'prereqUsageKey': str(self.seq1.location), 'prereqMinScore': '100',
+            data={'prereqUsageKey': str(self.seq1.usage_key), 'prereqMinScore': '100',
                   'prereqMinCompletion': '100'}
         )
         mock_set_required_content.assert_called_with(
             self.course.id,
-            self.seq2.location,
-            str(self.seq1.location),
+            self.seq2.usage_key,
+            str(self.seq1.usage_key),
             '100',
             '100'
         )
@@ -112,7 +112,7 @@ class TestSubsectionGating(CourseTestCase):
         )
         mock_set_required_content.assert_called_with(
             self.course.id,
-            self.seq2.location,
+            self.seq2.usage_key,
             '',
             '',
             ''
@@ -132,17 +132,17 @@ class TestSubsectionGating(CourseTestCase):
             mock_is_prereq, mock_get_required_content, mock_get_prereqs
     ):
         mock_is_prereq.return_value = True
-        mock_get_required_content.return_value = str(self.seq1.location), min_score, min_completion
+        mock_get_required_content.return_value = str(self.seq1.usage_key), min_score, min_completion
         mock_get_prereqs.return_value = [
-            {'namespace': f'{str(self.seq1.location)}{GATING_NAMESPACE_QUALIFIER}'},
-            {'namespace': f'{str(self.seq2.location)}{GATING_NAMESPACE_QUALIFIER}'}
+            {'namespace': f'{str(self.seq1.usage_key)}{GATING_NAMESPACE_QUALIFIER}'},
+            {'namespace': f'{str(self.seq2.usage_key)}{GATING_NAMESPACE_QUALIFIER}'}
         ]
         resp = json.loads(self.client.get_json(self.seq2_url).content.decode('utf-8'))
-        mock_is_prereq.assert_called_with(self.course.id, self.seq2.location)
-        mock_get_required_content.assert_called_with(self.course.id, self.seq2.location)
+        mock_is_prereq.assert_called_with(self.course.id, self.seq2.usage_key)
+        mock_get_required_content.assert_called_with(self.course.id, self.seq2.usage_key)
         mock_get_prereqs.assert_called_with(self.course.id)
         self.assertTrue(resp['is_prereq'])
-        self.assertEqual(resp['prereq'], str(self.seq1.location))
+        self.assertEqual(resp['prereq'], str(self.seq1.usage_key))
         self.assertEqual(resp['prereq_min_score'], min_score)
         self.assertEqual(resp['prereq_min_completion'], min_completion)
         self.assertEqual(resp['visibility_state'], VisibilityState.gated)
@@ -151,10 +151,10 @@ class TestSubsectionGating(CourseTestCase):
     @patch('cms.djangoapps.contentstore.signals.handlers.gating_api.remove_prerequisite')
     def test_delete_item_signal_handler_called(self, mock_remove_prereq, mock_set_required):
         seq3 = BlockFactory.create(
-            parent_location=self.chapter.location,
+            parent_location=self.chapter.usage_key,
             category='sequential',
             display_name='untitled sequential 3'
         )
-        self.client.delete(reverse_usage_url('xblock_handler', seq3.location))
-        mock_remove_prereq.assert_called_with(seq3.location)
-        mock_set_required.assert_called_with(seq3.location.course_key, seq3.location, None, None, None)
+        self.client.delete(reverse_usage_url('xblock_handler', seq3.usage_key))
+        mock_remove_prereq.assert_called_with(seq3.usage_key)
+        mock_set_required.assert_called_with(seq3.usage_key.course_key, seq3.usage_key, None, None, None)

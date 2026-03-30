@@ -61,10 +61,10 @@ class TestLinkCheckProvider(CourseTestCase):
         when passed a block level xblock.
         """
         expected_tree = {
-            self.mock_section.location: {
-                self.mock_subsection.location: {
-                    self.mock_unit.location: {
-                        self.mock_block.location: {}
+            self.mock_section.usage_key: {
+                self.mock_subsection.usage_key: {
+                    self.mock_unit.usage_key: {
+                        self.mock_block.usage_key: {}
                     }
                 }
             }
@@ -81,22 +81,22 @@ class TestLinkCheckProvider(CourseTestCase):
         when passed a block level xblock.
         """
         expected_dictionary = {
-            self.mock_section.location: {
+            self.mock_section.usage_key: {
                 'display_name': 'Section Name',
                 'category': 'chapter'
             },
-            self.mock_subsection.location: {
+            self.mock_subsection.usage_key: {
                 'display_name': 'Subsection Name',
                 'category': 'sequential'
             },
-            self.mock_unit.location: {
+            self.mock_unit.usage_key: {
                 'display_name': 'Unit Name',
                 'category': 'vertical'
             },
-            self.mock_block.location: {
+            self.mock_block.usage_key: {
                 'display_name': 'Block Name',
                 'category': 'html',
-                'url': f'/course/{self.course.id}/editor/html/{self.mock_block.location}',
+                'url': f'/course/{self.course.id}/editor/html/{self.mock_block.usage_key}',
                 'locked_links': ['example_link']
             }
         }
@@ -375,12 +375,12 @@ class TestLinkCheckProvider(CourseTestCase):
         # Test data that represents the broken links JSON structure
         json_content = [
             [
-                str(self.mock_block.location),
+                str(self.mock_block.usage_key),
                 "http://content-link.com",
                 LinkState.BROKEN,
             ],
             [
-                str(self.mock_unit.location),
+                str(self.mock_unit.usage_key),
                 "http://unit-link.com",
                 LinkState.LOCKED,
             ],

@@ -260,7 +260,7 @@ def save_ccx(request, course, ccx=None):  # lint-amnesty, pylint: disable=too-ma
         if ccx_ids_to_delete is None:
             ccx_ids_to_delete = []
         blocks = {
-            str(child.location): child
+            str(child.usage_key): child
             for child in parent.get_children()}
 
         for unit in data:
@@ -413,7 +413,7 @@ def get_ccx_schedule(course, ccx):
                     start = get_date(ccx, child, 'start', node)
 
                 visited = {
-                    'location': str(child.location),
+                    'location': str(child.usage_key),
                     'display_name': child.display_name,
                     'category': child.category,
                     'start': start,
@@ -422,7 +422,7 @@ def get_ccx_schedule(course, ccx):
                 }
             else:
                 visited = {
-                    'location': str(child.location),
+                    'location': str(child.usage_key),
                     'display_name': child.display_name,
                     'category': child.category,
                     'start': start,

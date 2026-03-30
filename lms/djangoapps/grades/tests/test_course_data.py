@@ -29,14 +29,14 @@ class CourseDataTest(ModuleStoreTestCase):
         self.user = UserFactory.create()
         self.collected_structure = get_course_in_cache(self.course.id)
         self.one_true_structure = get_course_blocks(
-            self.user, self.course.location, collected_block_structure=self.collected_structure,
+            self.user, self.course.usage_key, collected_block_structure=self.collected_structure,
         )
         self.expected_results = {
             'course': self.course,
             'collected_block_structure': self.collected_structure,
             'structure': self.one_true_structure,
             'course_key': self.course.id,
-            'location': self.course.location,
+            'location': self.course.usage_key,
         }
 
     @patch('lms.djangoapps.grades.course_data.get_course_blocks')
@@ -56,7 +56,7 @@ class CourseDataTest(ModuleStoreTestCase):
                     expected = self.expected_results[arg]
                     actual = getattr(course_data, arg)
                     if arg == 'course':
-                        assert expected.location == actual.location
+                        assert expected.usage_key == actual.usage_key
                     else:
                         assert expected == actual
 
@@ -74,7 +74,7 @@ class CourseDataTest(ModuleStoreTestCase):
         ]:
             course_data = CourseData(self.user, **kwargs)
             assert course_data.course_key == self.course.id
-            assert course_data.location == self.course.location
+            assert course_data.usage_key == self.course.usage_key
             assert course_data.structure.root_block_usage_key == self.one_true_structure.root_block_usage_key
             assert course_data.course.id == self.course.id
             assert course_data.version == self.course.course_version
@@ -88,7 +88,7 @@ class CourseDataTest(ModuleStoreTestCase):
 
     @patch.dict('django.conf.settings.FEATURES', {'DISABLE_START_DATES': False})
     def test_full_string(self):
-        empty_structure = get_course_blocks(self.user, self.course.location)
+        empty_structure = get_course_blocks(self.user, self.course.usage_key)
         assert not empty_structure
 
         # full_string retrieves value from collected_structure when structure is empty.

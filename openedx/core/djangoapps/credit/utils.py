@@ -34,7 +34,7 @@ def _is_in_course_tree(block):
     if its parent has been deleted and is now an orphan.
     """
     ancestor = block.get_parent()
-    while ancestor is not None and ancestor.location.category != "course":
+    while ancestor is not None and ancestor.usage_key.category != "course":
         ancestor = ancestor.get_parent()
 
     return ancestor is not None

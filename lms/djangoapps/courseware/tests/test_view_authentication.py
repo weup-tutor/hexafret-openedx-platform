@@ -115,15 +115,15 @@ class TestViewAuth(EnterpriseTestConsentRequired, ModuleStoreTestCase, LoginEnro
         self.course = CourseFactory.create(number='999', display_name='Robot_Super_Course')
         self.courseware_chapter = BlockFactory.create(display_name='courseware')
         self.overview_chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             display_name='Super Overview'
         )
         self.welcome_section = BlockFactory.create(
-            parent_location=self.overview_chapter.location,
+            parent_location=self.overview_chapter.usage_key,
             display_name='Super Welcome'
         )
         self.welcome_unit = BlockFactory.create(
-            parent_location=self.welcome_section.location,
+            parent_location=self.welcome_section.usage_key,
             display_name='Super Unit'
         )
         self.course = modulestore().get_course(self.course.id)
@@ -131,19 +131,19 @@ class TestViewAuth(EnterpriseTestConsentRequired, ModuleStoreTestCase, LoginEnro
         self.test_course = CourseFactory.create(org=self.course.id.org)
         self.other_org_course = CourseFactory.create(org='Other_Org_Course')
         self.sub_courseware_chapter = BlockFactory.create(
-            parent_location=self.test_course.location,
+            parent_location=self.test_course.usage_key,
             display_name='courseware'
         )
         self.sub_overview_chapter = BlockFactory.create(
-            parent_location=self.sub_courseware_chapter.location,
+            parent_location=self.sub_courseware_chapter.usage_key,
             display_name='Overview'
         )
         self.sub_welcome_section = BlockFactory.create(
-            parent_location=self.sub_overview_chapter.location,
+            parent_location=self.sub_overview_chapter.usage_key,
             display_name='Welcome'
         )
         self.sub_welcome_unit = BlockFactory.create(
-            parent_location=self.sub_welcome_section.location,
+            parent_location=self.sub_welcome_section.usage_key,
             display_name='New Unit'
         )
         self.test_course = modulestore().get_course(self.test_course.id)

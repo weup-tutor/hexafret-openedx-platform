@@ -52,7 +52,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.grade = PersistentSubsectionGrade.update_or_create_grade(
             user_id=self.user.id,
             course_id=self.course.id,
-            usage_key=self.subsection.location,
+            usage_key=self.subsection.usage_key,
             first_attempted=None,
             visible_blocks=[],
             earned_all=6.0,
@@ -96,7 +96,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.assertDictEqual(self.subsection_grade_to_dict(self.service.get_subsection_grade(
             user_id=self.user.id,
             course_key_or_id=self.course.id,
-            usage_key_or_id=self.subsection.location
+            usage_key_or_id=self.subsection.usage_key
         )), {
             'earned_all': 6.0,
             'earned_graded': 5.0
@@ -106,7 +106,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.assertDictEqual(self.subsection_grade_to_dict(self.service.get_subsection_grade(
             user_id=self.user.id,
             course_key_or_id=str(self.course.id),
-            usage_key_or_id=str(self.subsection.location)
+            usage_key_or_id=str(self.subsection.usage_key)
         )), {
             'earned_all': 6.0,
             'earned_graded': 5.0
@@ -118,7 +118,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.assertDictEqual(self.subsection_grade_override_to_dict(self.service.get_subsection_grade_override(
             user_id=self.user.id,
             course_key_or_id=self.course.id,
-            usage_key_or_id=self.subsection.location
+            usage_key_or_id=self.subsection.usage_key
         )), {
             'earned_all_override': override.earned_all_override,
             'earned_graded_override': override.earned_graded_override
@@ -135,7 +135,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.assertDictEqual(self.subsection_grade_override_to_dict(self.service.get_subsection_grade_override(
             user_id=self.user.id,
             course_key_or_id=str(self.course.id),
-            usage_key_or_id=self.subsection.location
+            usage_key_or_id=self.subsection.usage_key
         )), {
             'earned_all_override': override.earned_all_override,
             'earned_graded_override': override.earned_graded_override
@@ -163,7 +163,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.service.override_subsection_grade(
             user_id=self.user.id,
             course_key_or_id=self.course.id,
-            usage_key_or_id=self.subsection.location,
+            usage_key_or_id=self.subsection.usage_key,
             earned_all=override['earned_all'],
             earned_graded=override['earned_graded']
         )
@@ -171,7 +171,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         override_obj = self.service.get_subsection_grade_override(
             self.user.id,
             self.course.id,
-            self.subsection.location
+            self.subsection.usage_key
         )
         assert override_obj is not None
         assert override_obj.earned_all_override == override['earned_all']
@@ -181,7 +181,7 @@ class GradesServiceTests(ModuleStoreTestCase):
             sender=None,
             user_id=self.user.id,
             course_id=str(self.course.id),
-            usage_id=str(self.subsection.location),
+            usage_id=str(self.subsection.usage_key),
             only_if_higher=False,
             modified=override_obj.modified,
             score_deleted=False,
@@ -198,7 +198,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.service.override_subsection_grade(
             user_id=self.user.id,
             course_key_or_id=self.course.id,
-            usage_key_or_id=self.subsection_without_grade.location,
+            usage_key_or_id=self.subsection_without_grade.usage_key,
             earned_all=earned_all_override,
             earned_graded=earned_graded_override
         )
@@ -207,7 +207,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         subsection_grade = self.service.get_subsection_grade(
             self.user.id,
             self.course.id,
-            self.subsection_without_grade.location
+            self.subsection_without_grade.usage_key
         )
         assert subsection_grade is not None
         assert 0 == subsection_grade.earned_all
@@ -217,7 +217,7 @@ class GradesServiceTests(ModuleStoreTestCase):
         override_obj = self.service.get_subsection_grade_override(
             self.user.id,
             self.course.id,
-            self.subsection_without_grade.location
+            self.subsection_without_grade.usage_key
         )
         assert override_obj is not None
         assert override_obj.earned_all_override == earned_all_override
@@ -227,7 +227,7 @@ class GradesServiceTests(ModuleStoreTestCase):
             sender=None,
             user_id=self.user.id,
             course_id=str(self.course.id),
-            usage_id=str(self.subsection_without_grade.location),
+            usage_id=str(self.subsection_without_grade.usage_key),
             only_if_higher=False,
             modified=override_obj.modified,
             score_deleted=False,
@@ -244,17 +244,17 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.service.undo_override_subsection_grade(
             user_id=self.user.id,
             course_key_or_id=self.course.id,
-            usage_key_or_id=self.subsection.location,
+            usage_key_or_id=self.subsection.usage_key,
         )
 
-        override = self.service.get_subsection_grade_override(self.user.id, self.course.id, self.subsection.location)
+        override = self.service.get_subsection_grade_override(self.user.id, self.course.id, self.subsection.usage_key)
         assert override is None
 
         assert self.mock_signal.call_args == call(
             sender=None,
             user_id=self.user.id,
             course_id=str(self.course.id),
-            usage_id=str(self.subsection.location),
+            usage_id=str(self.subsection.usage_key),
             only_if_higher=False,
             modified=datetime.now().replace(tzinfo=pytz.UTC),
             score_deleted=True,
@@ -274,11 +274,11 @@ class GradesServiceTests(ModuleStoreTestCase):
         self.service.undo_override_subsection_grade(
             user_id=self.user.id,
             course_key_or_id=self.course.id,
-            usage_key_or_id=self.subsection.location,
+            usage_key_or_id=self.subsection.usage_key,
             feature=GradeOverrideFeatureEnum.proctoring,
         )
 
-        override = self.service.get_subsection_grade_override(self.user.id, self.course.id, self.subsection.location)
+        override = self.service.get_subsection_grade_override(self.user.id, self.course.id, self.subsection.usage_key)
         assert override is not None
 
     @freeze_time('2018-01-01')
@@ -293,7 +293,7 @@ class GradesServiceTests(ModuleStoreTestCase):
             self.service.undo_override_subsection_grade(
                 user_id=self.user.id,
                 course_key_or_id=self.course.id,
-                usage_key_or_id=self.subsection.location,
+                usage_key_or_id=self.subsection.usage_key,
             )
         except PersistentSubsectionGrade.DoesNotExist:
             assert False, 'Exception raised unexpectedly'

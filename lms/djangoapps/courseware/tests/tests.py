@@ -65,24 +65,24 @@ class PageLoaderTestCase(LoginEnrollmentTestCase):
         # Try to load each item in the course
         for block in items:
 
-            if block.location.category == 'about':
+            if block.usage_key.category == 'about':
                 self._assert_loads('about_course',
                                    {'course_id': str(course_key)},
                                    block)
 
-            elif block.location.category == 'static_tab':
+            elif block.usage_key.category == 'static_tab':
                 kwargs = {'course_id': str(course_key),
-                          'tab_slug': block.location.name}
+                          'tab_slug': block.usage_key.name}
                 self._assert_loads('static_tab', kwargs, block)
 
-            elif block.location.category == 'course_info':
+            elif block.usage_key.category == 'course_info':
                 self._assert_loads('info', {'course_id': str(course_key)},
                                    block)
 
             else:
 
                 kwargs = {'course_id': str(course_key),
-                          'location': str(block.location)}
+                          'location': str(block.usage_key)}
 
                 self._assert_loads('jump_to', kwargs, block,
                                    expect_redirect=True,
@@ -103,7 +103,7 @@ class PageLoaderTestCase(LoginEnrollmentTestCase):
 
         if response.status_code != 200:
             self.fail('Status %d for page %s' %
-                      (response.status_code, block.location))
+                      (response.status_code, block.usage_key))
 
         if expect_redirect:
             assert response.redirect_chain[0][1] == 302

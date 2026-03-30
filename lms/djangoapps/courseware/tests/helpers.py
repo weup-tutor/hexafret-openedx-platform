@@ -77,7 +77,7 @@ class BaseTestXmodule(ModuleStoreTestCase):
 
     def initialize_module(self, runtime_kwargs=None, **kwargs):  # lint-amnesty, pylint: disable=missing-function-docstring
         kwargs.update({
-            'parent_location': self.section.location,
+            'parent_location': self.section.usage_key,
             'category': self.CATEGORY
         })
 
@@ -94,7 +94,7 @@ class BaseTestXmodule(ModuleStoreTestCase):
             runtime_kwargs = {}
         self.new_module_runtime(runtime=self.block.runtime, **runtime_kwargs)
 
-        self.item_url = str(self.block.location)
+        self.item_url = str(self.block.usage_key)
 
     def setup_course(self):  # lint-amnesty, pylint: disable=missing-function-docstring
         self.course = CourseFactory.create()
@@ -104,11 +104,11 @@ class BaseTestXmodule(ModuleStoreTestCase):
         modulestore().metadata_inheritance_cache_subsystem = None
 
         chapter = BlockFactory.create(
-            parent_location=self.course.location,
+            parent_location=self.course.usage_key,
             category="sequential",
         )
         self.section = BlockFactory.create(
-            parent_location=chapter.location,
+            parent_location=chapter.usage_key,
             category="sequential"
         )
 

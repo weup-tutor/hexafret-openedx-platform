@@ -1717,7 +1717,7 @@ class SplitMongoModuleStore(SplitBulkWriteMixin, ModuleStoreWriteBase):
                 return xblock
 
             # don't version the structure as create_item handled that already.
-            new_structure = self._lookup_course(xblock.location.course_key).structure
+            new_structure = self._lookup_course(xblock.usage_key.course_key).structure
 
             # add new block as child and update parent's version
             block_id = BlockKey.from_usage_key(parent_usage_key)
@@ -1728,11 +1728,11 @@ class SplitMongoModuleStore(SplitBulkWriteMixin, ModuleStoreWriteBase):
 
             # Originally added to support entrance exams (settings.FEATURES.get('ENTRANCE_EXAMS'))
             if kwargs.get('position') is None:
-                parent.fields.setdefault('children', []).append(BlockKey.from_usage_key(xblock.location))
+                parent.fields.setdefault('children', []).append(BlockKey.from_usage_key(xblock.usage_key))
             else:
                 parent.fields.setdefault('children', []).insert(
                     kwargs.get('position'),
-                    BlockKey.from_usage_key(xblock.location)
+                    BlockKey.from_usage_key(xblock.usage_key)
                 )
 
             if parent.edit_info.update_version != new_structure['_id']:
@@ -1954,7 +1954,7 @@ class SplitMongoModuleStore(SplitBulkWriteMixin, ModuleStoreWriteBase):
         if definition_locator is None and not allow_not_found:
             raise AttributeError("block is missing expected definition_locator from caching descriptor system")
         return self._update_item_from_fields(
-            user_id, block.location.course_key, BlockKey.from_usage_key(block.location),
+            user_id, block.usage_key.course_key, BlockKey.from_usage_key(block.usage_key),
             partitioned_fields, definition_locator, allow_not_found, force, **kwargs
         ) or block
 
@@ -2137,7 +2137,7 @@ class SplitMongoModuleStore(SplitBulkWriteMixin, ModuleStoreWriteBase):
         :param user_id: who's doing the change
         """
         # find course_index entry if applicable and structures entry
-        course_key = xblock.location.course_key
+        course_key = xblock.usage_key.course_key
         with self.bulk_operations(course_key):
             index_entry = self._get_index_if_valid(course_key, force)
             structure = self._lookup_course(course_key).structure
@@ -2150,10 +2150,10 @@ class SplitMongoModuleStore(SplitBulkWriteMixin, ModuleStoreWriteBase):
 
                 # update the index entry if appropriate
                 if index_entry is not None:
-                    self._update_head(course_key, index_entry, xblock.location.branch, new_id)
+                    self._update_head(course_key, index_entry, xblock.usage_key.branch, new_id)
 
                 # fetch and return the new item--fetching is unnecessary but a good qc step
-                return self.get_item(xblock.location.for_version(new_id))
+                return self.get_item(xblock.usage_key.for_version(new_id))
             else:
                 return xblock
 
@@ -2194,7 +2194,7 @@ class SplitMongoModuleStore(SplitBulkWriteMixin, ModuleStoreWriteBase):
                 if isinstance(child.block_id, LocalId):
                     child_block = xblock.runtime.get_block(child)
                     is_updated = self._persist_subdag(course_key, child_block, user_id, structure_blocks, new_id) or is_updated  # lint-amnesty, pylint: disable=line-too-long
-                    children.append(BlockKey.from_usage_key(child_block.location))
+                    children.append(BlockKey.from_usage_key(child_block.usage_key))
                 else:
                     children.append(BlockKey.from_usage_key(child))
             is_updated = is_updated or structure_blocks[block_key].fields['children'] != children

@@ -1058,7 +1058,7 @@ class TestMigrateFromModulestore(ModuleStoreTestCase):
         """
         Test successful migration from legacy library to V2 library
         """
-        source = ModulestoreSource.objects.create(key=self.legacy_library.location.library_key)
+        source = ModulestoreSource.objects.create(key=self.legacy_library.usage_key.library_key)
 
         task = bulk_migrate_from_modulestore.apply_async(
             kwargs={
@@ -1086,8 +1086,8 @@ class TestMigrateFromModulestore(ModuleStoreTestCase):
         """
         Test successful bulk migration from legacy libraries to V2 library
         """
-        source = ModulestoreSource.objects.create(key=self.legacy_library.location.library_key)
-        source_2 = ModulestoreSource.objects.create(key=self.legacy_library_2.location.library_key)
+        source = ModulestoreSource.objects.create(key=self.legacy_library.usage_key.library_key)
+        source_2 = ModulestoreSource.objects.create(key=self.legacy_library_2.usage_key.library_key)
 
         task = bulk_migrate_from_modulestore.apply_async(
             kwargs={
@@ -1121,8 +1121,8 @@ class TestMigrateFromModulestore(ModuleStoreTestCase):
         """
         Test successful bulk migration from legacy libraries to V2 library with create collections
         """
-        source = ModulestoreSource.objects.create(key=self.legacy_library.location.library_key)
-        source_2 = ModulestoreSource.objects.create(key=self.legacy_library_2.location.library_key)
+        source = ModulestoreSource.objects.create(key=self.legacy_library.usage_key.library_key)
+        source_2 = ModulestoreSource.objects.create(key=self.legacy_library_2.usage_key.library_key)
         source_3 = ModulestoreSource.objects.create(key=self.course.id)
 
         task = bulk_migrate_from_modulestore.apply_async(
@@ -1183,7 +1183,7 @@ class TestMigrateFromModulestore(ModuleStoreTestCase):
         """
         Test successful bulk migration from legacy libraries to V2 library using previous collection
         """
-        source = ModulestoreSource.objects.create(key=self.legacy_library.location.library_key)
+        source = ModulestoreSource.objects.create(key=self.legacy_library.usage_key.library_key)
 
         task = bulk_migrate_from_modulestore.apply_async(
             kwargs={
@@ -1245,7 +1245,7 @@ class TestMigrateFromModulestore(ModuleStoreTestCase):
         """
         Test successful bulk migration from legacy libraries to different V2 libraries
         """
-        source = ModulestoreSource.objects.create(key=self.legacy_library.location.library_key)
+        source = ModulestoreSource.objects.create(key=self.legacy_library.usage_key.library_key)
 
         task = bulk_migrate_from_modulestore.apply_async(
             kwargs={
@@ -1310,7 +1310,7 @@ class TestMigrateFromModulestore(ModuleStoreTestCase):
         """
         Test successful bulk migration from legacy libraries to V2 library using previous collection
         """
-        source = ModulestoreSource.objects.create(key=self.legacy_library.location.library_key)
+        source = ModulestoreSource.objects.create(key=self.legacy_library.usage_key.library_key)
 
         task = bulk_migrate_from_modulestore.apply_async(
             kwargs={
@@ -1564,8 +1564,8 @@ class TestMigrateFromModulestore(ModuleStoreTestCase):
         Test failed bulk migration from legacy libraries to V2 library
         """
         mock_import_assets.side_effect = Exception("Simulated import error")
-        source = ModulestoreSource.objects.create(key=self.legacy_library.location.library_key)
-        source_2 = ModulestoreSource.objects.create(key=self.legacy_library_2.location.library_key)
+        source = ModulestoreSource.objects.create(key=self.legacy_library.usage_key.library_key)
+        source_2 = ModulestoreSource.objects.create(key=self.legacy_library_2.usage_key.library_key)
 
         task = bulk_migrate_from_modulestore.apply_async(
             kwargs={

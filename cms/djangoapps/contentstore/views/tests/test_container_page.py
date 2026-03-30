@@ -55,20 +55,20 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
         self.unreleased_public_vertical = self._create_block(
             parent=self.sequential, category='vertical', display_name='Unreleased Public Unit',
             start=future)
-        self.store.publish(self.unreleased_public_vertical.location, self.user.id)
-        self.store.publish(self.released_public_vertical.location, self.user.id)
-        self.store.publish(self.vertical.location, self.user.id)
+        self.store.publish(self.unreleased_public_vertical.usage_key, self.user.id)
+        self.store.publish(self.released_public_vertical.usage_key, self.user.id)
+        self.store.publish(self.vertical.usage_key, self.user.id)
 
     def test_container_html(self):
         assets_url = reverse(
-            'assets_handler', kwargs={'course_key_string': str(self.child_container.location.course_key)}
+            'assets_handler', kwargs={'course_key_string': str(self.child_container.usage_key.course_key)}
         )
         self._test_html_content(
             self.child_container,
             expected_section_tag=(
                 '<section class="wrapper-xblock level-page is-hidden studio-xblock-wrapper" '
                 'data-locator="{0}" data-course-key="{0.course_key}" data-course-assets="{1}">'.format(
-                    self.child_container.location, assets_url
+                    self.child_container.usage_key, assets_url
                 )
             ),
             expected_breadcrumbs=(
@@ -77,10 +77,10 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
             ).format(
                 course=re.escape(str(self.course.id)),
                 section_parameters=re.escape('?show={}'.format(quote(
-                    str(self.chapter.location).encode()
+                    str(self.chapter.usage_key).encode()
                 ))),
                 subsection_parameters=re.escape('?show={}'.format(quote(
-                    str(self.sequential.location).encode()
+                    str(self.sequential.usage_key).encode()
                 ))),
             ),
         )
@@ -96,14 +96,14 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
 
         def test_container_html(xblock):
             assets_url = reverse(
-                'assets_handler', kwargs={'course_key_string': str(draft_container.location.course_key)}
+                'assets_handler', kwargs={'course_key_string': str(draft_container.usage_key.course_key)}
             )
             self._test_html_content(
                 xblock,
                 expected_section_tag=(
                     '<section class="wrapper-xblock level-page is-hidden studio-xblock-wrapper" '
                     'data-locator="{0}" data-course-key="{0.course_key}" data-course-assets="{1}">'.format(
-                        draft_container.location, assets_url
+                        draft_container.usage_key, assets_url
                     )
                 ),
                 expected_breadcrumbs=(
@@ -111,9 +111,9 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
                     '<a href="/container/{unit_parameters}">Unit</a>.*'
                 ).format(
                     course=re.escape(str(self.course.id)),
-                    unit_parameters=re.escape(str(self.vertical.location)),
+                    unit_parameters=re.escape(str(self.vertical.usage_key)),
                     subsection_parameters=re.escape('?show={}'.format(quote(
-                        str(self.sequential.location).encode()
+                        str(self.sequential.usage_key).encode()
                     ))),
                 ),
             )
@@ -122,8 +122,8 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
         test_container_html(draft_container)
 
         # Now publish the unit and validate again
-        self.store.publish(self.vertical.location, self.user.id)
-        draft_container = self.store.get_item(draft_container.location)
+        self.store.publish(self.vertical.usage_key, self.user.id)
+        draft_container = self.store.get_item(draft_container.usage_key)
         test_container_html(draft_container)
 
     def _test_html_content(self, xblock, expected_section_tag, expected_breadcrumbs):
@@ -139,9 +139,9 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
         """
         Verify that a public xblock's container preview returns the expected HTML.
         """
-        published_unit = self.store.publish(self.vertical.location, self.user.id)
-        published_child_container = self.store.get_item(self.child_container.location)
-        published_child_vertical = self.store.get_item(self.child_vertical.location)
+        published_unit = self.store.publish(self.vertical.usage_key, self.user.id)
+        published_child_container = self.store.get_item(self.child_container.usage_key)
+        published_child_vertical = self.store.get_item(self.child_vertical.usage_key)
         self.validate_preview_html(published_unit, self.container_view)
         self.validate_preview_html(published_child_container, self.container_view)
         self.validate_preview_html(published_child_vertical, self.reorderable_child_view)
@@ -210,7 +210,7 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
         Verify that a public container rendered as a child of the container page returns the expected HTML.
         """
         empty_child_container = self._create_block(self.vertical, 'split_test', 'Split Test 1')
-        published_empty_child_container = self.store.publish(empty_child_container.location, self.user.id)
+        published_empty_child_container = self.store.publish(empty_child_container.usage_key, self.user.id)
         self.validate_preview_html(published_empty_child_container, self.reorderable_child_view, can_add=False)
 
     def test_draft_child_container_preview_html(self):
@@ -243,7 +243,7 @@ class ContainerPageTestCase(StudioPageTestCase, LibraryTestCase):
         # Check 200 response if 'usage_key_string' is correct
         response = views.container_handler(
             request=request,
-            usage_key_string=str(self.vertical.location)
+            usage_key_string=str(self.vertical.usage_key)
         )
         self.assertEqual(response.status_code, 200)
 
@@ -255,14 +255,14 @@ class ContainerEmbedPageTestCase(ContainerPageTestCase):  # lint-amnesty, pylint
 
     def test_container_html(self):
         assets_url = reverse(
-            'assets_handler', kwargs={'course_key_string': str(self.child_container.location.course_key)}
+            'assets_handler', kwargs={'course_key_string': str(self.child_container.usage_key.course_key)}
         )
         self._test_html_content(
             self.child_container,
             expected_section_tag=(
                 '<section class="wrapper-xblock level-page is-hidden studio-xblock-wrapper" '
                 'data-locator="{0}" data-course-key="{0.course_key}" data-course-assets="{1}">'.format(
-                    self.child_container.location, assets_url
+                    self.child_container.usage_key, assets_url
                 )
             ),
         )
@@ -278,14 +278,14 @@ class ContainerEmbedPageTestCase(ContainerPageTestCase):  # lint-amnesty, pylint
 
         def test_container_html(xblock):
             assets_url = reverse(
-                'assets_handler', kwargs={'course_key_string': str(draft_container.location.course_key)}
+                'assets_handler', kwargs={'course_key_string': str(draft_container.usage_key.course_key)}
             )
             self._test_html_content(
                 xblock,
                 expected_section_tag=(
                     '<section class="wrapper-xblock level-page is-hidden studio-xblock-wrapper" '
                     'data-locator="{0}" data-course-key="{0.course_key}" data-course-assets="{1}">'.format(
-                        draft_container.location, assets_url
+                        draft_container.usage_key, assets_url
                     )
                 ),
             )
@@ -294,8 +294,8 @@ class ContainerEmbedPageTestCase(ContainerPageTestCase):  # lint-amnesty, pylint
         test_container_html(draft_container)
 
         # Now publish the unit and validate again
-        self.store.publish(self.vertical.location, self.user.id)
-        draft_container = self.store.get_item(draft_container.location)
+        self.store.publish(self.vertical.usage_key, self.user.id)
+        draft_container = self.store.get_item(draft_container.usage_key)
         test_container_html(draft_container)
 
     def _test_html_content(self, xblock, expected_section_tag):  # lint-amnesty, pylint: disable=arguments-differ

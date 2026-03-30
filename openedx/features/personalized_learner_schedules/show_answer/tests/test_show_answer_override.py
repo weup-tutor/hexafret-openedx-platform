@@ -33,7 +33,7 @@ class ShowAnswerFieldOverrideTest(ModuleStoreTestCase):
     def get_course_block(self, course):
         request = RequestFactory().request()
         field_data_cache = FieldDataCache([], course.id, self.user)
-        return get_block(self.user, request, course.location, field_data_cache, course=course)
+        return get_block(self.user, request, course.usage_key, field_data_cache, course=course)
 
     @ddt.data(True, False)
     def test_override_enabled_for(self, active):

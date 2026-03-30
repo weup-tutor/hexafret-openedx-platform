@@ -111,8 +111,8 @@ def _get_or_create_library(org, number, display_name, user):
                     "display_name": display_name
                 },
             )
-        add_instructor(library.location.library_key, user, user)
-        return library.location.library_key, True
+        add_instructor(library.usage_key.library_key, user, user)
+        return library.usage_key.library_key, True
     except DuplicateCourseError:
         # Course exists, return its key
         return LibraryLocator(org=org, library=number), False

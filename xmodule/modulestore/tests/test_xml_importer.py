@@ -175,7 +175,7 @@ class UpdateLocationTest(ModuleStoreNoSettings):
     def test_update_locations_native_xblock(self):
         """ Update locations updates location and keeps values and "is_set_on" status """
         # Set the XBlock's location
-        self.xblock.location = BlockUsageLocator(CourseLocator("org", "import", "run"), "category", "stubxblock")
+        self.xblock.usage_key = BlockUsageLocator(CourseLocator("org", "import", "run"), "category", "stubxblock")
 
         # Explicitly set the content, settings and children fields
         self.xblock.test_content_field = 'Explicitly set'
@@ -186,12 +186,12 @@ class UpdateLocationTest(ModuleStoreNoSettings):
         self.xblock.save()
 
         # Update location
-        target_location = self.xblock.location.replace(revision='draft')
+        target_location = self.xblock.usage_key.replace(revision='draft')
         _update_block_location(self.xblock, target_location)
         new_version = self.xblock  # _update_block_location updates in-place
 
         # Check the XBlock's location
-        assert new_version.location == target_location
+        assert new_version.usage_key == target_location
 
         # Check the values of the fields.
         # The content, settings and children fields should be preserved

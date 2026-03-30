@@ -50,22 +50,22 @@ class MasqueradeTestCase(SharedModuleStoreTestCase, LoginEnrollmentTestCase, Mas
         super().setUpClass()
         cls.course = CourseFactory.create(number='masquerade-test', metadata={'start': datetime.now(UTC)})
         cls.info_page = BlockFactory.create(
-            category="course_info", parent_location=cls.course.location,
+            category="course_info", parent_location=cls.course.usage_key,
             data="OOGIE BLOOGIE", display_name="updates"
         )
         cls.chapter = BlockFactory.create(
-            parent_location=cls.course.location,
+            parent_location=cls.course.usage_key,
             category="chapter",
             display_name="Test Section",
         )
         cls.sequential_display_name = "Test Masquerade Subsection"
         cls.sequential = BlockFactory.create(
-            parent_location=cls.chapter.location,
+            parent_location=cls.chapter.usage_key,
             category="sequential",
             display_name=cls.sequential_display_name,
         )
         cls.vertical = BlockFactory.create(
-            parent_location=cls.sequential.location,
+            parent_location=cls.sequential.usage_key,
             category="vertical",
             display_name="Test Unit",
         )
@@ -78,7 +78,7 @@ class MasqueradeTestCase(SharedModuleStoreTestCase, LoginEnrollmentTestCase, Mas
         )
         cls.problem_display_name = "TestMasqueradeProblem"
         cls.problem = BlockFactory.create(
-            parent_location=cls.vertical.location,
+            parent_location=cls.vertical.usage_key,
             category='problem',
             data=problem_xml,
             display_name=cls.problem_display_name
@@ -99,8 +99,8 @@ class MasqueradeTestCase(SharedModuleStoreTestCase, LoginEnrollmentTestCase, Mas
             'courseware_subsection',
             kwargs={
                 'course_id': str(self.course.id),
-                'section': self.chapter.location.block_id,
-                'subsection': self.sequential.location.block_id,
+                'section': self.chapter.usage_key.block_id,
+                'subsection': self.sequential.usage_key.block_id,
             }
         )
         return self.client.get(url)
@@ -145,7 +145,7 @@ class MasqueradeTestCase(SharedModuleStoreTestCase, LoginEnrollmentTestCase, Mas
             'xblock_handler',
             kwargs={
                 'course_id': str(self.course.id),
-                'usage_id': str(self.problem.location),
+                'usage_id': str(self.problem.usage_key),
                 'handler': 'xmodule_handler',
                 'suffix': 'problem_get'
             }
