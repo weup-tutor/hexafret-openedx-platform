@@ -258,7 +258,7 @@ def _update_node_tree_and_dictionary(block, link, link_state, node_tree, diction
     # Add block-level details for the last xblock in the path (URL and broken/locked links)
     updated_dictionary[xblock_id].setdefault(
         'url',
-        f'/course/{block.course_id}/editor/{block.category}/{block.location}'
+        f'/course/{block.context_key}/editor/{block.scope_ids.block_type}/{block.location}'
     )
 
     # The link_state == True condition is maintained for backward compatibility.

@@ -353,7 +353,7 @@ def update_block(block):
     Helper method to update the block in the modulestore
     """
     store = modulestore()
-    with store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, block.course_id):
+    with store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, block.context_key):
         return store.update_item(block, ModuleStoreEnum.UserID.test)
 
 

@@ -68,7 +68,7 @@ class _PollBlockTestBase(TestCase):
         unescaped characters.
         """
         module_system = DummyModuleStoreRuntime(load_error_blocks=True)
-        module_system.id_generator.target_course_id = self.xblock.course_id
+        module_system.id_generator.target_course_id = self.xblock.context_key
         sample_poll_xml = '''
         <poll_question display_name="Poll Question">
             <p>How old are you?</p>

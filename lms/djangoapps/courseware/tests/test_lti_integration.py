@@ -53,7 +53,7 @@ class _TestLTIBase(BaseTestXmodule):
         mocked_decoded_signature = 'my_signature='
 
         # Note: this course_id is actually a course_key
-        context_id = str(self.block.course_id)
+        context_id = str(self.block.context_key)
         user_service = self.block.runtime.service(self.block, 'user')
         user_id = str(user_service.get_current_user().opt_attrs.get(ATTR_KEY_ANONYMOUS_USER_ID))
         hostname = settings.LMS_BASE

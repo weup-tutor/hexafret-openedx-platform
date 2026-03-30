@@ -310,17 +310,6 @@ class XModuleMixin(XModuleFields, XBlock):  # pylint: disable=too-many-public-me
         return self.runtime
 
     @property
-    def course_id(self):
-        """
-        Return the key of the block to which this Course belongs.
-
-        New code should always used `context_key`, which is the key of the Learning Context to which
-        this block belongs. "Learning Context" is a generalized notion of Courses which is inclusive
-        of Content Libraries, et al.
-        """
-        return self.context_key
-
-    @property
     def category(self):
         """
         Return the block type, formerly known as "category".

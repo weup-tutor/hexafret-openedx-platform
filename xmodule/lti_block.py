@@ -618,8 +618,8 @@ class _BuiltInLTIBlock(
 
         Returns None if the current block is not part of a course (i.e part of a library).
         """
-        if isinstance(self.course_id, CourseKey):
-            return self.runtime.modulestore.get_course(self.course_id)
+        if isinstance(self.context_key, CourseKey):
+            return self.runtime.modulestore.get_course(self.context_key)
         return None
 
     @property
@@ -630,7 +630,7 @@ class _BuiltInLTIBlock(
         context_id is an opaque identifier that uniquely identifies the context (e.g., a course)
         that contains the link being launched.
         """
-        return str(self.course_id)
+        return str(self.context_key)
 
     @property
     def role(self):

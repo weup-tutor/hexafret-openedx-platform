@@ -302,7 +302,7 @@ class _BuiltInVideoBlock(
             try:
                 val_profiles = ["youtube", "desktop_webm", "desktop_mp4"]
 
-                if self.is_hls_playback_enabled(self.course_id):
+                if self.is_hls_playback_enabled(self.context_key):
                     val_profiles.append('hls')
 
                 # strip edx_video_id to prevent ValVideoNotFoundError error if unwanted spaces are there. TNL-5769
@@ -489,7 +489,7 @@ class _BuiltInVideoBlock(
         }
         video_config_service = self.runtime.service(self, 'video_config')
         if video_config_service:
-            template_context.update(video_config_service.get_public_sharing_context(self, self.course_id))
+            template_context.update(video_config_service.get_public_sharing_context(self, self.context_key))
 
         return loader.render_django_template("templates/video.html", template_context)
 

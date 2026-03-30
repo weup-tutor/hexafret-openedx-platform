@@ -322,7 +322,7 @@ class LegacyLibraryContentBlock(ItemBankMixin, XModuleToXBlockMixin, XBlock):
         """
         from cms.djangoapps.modulestore_migrator import api as migrator_api
         store = modulestore()
-        with store.bulk_operations(self.course_id):
+        with store.bulk_operations(self.context_key):
             children = self.get_children()
             # These are the v1 library item upstream UsageKeys
             child_old_upstream_keys = [
