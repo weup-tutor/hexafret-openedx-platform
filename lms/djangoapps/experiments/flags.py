@@ -31,6 +31,7 @@ AUDIT_EXPIRY_URGENCY_V1_ENABLED = WaffleFlag(
     __name__,
 )
 
+
 class ExperimentWaffleFlag(CourseWaffleFlag):
     """
     ExperimentWaffleFlag handles logic around experimental bucketing and whitelisting.

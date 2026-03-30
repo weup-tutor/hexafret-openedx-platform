@@ -161,7 +161,6 @@ class TestAccess(ModuleStoreTestCase):
         assert duration_limit_upgrade_deadline is not None
         assert duration_limit_upgrade_deadline == expected_course_expiration_date
 
-
     def test_get_user_course_expiration_date_uses_persisted_audit_expiry_at_when_present(self):
         enrollment = CourseEnrollmentFactory.create(course=self.course)
         overview = enrollment.course
