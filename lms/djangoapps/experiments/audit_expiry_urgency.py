@@ -214,8 +214,6 @@ def maybe_persist_audit_expiry_urgency_attributes(enrollment):
 
     Safe + idempotent: if audit_expiry_at already exists, this is a no-op.
     """
-    # Keep the eligibility gates consolidated, but avoid a large boolean expression
-    # directly in the `if` to satisfy pylint's `too-many-boolean-expressions` rule.
     missing_enrollment_or_user = (not enrollment or not getattr(enrollment, 'user_id', None))
     missing_course_overview = (not missing_enrollment_or_user and not enrollment.course_overview)
 
