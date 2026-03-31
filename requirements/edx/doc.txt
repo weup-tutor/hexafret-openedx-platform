@@ -1610,7 +1610,7 @@ wrapt==2.1.2
     # via
     #   -r requirements/edx/base.txt
     #   xblocks-contrib
-xblock[django]==5.3.0
+xblock[django]==git+https://github.com/openedx/xblock.git@farhan/test-video-block#egg=xblock
     # via
     #   -r requirements/edx/base.txt
     #   acid-xblock
