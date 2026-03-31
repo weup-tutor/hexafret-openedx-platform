@@ -53,7 +53,6 @@ FORCE_VARIANT_SETTING = 'AUDIT_EXPIRY_FORCE_VARIANT'
 def _get_configured_target_course_id_strings():
     """Return configured target course run IDs as a list of strings."""
     default_from_settings = getattr(settings, SITE_CONFIG_KEY_TARGET_COURSES, [])
-    site_config_enabled = configuration_helpers.is_site_configuration_enabled()
     configured = configuration_helpers.get_value(SITE_CONFIG_KEY_TARGET_COURSES, default=default_from_settings)
 
     if configured is None:
@@ -210,48 +209,40 @@ def compute_audit_expiry_at(enrollment, variant, access_duration):
     return content_availability_date + access_duration
 
 
-def should_process_enrollment(enrollment):
-    """Return True if enrollment is eligible for this experiment."""
-    if not AUDIT_EXPIRY_URGENCY_V1_ENABLED.is_enabled():
-        return False
-    if not enrollment or not enrollment.user_id:
-        log.warning('Audit expiry urgency: skipped (missing enrollment or user)')
-        return False
-    if not enrollment.is_active:
-        return False
-    if enrollment.mode != CourseMode.AUDIT:
-        return False
-    if not enrollment.course_overview:
-        log.warning('Audit expiry urgency: skipped (missing course_overview)')
-        return False
-    if not is_target_course(enrollment.course_id):
-        return False
-    # Only apply if Course Duration Limits would normally apply.
-    access_duration = get_user_course_duration(enrollment.user, enrollment.course_overview)
-    if access_duration is None:
-        return False
-    return access_duration is not None
-
-
 def maybe_persist_audit_expiry_urgency_attributes(enrollment):
     """Persist variant and audit_expiry_at for an eligible enrollment.
 
     Safe + idempotent: if audit_expiry_at already exists, this is a no-op.
     """
-    if not should_process_enrollment(enrollment):
+    if not AUDIT_EXPIRY_URGENCY_V1_ENABLED.is_enabled():
+        return
+
+    if not enrollment or not getattr(enrollment, 'user_id', None):
+        log.warning('Audit expiry urgency: skipped (missing enrollment or user)')
+        return
+
+    if not enrollment.course_overview:
+        log.warning('Audit expiry urgency: skipped (missing course_overview)')
+        return
+
+    if any((
+        not enrollment.is_active,
+        enrollment.mode != CourseMode.AUDIT,
+        not is_target_course(enrollment.course_id),
+    )):
         return
 
     # Idempotency: do not overwrite once set.
     if get_persisted_audit_expiry_at(enrollment):
         return
 
-    target_course_ids = _get_configured_target_course_id_strings()
-    variant = choose_variant(enrollment.user, target_course_ids)
-
     access_duration = get_user_course_duration(enrollment.user, enrollment.course_overview)
     if access_duration is None:
-        # Defensive: should_process_enrollment already checked this.
+        # Only apply if Course Duration Limits would normally apply.
         return
+
+    target_course_ids = _get_configured_target_course_id_strings()
+    variant = choose_variant(enrollment.user, target_course_ids)
 
     audit_expiry_at = compute_audit_expiry_at(enrollment, variant, access_duration)
     if timezone.is_naive(audit_expiry_at):
