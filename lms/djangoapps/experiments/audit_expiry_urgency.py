@@ -197,7 +197,7 @@ def choose_variant(user, target_course_id_strings):
 def _content_availability_date(enrollment):
     course_start = getattr(enrollment.course_overview, 'start', None)
     if course_start is None:
-        return enrollment.maybe_persist_audit_expiry_urgency_attributescreated
+        return enrollment.created
     return max(enrollment.created, course_start)
 
 
@@ -214,18 +214,24 @@ def maybe_persist_audit_expiry_urgency_attributes(enrollment):
 
     Safe + idempotent: if audit_expiry_at already exists, this is a no-op.
     """
-    if (
-        not AUDIT_EXPIRY_URGENCY_V1_ENABLED.is_enabled()
-        or not enrollment
-        or not enrollment.user_id
-        or not enrollment.is_active
-        or enrollment.mode != CourseMode.AUDIT
-        or not enrollment.course_overview
-        or not is_target_course(enrollment.course_id)
-    ):
-        if not enrollment or not getattr(enrollment, 'user_id', None):
+    # Keep the eligibility gates consolidated, but avoid a large boolean expression
+    # directly in the `if` to satisfy pylint's `too-many-boolean-expressions` rule.
+    missing_enrollment_or_user = (not enrollment or not getattr(enrollment, 'user_id', None))
+    missing_course_overview = (not missing_enrollment_or_user and not enrollment.course_overview)
+
+    ineligible = any((
+        not AUDIT_EXPIRY_URGENCY_V1_ENABLED.is_enabled(),
+        missing_enrollment_or_user,
+        not enrollment.is_active,
+        enrollment.mode != CourseMode.AUDIT,
+        missing_course_overview,
+        not is_target_course(enrollment.course_id),
+    ))
+
+    if ineligible:
+        if missing_enrollment_or_user:
             log.warning('Audit expiry urgency: skipped (missing enrollment or user)')
-        elif not enrollment.course_overview:
+        elif missing_course_overview:
             log.warning('Audit expiry urgency: skipped (missing course_overview)')
         return
 
