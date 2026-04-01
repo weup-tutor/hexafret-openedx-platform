@@ -2291,7 +2291,7 @@ wrapt==2.1.2
     #   -r requirements/edx/doc.txt
     #   -r requirements/edx/testing.txt
     #   xblocks-contrib
-xblock[django]==5.3.0
+xblock[django]==git+https://github.com/openedx/xblock.git@farhan/test-xmodule-mixin-drop#egg=xblock
     # via
     #   -r requirements/edx/doc.txt
     #   -r requirements/edx/testing.txt
