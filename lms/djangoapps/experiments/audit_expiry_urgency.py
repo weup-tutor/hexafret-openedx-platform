@@ -86,16 +86,19 @@ def _get_attribute(enrollment, name):
 
 
 def get_persisted_variant(enrollment):
+    """Return the persisted experiment variant for an enrollment, if present."""
     attr = _get_attribute(enrollment, ATTRIBUTE_NAME_VARIANT)
     return attr.value if attr else None
 
 
 def get_persisted_experiment_key(enrollment):
+    """Return the persisted experiment key for an enrollment, if present."""
     attr = _get_attribute(enrollment, ATTRIBUTE_NAME_EXPERIMENT_KEY)
     return attr.value if attr else None
 
 
 def get_persisted_expiry_days(enrollment):
+    """Return the persisted expiry-days value as an int, if valid."""
     attr = _get_attribute(enrollment, ATTRIBUTE_NAME_EXPIRY_DAYS)
     if not attr:
         return None
@@ -106,16 +109,19 @@ def get_persisted_expiry_days(enrollment):
 
 
 def get_persisted_assigned_at(enrollment):
+    """Return the persisted assignment timestamp for an enrollment, if present."""
     attr = _get_attribute(enrollment, ATTRIBUTE_NAME_ASSIGNED_AT)
     return attr.value if attr else None
 
 
 def get_persisted_decision_source(enrollment):
+    """Return how the persisted experiment decision was made, if present."""
     attr = _get_attribute(enrollment, ATTRIBUTE_NAME_DECISION_SOURCE)
     return attr.value if attr else None
 
 
 def get_persisted_audit_expiry_at(enrollment):
+    """Return the persisted audit expiry datetime string for an enrollment, if present."""
     attr = _get_attribute(enrollment, ATTRIBUTE_NAME_AUDIT_EXPIRY_AT)
     return attr.value if attr else None
 
