@@ -158,11 +158,32 @@ def get_access_expiration_data(user, course):
 
     masquerading_expired_course = is_masquerading_as_specific_student(user, course.id) and expiration_date < now
 
+    experiment_key = None
+    variant = None
+    expiry_days = None
+
+    if AUDIT_EXPIRY_URGENCY_V1_ENABLED.is_enabled():
+        experiment_attributes = {
+            attr.name: attr.value
+            for attr in enrollment.attributes.filter(namespace='audit_expiry_experiment')
+        }
+        experiment_key = experiment_attributes.get('experiment_key')
+        variant = experiment_attributes.get('variant')
+        expiry_days_value = experiment_attributes.get('expiry_days')
+        if expiry_days_value is not None:
+            try:
+                expiry_days = int(expiry_days_value)
+            except (TypeError, ValueError):
+                expiry_days = None
+
     return {
         'expiration_date': expiration_date,
         'masquerading_expired_course': masquerading_expired_course,
         'upgrade_deadline': upgrade_deadline,
         'upgrade_url': verified_upgrade_deadline_link(user, course=course) if upgrade_deadline else None,
+        'experiment_key': experiment_key,
+        'variant': variant,
+        'expiry_days': expiry_days,
     }
 
 

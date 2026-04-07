@@ -39,7 +39,11 @@ VARIANT_EXPIRY_7_DAYS = 'expiry_7_days'
 VALID_VARIANTS = {VARIANT_CONTROL, VARIANT_EXPIRY_7_DAYS}
 
 ATTRIBUTE_NAMESPACE = 'audit_expiry_experiment'
+ATTRIBUTE_NAME_EXPERIMENT_KEY = 'experiment_key'
 ATTRIBUTE_NAME_VARIANT = 'variant'
+ATTRIBUTE_NAME_EXPIRY_DAYS = 'expiry_days'
+ATTRIBUTE_NAME_ASSIGNED_AT = 'assigned_at'
+ATTRIBUTE_NAME_DECISION_SOURCE = 'decision_source'
 ATTRIBUTE_NAME_AUDIT_EXPIRY_AT = 'audit_expiry_at'
 
 SITE_CONFIG_KEY_TARGET_COURSES = 'AUDIT_EXPIRY_EXPERIMENT_COURSES'
@@ -83,6 +87,31 @@ def _get_attribute(enrollment, name):
 
 def get_persisted_variant(enrollment):
     attr = _get_attribute(enrollment, ATTRIBUTE_NAME_VARIANT)
+    return attr.value if attr else None
+
+
+def get_persisted_experiment_key(enrollment):
+    attr = _get_attribute(enrollment, ATTRIBUTE_NAME_EXPERIMENT_KEY)
+    return attr.value if attr else None
+
+
+def get_persisted_expiry_days(enrollment):
+    attr = _get_attribute(enrollment, ATTRIBUTE_NAME_EXPIRY_DAYS)
+    if not attr:
+        return None
+    try:
+        return int(attr.value)
+    except (TypeError, ValueError):
+        return None
+
+
+def get_persisted_assigned_at(enrollment):
+    attr = _get_attribute(enrollment, ATTRIBUTE_NAME_ASSIGNED_AT)
+    return attr.value if attr else None
+
+
+def get_persisted_decision_source(enrollment):
+    attr = _get_attribute(enrollment, ATTRIBUTE_NAME_DECISION_SOURCE)
     return attr.value if attr else None
 
 
@@ -174,24 +203,24 @@ def _activate_optimizely_variant(user):
 
 
 def choose_variant(user, target_course_id_strings):
-    """Choose (or reuse) a learner-level variant."""
+    """Choose (or reuse) a learner-level variant and decision source."""
     forced_variant = _forced_variant_from_settings()
     if forced_variant:
-        return forced_variant
+        return forced_variant, 'force_variant'
 
     existing_variant = _find_existing_variant_for_user(user, target_course_id_strings)
     if existing_variant:
-        return existing_variant
+        return existing_variant, 'existing'
 
     variation_key = _activate_optimizely_variant(user)
     if variation_key in VALID_VARIANTS:
-        return variation_key
+        return variation_key, 'optimizely'
 
     if variation_key is not None:
         log.warning('Audit expiry urgency: unexpected variation=%s; falling back to control', variation_key)
     else:
         log.warning('Audit expiry urgency: Optimizely unavailable; falling back to control')
-    return VARIANT_CONTROL
+    return VARIANT_CONTROL, 'fallback_control'
 
 
 def _content_availability_date(enrollment):
@@ -205,8 +234,30 @@ def compute_audit_expiry_at(enrollment, variant, access_duration):
     """Compute the persisted audit expiry datetime for this enrollment."""
     content_availability_date = _content_availability_date(enrollment)
     if variant == VARIANT_EXPIRY_7_DAYS:
-        return content_availability_date + timedelta(days=7)
-    return content_availability_date + access_duration
+        expiry_at = content_availability_date + timedelta(days=7)
+        return expiry_at, 7
+    expiry_at = content_availability_date + access_duration
+    return expiry_at, access_duration.days
+
+
+def _track_exposure_event(user, course_key, variant, expiry_days, decision_source):
+    """Track the first persisted learner assignment for this experiment."""
+    try:
+        optimizely_client = OptimizelyClient.get_optimizely_client()
+        if optimizely_client:
+            optimizely_client.track(
+                'audit_expiry_urgency_exposed',
+                str(user.id),
+                attributes={
+                    'experiment_key': EXPERIMENT_KEY,
+                    'variant': variant,
+                    'expiry_days': expiry_days,
+                    'course_id': str(course_key),
+                    'decision_source': decision_source,
+                }
+            )
+    except Exception:  # pylint: disable=broad-except
+        log.exception('Audit expiry urgency: failed to track exposure for user_id=%s', user.id)
 
 
 def maybe_persist_audit_expiry_urgency_attributes(enrollment):
@@ -242,11 +293,20 @@ def maybe_persist_audit_expiry_urgency_attributes(enrollment):
         return
 
     target_course_ids = _get_configured_target_course_id_strings()
-    variant = choose_variant(enrollment.user, target_course_ids)
+    variant, decision_source = choose_variant(enrollment.user, target_course_ids)
 
-    audit_expiry_at = compute_audit_expiry_at(enrollment, variant, access_duration)
+    audit_expiry_at, expiry_days = compute_audit_expiry_at(enrollment, variant, access_duration)
     if timezone.is_naive(audit_expiry_at):
         audit_expiry_at = timezone.make_aware(audit_expiry_at, timezone=timezone.utc)
 
+    assigned_at = timezone.now()
+
+    _set_attribute(enrollment, ATTRIBUTE_NAME_EXPERIMENT_KEY, EXPERIMENT_KEY)
     _set_attribute(enrollment, ATTRIBUTE_NAME_VARIANT, variant)
+    _set_attribute(enrollment, ATTRIBUTE_NAME_EXPIRY_DAYS, str(expiry_days))
+    _set_attribute(enrollment, ATTRIBUTE_NAME_ASSIGNED_AT, assigned_at.isoformat())
+    _set_attribute(enrollment, ATTRIBUTE_NAME_DECISION_SOURCE, decision_source)
     _set_attribute(enrollment, ATTRIBUTE_NAME_AUDIT_EXPIRY_AT, audit_expiry_at.isoformat())
+
+    if decision_source != 'existing':
+        _track_exposure_event(enrollment.user, enrollment.course_id, variant, expiry_days, decision_source)

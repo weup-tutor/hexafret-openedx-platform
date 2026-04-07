@@ -74,8 +74,51 @@ class TestAccess(ModuleStoreTestCase):
                    'expiration_date': expiration_date,
                    'masquerading_expired_course': False,
                    'upgrade_deadline': upgrade_deadline,
-                   'upgrade_url': '/dashboard'
+                   'upgrade_url': '/dashboard',
+                   'experiment_key': None,
+                   'variant': None,
+                   'expiry_days': None,
                }
+
+    def test_get_access_expiration_data_includes_experiment_metadata(self):
+        enrollment = CourseEnrollmentFactory.create(course=self.course)
+        overview = enrollment.course
+        user = enrollment.user
+
+        CourseModeFactory(
+            course_id=enrollment.course.id,
+            mode_slug=CourseMode.VERIFIED,
+        )
+        CourseModeFactory(
+            course_id=enrollment.course.id,
+            mode_slug=CourseMode.AUDIT,
+        )
+
+        CourseEnrollmentAttribute.objects.create(
+            enrollment=enrollment,
+            namespace='audit_expiry_experiment',
+            name='experiment_key',
+            value='audit_expiry_urgency_v1',
+        )
+        CourseEnrollmentAttribute.objects.create(
+            enrollment=enrollment,
+            namespace='audit_expiry_experiment',
+            name='variant',
+            value='expiry_7_days',
+        )
+        CourseEnrollmentAttribute.objects.create(
+            enrollment=enrollment,
+            namespace='audit_expiry_experiment',
+            name='expiry_days',
+            value='7',
+        )
+
+        with override_waffle_flag(AUDIT_EXPIRY_URGENCY_V1_ENABLED, active=True):
+            data = get_access_expiration_data(user, overview)
+
+        assert data['experiment_key'] == 'audit_expiry_urgency_v1'
+        assert data['variant'] == 'expiry_7_days'
+        assert data['expiry_days'] == 7
 
     @ddt.data(
         *itertools.product(
