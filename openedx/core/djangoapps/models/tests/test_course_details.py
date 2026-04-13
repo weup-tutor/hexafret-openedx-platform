@@ -4,17 +4,17 @@ Tests for CourseDetails
 
 
 import datetime
-from django.test import override_settings
-import pytest
-import ddt
 from zoneinfo import ZoneInfo
 
-from xmodule.modulestore import ModuleStoreEnum
-from xmodule.data import CertificatesDisplayBehaviors
-from xmodule.modulestore.tests.django_utils import TEST_DATA_SPLIT_MODULESTORE, ModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory
+import ddt
+import pytest
+from django.test import override_settings
 
 from openedx.core.djangoapps.models.course_details import ABOUT_ATTRIBUTES, CourseDetails
+from xmodule.data import CertificatesDisplayBehaviors
+from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.tests.django_utils import TEST_DATA_SPLIT_MODULESTORE, ModuleStoreTestCase
+from xmodule.modulestore.tests.factories import CourseFactory
 
 EXAMPLE_CERTIFICATE_AVAILABLE_DATE = datetime.date(2020, 1, 1)
 
@@ -145,7 +145,7 @@ class CourseDetailsTestCase(ModuleStoreTestCase):
         attribute_name = 'not_an_about_attribute'
         with self.store.branch_setting(ModuleStoreEnum.Branch.draft_preferred, self.course.id):
             CourseDetails.update_about_item(self.course, attribute_name, 'test_value', self.user.id)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             CourseDetails.fetch_about_attribute(self.course.id, attribute_name)
 
     def test_fetch_video(self):
@@ -154,7 +154,7 @@ class CourseDetailsTestCase(ModuleStoreTestCase):
             CourseDetails.update_about_video(self.course, video_value, self.user.id)
         assert CourseDetails.fetch_youtube_video_id(self.course.id) == video_value
         video_url = CourseDetails.fetch_video_url(self.course.id)
-        self.assertRegex(video_url, fr'http://.*{video_value}')
+        self.assertRegex(video_url, fr'http://.*{video_value}')  # noqa: PT009
 
     @ddt.data(
         (

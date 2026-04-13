@@ -4,8 +4,9 @@ Tests for cohorts
 # pylint: disable=no-member
 
 from unittest.mock import call, patch
-import pytest
+
 import ddt
+import pytest
 from django.contrib.auth.models import AnonymousUser, User  # lint-amnesty, pylint: disable=imported-auth-user
 from django.db import IntegrityError
 from django.http import Http404
@@ -17,7 +18,10 @@ from openedx_events.tests.utils import OpenEdxEventsTestMixin
 from common.djangoapps.student.models import CourseEnrollment
 from common.djangoapps.student.tests.factories import UserFactory
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
-from xmodule.modulestore.tests.django_utils import TEST_DATA_SPLIT_MODULESTORE, ModuleStoreTestCase  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.django_utils import (  # lint-amnesty, pylint: disable=wrong-import-order
+    TEST_DATA_SPLIT_MODULESTORE,
+    ModuleStoreTestCase,
+)
 from xmodule.modulestore.tests.factories import ToyCourseFactory  # lint-amnesty, pylint: disable=wrong-import-order
 
 from .. import cohorts
@@ -235,7 +239,7 @@ class TestCohorts(ModuleStoreTestCase):
         assert cohorts.get_assignment_type(cohort) == CourseCohort.RANDOM
 
         exception_msg = "There must be one cohort to which students can automatically be assigned."
-        with pytest.raises(ValueError) as context_manager:
+        with pytest.raises(ValueError) as context_manager:  # noqa: PT011
             cohorts.set_assignment_type(cohort, CourseCohort.MANUAL)
 
         assert exception_msg == str(context_manager.value)
@@ -643,7 +647,7 @@ class TestCohorts(ModuleStoreTestCase):
         """
         course = modulestore().get_course(self.toy_course_key)
 
-        with pytest.raises(ValueError) as value_error:
+        with pytest.raises(ValueError) as value_error:  # noqa: PT011
             cohorts.set_course_cohorted(course.id, 'not a boolean')
 
         assert 'Cohorted must be a boolean' == str(value_error.value)
