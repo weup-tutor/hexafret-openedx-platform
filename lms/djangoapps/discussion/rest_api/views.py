@@ -19,7 +19,11 @@ from edx_rest_framework_extensions.auth.session.authentication import (
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import permissions, status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.exceptions import ParseError, UnsupportedMediaType
+from rest_framework.exceptions import (
+    ParseError,
+    PermissionDenied,
+    UnsupportedMediaType,
+)
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
