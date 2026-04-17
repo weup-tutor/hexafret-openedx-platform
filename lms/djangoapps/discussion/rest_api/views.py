@@ -120,6 +120,7 @@ log = logging.getLogger(__name__)
 
 User = get_user_model()
 
+
 def _discussion_error_type(exc):
     """Map common discussion exceptions to a stable Datadog error type."""
     if isinstance(exc, PermissionError):
