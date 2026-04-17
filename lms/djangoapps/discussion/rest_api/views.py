@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import BadRequest, ValidationError
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
+from edx_django_utils.monitoring import set_custom_attribute
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication import (
     SessionAuthenticationAllowInactiveUser,
@@ -118,6 +119,22 @@ from .utils import (
 log = logging.getLogger(__name__)
 
 User = get_user_model()
+
+def _discussion_error_type(exc):
+    """Map common discussion exceptions to a stable Datadog error type."""
+    if isinstance(exc, PermissionError):
+        return "permission_denied"
+    if isinstance(exc, PermissionDenied):
+        return "permission_denied"
+    if isinstance(exc, InvalidKeyError):
+        return "validation_error"
+    if isinstance(exc, ValidationError):
+        return "validation_error"
+    if isinstance(exc, ParseError):
+        return "validation_error"
+    if isinstance(exc, UnsupportedMediaType):
+        return "validation_error"
+    return "backend_error"
 
 
 @view_auth_classes()
@@ -713,12 +730,30 @@ class ThreadViewSet(DeveloperErrorViewMixin, ViewSet):
         Implements the POST method for the list endpoint as described in the
         class docstring.
         """
+        set_custom_attribute("forum.operation", "thread.create")
+        set_custom_attribute("forum.course_id", request.data.get("course_id", ""))
+        set_custom_attribute("forum.entity_type", "thread")
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+
+        if request.data.get("type"):
+            set_custom_attribute("forum.thread_type", request.data.get("type"))
+        if request.data.get("topic_id"):
+            set_custom_attribute("forum.commentable_id", request.data.get("topic_id"))
+        if request.data.get("group_id") is not None:
+            set_custom_attribute("forum.group_id", str(request.data.get("group_id")))
+
+        try:
         if not request.data.get("course_id"):
             raise ValidationError({"course_id": ["This field is required."]})
         course_key_str = request.data.get("course_id")
         course_key = CourseKey.from_string(course_key_str)
 
         if is_content_creation_rate_limited(request, course_key=course_key):
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute(
+                    "forum.http_status", str(status.HTTP_429_TOO_MANY_REQUESTS)
+            )
+            set_custom_attribute("forum.error_type", "rate_limited")
             return Response(
                 "Too many requests", status=status.HTTP_429_TOO_MANY_REQUESTS
             )
@@ -729,7 +764,15 @@ class ThreadViewSet(DeveloperErrorViewMixin, ViewSet):
                 raise ValidationError({"captcha_token": "This field is required."})
 
             if not verify_recaptcha_token(captcha_token):
-                return Response({"error": "CAPTCHA verification failed."}, status=400)
+                set_custom_attribute("forum.result", "error")
+                set_custom_attribute(
+                    "forum.http_status", str(status.HTTP_400_BAD_REQUEST)
+                )
+                set_custom_attribute("forum.error_type", "validation_error")
+                return Response(
+                    {"error": "CAPTCHA verification failed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         if (
             ONLY_VERIFIED_USERS_CAN_POST.is_enabled(course_key)
@@ -741,7 +784,15 @@ class ThreadViewSet(DeveloperErrorViewMixin, ViewSet):
 
         data = request.data.copy()
         data.pop("captcha_token", None)
-        return Response(create_thread(request, data))
+        response = Response(create_thread(request, data))
+        set_custom_attribute("forum.result", "success")
+        set_custom_attribute("forum.http_status", str(response.status_code))
+        return response
+    except Exception as exc:
+        set_custom_attribute("forum.result", "error")
+        set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+        set_custom_attribute("forum.error_type", _discussion_error_type(exc))
+        raise
 
     def partial_update(self, request, thread_id):
         """
