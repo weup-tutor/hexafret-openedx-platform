@@ -743,56 +743,58 @@ class ThreadViewSet(DeveloperErrorViewMixin, ViewSet):
             set_custom_attribute("forum.group_id", str(request.data.get("group_id")))
 
         try:
-        if not request.data.get("course_id"):
-            raise ValidationError({"course_id": ["This field is required."]})
-        course_key_str = request.data.get("course_id")
-        course_key = CourseKey.from_string(course_key_str)
+            if not request.data.get("course_id"):
+                raise ValidationError({"course_id": ["This field is required."]})
+            course_key_str = request.data.get("course_id")
+            course_key = CourseKey.from_string(course_key_str)
 
-        if is_content_creation_rate_limited(request, course_key=course_key):
-            set_custom_attribute("forum.result", "error")
-            set_custom_attribute(
-                    "forum.http_status", str(status.HTTP_429_TOO_MANY_REQUESTS)
-            )
-            set_custom_attribute("forum.error_type", "rate_limited")
-            return Response(
-                "Too many requests", status=status.HTTP_429_TOO_MANY_REQUESTS
-            )
-
-        if is_captcha_enabled(course_key) and is_only_student(course_key, request.user):
-            captcha_token = request.data.get("captcha_token")
-            if not captcha_token:
-                raise ValidationError({"captcha_token": "This field is required."})
-
-            if not verify_recaptcha_token(captcha_token):
+            if is_content_creation_rate_limited(request, course_key=course_key):
                 set_custom_attribute("forum.result", "error")
                 set_custom_attribute(
-                    "forum.http_status", str(status.HTTP_400_BAD_REQUEST)
+                    "forum.http_status", str(status.HTTP_429_TOO_MANY_REQUESTS)
                 )
-                set_custom_attribute("forum.error_type", "validation_error")
+                set_custom_attribute("forum.error_type", "rate_limited")
                 return Response(
-                    {"error": "CAPTCHA verification failed."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    "Too many requests", status=status.HTTP_429_TOO_MANY_REQUESTS
                 )
 
-        if (
-            ONLY_VERIFIED_USERS_CAN_POST.is_enabled(course_key)
-            and not request.user.is_active
-        ):
-            raise ValidationError(
-                {"detail": "Only verified users can post in discussions."}
-            )
+            if is_captcha_enabled(course_key) and is_only_student(
+                course_key, request.user
+            ):
+                captcha_token = request.data.get("captcha_token")
+                if not captcha_token:
+                    raise ValidationError({"captcha_token": "This field is required."})
 
-        data = request.data.copy()
-        data.pop("captcha_token", None)
-        response = Response(create_thread(request, data))
-        set_custom_attribute("forum.result", "success")
-        set_custom_attribute("forum.http_status", str(response.status_code))
-        return response
-    except Exception as exc:
-        set_custom_attribute("forum.result", "error")
-        set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
-        set_custom_attribute("forum.error_type", _discussion_error_type(exc))
-        raise
+                if not verify_recaptcha_token(captcha_token):
+                    set_custom_attribute("forum.result", "error")
+                    set_custom_attribute(
+                        "forum.http_status", str(status.HTTP_400_BAD_REQUEST)
+                    )
+                    set_custom_attribute("forum.error_type", "validation_error")
+                    return Response(
+                        {"error": "CAPTCHA verification failed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            if (
+                ONLY_VERIFIED_USERS_CAN_POST.is_enabled(course_key)
+                and not request.user.is_active
+            ):
+                raise ValidationError(
+                    {"detail": "Only verified users can post in discussions."}
+                )
+
+            data = request.data.copy()
+            data.pop("captcha_token", None)
+            response = Response(create_thread(request, data))
+            set_custom_attribute("forum.result", "success")
+            set_custom_attribute("forum.http_status", str(response.status_code))
+            return response
+        except Exception as exc:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", _discussion_error_type(exc))
+            raise
 
     def partial_update(self, request, thread_id):
         """
