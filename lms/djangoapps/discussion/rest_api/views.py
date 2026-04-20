@@ -20,7 +20,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
-from common.djangoapps.student.models import CourseEnrollment
 from common.djangoapps.util.file import store_uploaded_file
 from lms.djangoapps.course_api.blocks.api import get_blocks
 from lms.djangoapps.course_goals.models import UserActivity
@@ -1539,5 +1538,3 @@ class CourseDiscussionRolesAPIView(DeveloperErrorViewMixin, APIView):
         context = {'course_discussion_settings': CourseDiscussionSettings.get(course_id)}
         serializer = DiscussionRolesListSerializer(data, context=context)
         return Response(serializer.data)
-
-

@@ -87,5 +87,3 @@ def send_response_endorsed_notifications(thread_id, response_id, course_key_str,
     if int(response.user_id) != endorser.id:
         notification_sender.creator = User.objects.get(id=response.user_id)
         notification_sender.send_response_endorsed_notification()
-
-
