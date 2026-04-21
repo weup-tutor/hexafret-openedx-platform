@@ -806,7 +806,15 @@ class ThreadViewSet(DeveloperErrorViewMixin, ViewSet):
         Implements the PATCH method for the instance endpoint as described in
         the class docstring.
         """
-        set_custom_attribute("forum.operation", "thread.update")
+        voted_value = request.data.get("voted") if "voted" in request.data else None
+        if voted_value in (True, "true", "True", 1, "1"):
+            operation = "thread.vote"
+        elif voted_value in (False, "false", "False", 0, "0"):
+            operation = "thread.unvote"
+        else:
+            operation = "thread.update"
+
+        set_custom_attribute("forum.operation", operation)
         set_custom_attribute("forum.entity_type", "thread")
         set_custom_attribute("forum.entity_id", thread_id)
         set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
@@ -818,9 +826,11 @@ class ThreadViewSet(DeveloperErrorViewMixin, ViewSet):
             set_custom_attribute("forum.course_id", str(course_id))
 
             update_fields = [
-                field for field, value in request.data.items() if value is not None
+                field
+                for field, value in request.data.items()
+                if value is not None and field != "voted"
             ]
-            if update_fields:
+            if update_fields and operation == "thread.update":
                 set_custom_attribute("forum.update_fields", ",".join(update_fields))
 
             if request.data.get("type"):
