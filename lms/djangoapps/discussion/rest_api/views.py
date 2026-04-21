@@ -806,17 +806,71 @@ class ThreadViewSet(DeveloperErrorViewMixin, ViewSet):
         Implements the PATCH method for the instance endpoint as described in
         the class docstring.
         """
-        if request.content_type != MergePatchParser.media_type:
-            raise UnsupportedMediaType(request.content_type)
-        return Response(update_thread(request, thread_id, request.data))
+        set_custom_attribute("forum.operation", "thread.update")
+        set_custom_attribute("forum.entity_type", "thread")
+        set_custom_attribute("forum.entity_id", thread_id)
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+
+        try:
+            course_id = request.data.get("course_id") or get_course_id_from_thread_id(
+                thread_id
+            )
+            set_custom_attribute("forum.course_id", str(course_id))
+
+            update_fields = [
+                field for field, value in request.data.items() if value is not None
+            ]
+            if update_fields:
+                set_custom_attribute("forum.update_fields", ",".join(update_fields))
+
+            if request.data.get("type"):
+                set_custom_attribute("forum.thread_type", request.data.get("type"))
+            if request.data.get("topic_id"):
+                set_custom_attribute(
+                    "forum.commentable_id", request.data.get("topic_id")
+                )
+            if request.data.get("group_id") is not None:
+                set_custom_attribute(
+                    "forum.group_id", str(request.data.get("group_id"))
+                )
+
+            if request.content_type != MergePatchParser.media_type:
+                raise UnsupportedMediaType(request.content_type)
+
+            response = Response(update_thread(request, thread_id, request.data))
+            set_custom_attribute("forum.result", "success")
+            set_custom_attribute("forum.http_status", str(response.status_code))
+            return response
+        except Exception as exc:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", _discussion_error_type(exc))
+            raise
 
     def destroy(self, request, thread_id):
         """
         Implements the DELETE method for the instance endpoint as described in
         the class docstring
         """
-        delete_thread(request, thread_id)
-        return Response(status=204)
+        set_custom_attribute("forum.operation", "thread.delete")
+        set_custom_attribute("forum.entity_type", "thread")
+        set_custom_attribute("forum.entity_id", thread_id)
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+
+        try:
+            course_id = get_course_id_from_thread_id(thread_id)
+            set_custom_attribute("forum.course_id", str(course_id))
+            set_custom_attribute("forum.delete_mode", "soft")
+
+            delete_thread(request, thread_id)
+            set_custom_attribute("forum.result", "success")
+            set_custom_attribute("forum.http_status", str(status.HTTP_204_NO_CONTENT))
+            return Response(status=204)
+        except Exception as exc:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", _discussion_error_type(exc))
+            raise
 
 
 class LearnerThreadView(APIView):
