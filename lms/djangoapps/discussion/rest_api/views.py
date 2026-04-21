@@ -1349,7 +1349,15 @@ class CommentViewSet(DeveloperErrorViewMixin, ViewSet):
         Implements the PATCH method for the instance endpoint as described in
         the class docstring.
         """
-        set_custom_attribute("forum.operation", "comment.update")
+        voted_value = request.data.get("voted") if "voted" in request.data else None
+        if voted_value in (True, "true", "True", 1, "1"):
+            operation = "comment.vote"
+        elif voted_value in (False, "false", "False", 0, "0"):
+            operation = "comment.unvote"
+        else:
+            operation = "comment.update"
+
+        set_custom_attribute("forum.operation", operation)
         set_custom_attribute("forum.entity_type", "comment")
         set_custom_attribute("forum.entity_id", comment_id)
         set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
@@ -1367,7 +1375,7 @@ class CommentViewSet(DeveloperErrorViewMixin, ViewSet):
                 for field, value in request.data.items()
                 if value is not None and field != "voted"
             ]
-            if update_fields:
+            if update_fields and operation == "comment.update":
                 set_custom_attribute("forum.update_fields", ",".join(update_fields))
 
             if request.content_type != MergePatchParser.media_type:
