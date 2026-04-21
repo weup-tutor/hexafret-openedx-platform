@@ -1983,6 +1983,7 @@ def create_comment(request, comment_data):
     context["cc_requester"].follow(cc_thread)
     serializer.save()
     cc_comment = serializer.instance
+    set_custom_attribute("forum.entity_id", str(cc_comment.id))
     send_signal_after_commit(
         lambda: comment_created.send(sender=None, user=request.user, post=cc_comment)
     )

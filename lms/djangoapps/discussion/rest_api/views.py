@@ -142,6 +142,13 @@ def _discussion_error_type(exc):
     return "backend_error"
 
 
+def _get_comment_trace_context(comment_id):
+    """Retrieve comment context needed for request-level telemetry."""
+    cc_comment = Comment(id=comment_id).retrieve()
+    course_id = get_course_id_from_thread_id(cc_comment["thread_id"])
+    return cc_comment, course_id
+
+
 @view_auth_classes()
 class CourseView(DeveloperErrorViewMixin, APIView):
     """
@@ -1239,52 +1246,142 @@ class CommentViewSet(DeveloperErrorViewMixin, ViewSet):
         Implements the POST method for the list endpoint as described in the
         class docstring.
         """
-        if not request.data.get("thread_id"):
-            raise ValidationError({"thread_id": ["This field is required."]})
-        course_key_str = get_course_id_from_thread_id(request.data["thread_id"])
-        course_key = CourseKey.from_string(course_key_str)
+        operation = (
+            "comment.create_child"
+            if request.data.get("parent_id")
+            else "comment.create_parent"
+        )
+        set_custom_attribute("forum.operation", operation)
+        set_custom_attribute("forum.entity_type", "comment")
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
 
-        if is_content_creation_rate_limited(request, course_key=course_key):
-            return Response(
-                "Too many requests", status=status.HTTP_429_TOO_MANY_REQUESTS
-            )
+        try:
+            if not request.data.get("thread_id"):
+                raise ValidationError({"thread_id": ["This field is required."]})
+            course_key_str = get_course_id_from_thread_id(request.data["thread_id"])
+            course_key = CourseKey.from_string(course_key_str)
+            set_custom_attribute("forum.course_id", str(course_key_str))
 
-        if is_captcha_enabled(course_key) and is_only_student(course_key, request.user):
-            captcha_token = request.data.get("captcha_token")
-            if not captcha_token:
-                raise ValidationError({"captcha_token": "This field is required."})
+            if request.data.get("parent_id"):
+                set_custom_attribute(
+                    "forum.parent_comment_id", str(request.data.get("parent_id"))
+                )
 
-            if not verify_recaptcha_token(captcha_token):
-                return Response({"error": "CAPTCHA verification failed."}, status=400)
+            if is_content_creation_rate_limited(request, course_key=course_key):
+                set_custom_attribute("forum.result", "error")
+                set_custom_attribute(
+                    "forum.http_status", str(status.HTTP_429_TOO_MANY_REQUESTS)
+                )
+                set_custom_attribute("forum.error_type", "rate_limited")
+                return Response(
+                    "Too many requests", status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
 
-        if (
-            ONLY_VERIFIED_USERS_CAN_POST.is_enabled(course_key)
-            and not request.user.is_active
-        ):
-            raise ValidationError(
-                {"detail": "Only verified users can post in discussions."}
-            )
+            if is_captcha_enabled(course_key) and is_only_student(
+                course_key, request.user
+            ):
+                captcha_token = request.data.get("captcha_token")
+                if not captcha_token:
+                    raise ValidationError({"captcha_token": "This field is required."})
 
-        data = request.data.copy()
-        data.pop("captcha_token", None)
-        return Response(create_comment(request, data))
+                if not verify_recaptcha_token(captcha_token):
+                    set_custom_attribute("forum.result", "error")
+                    set_custom_attribute(
+                        "forum.http_status", str(status.HTTP_400_BAD_REQUEST)
+                    )
+                    set_custom_attribute("forum.error_type", "validation_error")
+                    return Response(
+                        {"error": "CAPTCHA verification failed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            if (
+                ONLY_VERIFIED_USERS_CAN_POST.is_enabled(course_key)
+                and not request.user.is_active
+            ):
+                raise ValidationError(
+                    {"detail": "Only verified users can post in discussions."}
+                )
+
+            data = request.data.copy()
+            data.pop("captcha_token", None)
+            response = Response(create_comment(request, data))
+            set_custom_attribute("forum.result", "success")
+            set_custom_attribute("forum.http_status", str(response.status_code))
+            return response
+        except Exception as exc:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", _discussion_error_type(exc))
+            raise
 
     def destroy(self, request, comment_id):
         """
         Implements the DELETE method for the instance endpoint as described in
         the class docstring
         """
-        delete_comment(request, comment_id)
-        return Response(status=204)
+        set_custom_attribute("forum.operation", "comment.delete")
+        set_custom_attribute("forum.entity_type", "comment")
+        set_custom_attribute("forum.entity_id", comment_id)
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+
+        try:
+            cc_comment, course_id = _get_comment_trace_context(comment_id)
+            set_custom_attribute("forum.course_id", str(course_id))
+            if cc_comment.get("parent_id"):
+                set_custom_attribute(
+                    "forum.parent_comment_id", str(cc_comment.get("parent_id"))
+                )
+            set_custom_attribute("forum.delete_mode", "soft")
+
+            delete_comment(request, comment_id)
+            set_custom_attribute("forum.result", "success")
+            set_custom_attribute("forum.http_status", str(status.HTTP_204_NO_CONTENT))
+            return Response(status=204)
+        except Exception as exc:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", _discussion_error_type(exc))
+            raise
 
     def partial_update(self, request, comment_id):
         """
         Implements the PATCH method for the instance endpoint as described in
         the class docstring.
         """
-        if request.content_type != MergePatchParser.media_type:
-            raise UnsupportedMediaType(request.content_type)
-        return Response(update_comment(request, comment_id, request.data))
+        set_custom_attribute("forum.operation", "comment.update")
+        set_custom_attribute("forum.entity_type", "comment")
+        set_custom_attribute("forum.entity_id", comment_id)
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+
+        try:
+            cc_comment, course_id = _get_comment_trace_context(comment_id)
+            set_custom_attribute("forum.course_id", str(course_id))
+            if cc_comment.get("parent_id"):
+                set_custom_attribute(
+                    "forum.parent_comment_id", str(cc_comment.get("parent_id"))
+                )
+
+            update_fields = [
+                field
+                for field, value in request.data.items()
+                if value is not None and field != "voted"
+            ]
+            if update_fields:
+                set_custom_attribute("forum.update_fields", ",".join(update_fields))
+
+            if request.content_type != MergePatchParser.media_type:
+                raise UnsupportedMediaType(request.content_type)
+
+            response = Response(update_comment(request, comment_id, request.data))
+            set_custom_attribute("forum.result", "success")
+            set_custom_attribute("forum.http_status", str(response.status_code))
+            return response
+        except Exception as exc:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", _discussion_error_type(exc))
+            raise
 
 
 class UploadFileView(DeveloperErrorViewMixin, APIView):
