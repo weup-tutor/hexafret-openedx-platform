@@ -1585,6 +1585,7 @@ SOCIAL_AUTH_SAML_SP_PUBLIC_CERT = ""
 SOCIAL_AUTH_SAML_SP_PRIVATE_KEY_DICT = {}
 SOCIAL_AUTH_SAML_SP_PUBLIC_CERT_DICT = {}
 
+# pylint: disable=setting-boolean-default-value
 # .. setting_name: SAML_METADATA_URL_ALLOW_PRIVATE_IPS
 # .. setting_default: False
 # .. setting_description: When False (the default), fetching SAML metadata from
