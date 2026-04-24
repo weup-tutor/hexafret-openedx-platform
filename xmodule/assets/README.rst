@@ -50,7 +50,6 @@ Currently, edx-platform XBlock JS is defined both here in `xmodule/assets`_ and 
 
   Example blocks using this setup:
 
-  * `ProblemBlock`_
   * `HtmlBlock`_
   * `AnnotatableBlock`_
 
@@ -63,7 +62,6 @@ As part of an `active build refactoring`_, we will soon consolidate all edx-plat
 
 .. _xmodule/assets: https://github.com/openedx/edx-platform/tree/master/xmodule/assets
 .. _xmodule/js: https://github.com/openedx/edx-platform/tree/master/xmodule/js
-.. _ProblemBlock: https://github.com/openedx/edx-platform/blob/master/xmodule/capa_block.py
 .. _HtmlBlock: https://github.com/openedx/edx-platform/blob/master/xmodule/html_block.py
 .. _AnnotatableBlock: https://github.com/openedx/edx-platform/blob/master/xmodule/annotatable_block.py
 .. _VerticalBlock: https://github.com/openedx/edx-platform/blob/master/xmodule/vertical_block.py
