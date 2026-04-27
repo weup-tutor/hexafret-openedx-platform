@@ -20,6 +20,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
+from forum import api as forum_api
+
 from common.djangoapps.student.models import CourseEnrollment
 from common.djangoapps.util.file import store_uploaded_file
 from lms.djangoapps.course_api.blocks.api import get_blocks
@@ -35,7 +37,6 @@ from openedx.core.djangoapps.discussions.config.waffle import ENABLE_NEW_STRUCTU
 from openedx.core.djangoapps.discussions.models import DiscussionsConfiguration, Provider
 from openedx.core.djangoapps.discussions.serializers import DiscussionSettingsSerializer
 from openedx.core.djangoapps.django_comment_common import comment_client
-from forum import api as forum_api
 from openedx.core.djangoapps.django_comment_common.models import CourseDiscussionSettings, Role
 from openedx.core.djangoapps.user_api.accounts.permissions import CanReplaceUsername, CanRetireUser
 from openedx.core.djangoapps.user_api.models import UserRetirementStatus
