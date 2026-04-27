@@ -1421,7 +1421,7 @@ openedx-filters==3.1.0
     #   edx-enterprise
     #   lti-consumer-xblock
     #   ora2
-openedx-forum==0.4.1
+openedx-forum==0.4.2
     # via
     #   -r requirements/edx/doc.txt
     #   -r requirements/edx/testing.txt
