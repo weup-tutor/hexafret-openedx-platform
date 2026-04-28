@@ -149,6 +149,36 @@ def _get_comment_trace_context(comment_id):
     return cc_comment, course_id
 
 
+def _moderation_error_type(exc):
+    """Map moderation failures to a stable Datadog error type."""
+    if isinstance(exc, PermissionError):
+        return "permission_denied"
+    if isinstance(exc, PermissionDenied):
+        return "permission_denied"
+    if isinstance(exc, InvalidKeyError):
+        return "validation_error"
+    if isinstance(exc, ValidationError):
+        return "validation_error"
+    if isinstance(exc, ParseError):
+        return "validation_error"
+    if isinstance(exc, UnsupportedMediaType):
+        return "validation_error"
+    if isinstance(exc, ValueError):
+        return "validation_error"
+    if isinstance(exc, TypeError):
+        return "validation_error"
+    return "backend_error"
+
+
+def _set_moderation_trace_context(request, operation, course_id="", entity_id=""):
+    """Attach canonical moderation request-level telemetry to the active span."""
+    set_custom_attribute("forum.operation", operation)
+    set_custom_attribute("forum.entity_type", "user")
+    set_custom_attribute("forum.entity_id", str(entity_id or ""))
+    set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+    set_custom_attribute("forum.course_id", str(course_id or ""))
+
+
 @view_auth_classes()
 class CourseView(DeveloperErrorViewMixin, APIView):
     """
@@ -2453,8 +2483,20 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
         from forum import api as forum_api
         from lms.djangoapps.discussion.rest_api.serializers import BanUserRequestSerializer
 
+        _set_moderation_trace_context(
+            request,
+            "moderation.ban_user",
+            course_id=request.data.get("course_id", ""),
+            entity_id=request.data.get("user_id", ""),
+        )
+
         # Check if ban API is available
         if not hasattr(forum_api, 'ban_user') or not hasattr(forum_api, 'is_user_banned'):
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute(
+                "forum.http_status", str(status.HTTP_501_NOT_IMPLEMENTED)
+            )
+            set_custom_attribute("forum.error_type", "backend_error")
             return Response(
                 {'error': 'Ban functionality is not available in this forum version'},
                 status=status.HTTP_501_NOT_IMPLEMENTED
@@ -2462,24 +2504,57 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
 
         serializer = BanUserRequestSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", "validation_error")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Validate and get user
         result = self._validate_ban_request_and_get_user(request, serializer.validated_data)
         if isinstance(result, Response):
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(result.status_code))
+            if result.status_code == status.HTTP_403_FORBIDDEN:
+                set_custom_attribute("forum.error_type", "permission_denied")
+            else:
+                set_custom_attribute("forum.error_type", "validation_error")
             return result
         user, course_key, ban_scope, reason = result
+        _set_moderation_trace_context(
+            request,
+            "moderation.ban_user",
+            course_id=str(course_key),
+            entity_id=user.id,
+        )
 
         # Check permissions
         permission_error = self._check_ban_permissions(request, ban_scope, course_key)
         if permission_error:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(permission_error.status_code))
+            if permission_error.status_code == status.HTTP_403_FORBIDDEN:
+                set_custom_attribute("forum.error_type", "permission_denied")
+            else:
+                set_custom_attribute("forum.error_type", "validation_error")
             return permission_error
 
         # Get or create ban
-        result = self._get_or_create_ban(user, course_key, ban_scope, reason, request)
-        if isinstance(result, Response):
-            return result
-        ban, action_type, message = result
+        try:
+            result = self._get_or_create_ban(user, course_key, ban_scope, reason, request)
+            if isinstance(result, Response):
+                set_custom_attribute("forum.result", "error")
+                set_custom_attribute("forum.http_status", str(result.status_code))
+                if result.status_code == status.HTTP_403_FORBIDDEN:
+                    set_custom_attribute("forum.error_type", "permission_denied")
+                else:
+                    set_custom_attribute("forum.error_type", "validation_error")
+                return result
+            ban, action_type, message = result
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_500_INTERNAL_SERVER_ERROR))
+            set_custom_attribute("forum.error_type", _moderation_error_type(exc))
+            raise
 
         # Audit log
         org_key = course_key.org if ban_scope == 'organization' else None
@@ -2496,7 +2571,7 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
             }
         )
 
-        return Response({
+        response = Response({
             'status': 'success',
             'message': message,
             'ban_id': ban['id'],
@@ -2505,6 +2580,9 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
             'scope': ban_scope,
             'course_id': str(course_key) if ban_scope == 'course' else None,
         }, status=status.HTTP_201_CREATED)
+        set_custom_attribute("forum.result", "success")
+        set_custom_attribute("forum.http_status", str(response.status_code))
+        return response
 
     @apidocs.schema(
         body=openapi.Schema(
@@ -2609,8 +2687,20 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
         from forum import api as forum_api
         from lms.djangoapps.discussion.rest_api.serializers import BanUserRequestSerializer
 
+        _set_moderation_trace_context(
+            request,
+            "moderation.unban_user",
+            course_id=request.data.get("course_id", ""),
+            entity_id=request.data.get("user_id", ""),
+        )
+
         # Check if ban API is available
         if not hasattr(forum_api, 'unban_user') or not hasattr(forum_api, 'is_user_banned'):
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute(
+                "forum.http_status", str(status.HTTP_501_NOT_IMPLEMENTED)
+            )
+            set_custom_attribute("forum.error_type", "backend_error")
             return Response(
                 {'error': 'Ban functionality is not available in this forum version'},
                 status=status.HTTP_501_NOT_IMPLEMENTED
@@ -2618,22 +2708,46 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
 
         serializer = BanUserRequestSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", "validation_error")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Validate and get user
         result = self._validate_ban_request_and_get_user(request, serializer.validated_data)
         if isinstance(result, Response):
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(result.status_code))
+            if result.status_code == status.HTTP_403_FORBIDDEN:
+                set_custom_attribute("forum.error_type", "permission_denied")
+            else:
+                set_custom_attribute("forum.error_type", "validation_error")
             return result
 
         user, course_key, ban_scope, reason = result
+        _set_moderation_trace_context(
+            request,
+            "moderation.unban_user",
+            course_id=str(course_key),
+            entity_id=user.id,
+        )
 
         # Permission check
         permission_error = self._check_ban_permissions(request, ban_scope, course_key)
         if permission_error:
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(permission_error.status_code))
+            if permission_error.status_code == status.HTTP_403_FORBIDDEN:
+                set_custom_attribute("forum.error_type", "permission_denied")
+            else:
+                set_custom_attribute("forum.error_type", "validation_error")
             return permission_error
 
         # Check if user has an active ban
         if not forum_api.is_user_banned(user, course_key, check_org=(ban_scope == 'organization')):
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_400_BAD_REQUEST))
+            set_custom_attribute("forum.error_type", "validation_error")
             return Response(
                 {
                     'error': f'User {user.username} does not have an active ban at {ban_scope} level',
@@ -2654,12 +2768,18 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
         # NOTE: The newer /moderation/{pk}/unban/ endpoint (line ~2912) correctly
         # supports optional course_id for creating exceptions. This older endpoint
         # should always fully unban when scope='organization'.
-        unban_result = forum_api.unban_user(
-            user=user,
-            unbanned_by=request.user,
-            course_id=course_key if ban_scope == 'course' else None,
-            scope=ban_scope
-        )
+        try:
+            unban_result = forum_api.unban_user(
+                user=user,
+                unbanned_by=request.user,
+                course_id=course_key if ban_scope == 'course' else None,
+                scope=ban_scope
+            )
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            set_custom_attribute("forum.result", "error")
+            set_custom_attribute("forum.http_status", str(status.HTTP_500_INTERNAL_SERVER_ERROR))
+            set_custom_attribute("forum.error_type", _moderation_error_type(exc))
+            raise
 
         # Prepare ban parameters based on scope
         org_key = course_key.org if ban_scope == 'organization' else None
@@ -2678,7 +2798,7 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
             },
         )
 
-        return Response({
+        response = Response({
             'status': 'success',
             'message': f'User {user.username} unbanned at {ban_scope} level',
             'ban_id': ban_data.get('id') if ban_data else None,
@@ -2686,6 +2806,9 @@ class DiscussionModerationViewSet(DeveloperErrorViewMixin, ViewSet):
             'username': user.username,
             'scope': ban_scope,
         }, status=status.HTTP_200_OK)
+        set_custom_attribute("forum.result", "success")
+        set_custom_attribute("forum.http_status", str(response.status_code))
+        return response
 
     @apidocs.schema(
         body=openapi.Schema(
