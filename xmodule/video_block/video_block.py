@@ -587,7 +587,7 @@ class _BuiltInVideoBlock(
         editable_fields.pop('sub')
 
         languages = [{'label': label, 'code': lang} for lang, label in settings.ALL_LANGUAGES]
-        languages.sort(key=lambda l: l['label'])
+        languages.sort(key=lambda lang: lang['label'])
         editable_fields['transcripts']['custom'] = True
         editable_fields['transcripts']['languages'] = languages
         editable_fields['transcripts']['type'] = 'VideoTranslations'
