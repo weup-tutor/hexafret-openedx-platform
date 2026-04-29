@@ -1943,15 +1943,22 @@ class BulkDeleteUserPosts(DeveloperErrorViewMixin, APIView):
         Implements the delete user posts endpoint.
         Supports both MongoDB and MySQL backends via forum API.
         """
+        set_custom_attribute("forum.operation", "bulk_delete_user_posts.queue")
+        set_custom_attribute("forum.entity_type", "user")
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+        set_custom_attribute("forum.course_id", str(course_id or ""))
         username = request.GET.get("username", None)
         execute_task = request.GET.get("execute", "false").lower() == "true"
         if (not username) or (not course_id):
             raise BadRequest("username and course_id are required.")
         course_or_org = request.GET.get("course_or_org", "course")
+        set_custom_attribute("forum.scope", course_or_org)
+        set_custom_attribute("forum.execute", str(execute_task).lower())
         if course_or_org not in ["course", "org"]:
             raise BadRequest("course_or_org must be either 'course' or 'org'.")
 
         user = get_object_or_404(User, username=username)
+        set_custom_attribute("forum.entity_id", str(user.id))
         course_ids = [course_id]
         if course_or_org == "org":
             org_id = CourseKey.from_string(course_id).org
@@ -1967,6 +1974,9 @@ class BulkDeleteUserPosts(DeveloperErrorViewMixin, APIView):
 
         comment_count = Comment.get_user_comment_count(user.id, course_ids)
         thread_count = Thread.get_user_threads_count(user.id, course_ids)
+        set_custom_attribute("forum.course_count", str(len(course_ids)))
+        set_custom_attribute("forum.thread_count", str(thread_count))
+        set_custom_attribute("forum.comment_count", str(comment_count))
         log.info(
             f"<<Bulk Delete>> {username} in {course_ids} - Count thread {thread_count}, comment {comment_count}"
         )
@@ -1979,9 +1989,11 @@ class BulkDeleteUserPosts(DeveloperErrorViewMixin, APIView):
                 "course_or_org": course_or_org,
                 "course_key": course_id,
             }
-            delete_course_post_for_user.apply_async(
+            task = delete_course_post_for_user.apply_async(
                 args=(user.id, username, course_ids, event_data),
             )
+            set_custom_attribute("forum.task_id", str(task.id))
+        _set_trace_outcome(status.HTTP_202_ACCEPTED)
         return Response(
             {"comment_count": comment_count, "thread_count": thread_count},
             status=status.HTTP_202_ACCEPTED,
@@ -2120,15 +2132,22 @@ class BulkRestoreUserPosts(DeveloperErrorViewMixin, APIView):
         """
         Implements the restore user posts endpoint.
         """
+        set_custom_attribute("forum.operation", "bulk_restore_user_posts.queue")
+        set_custom_attribute("forum.entity_type", "user")
+        set_custom_attribute("forum.actor_id", str(getattr(request.user, "id", "")))
+        set_custom_attribute("forum.course_id", str(course_id or ""))
         username = request.GET.get("username", None)
         execute_task = request.GET.get("execute", "false").lower() == "true"
         if (not username) or (not course_id):
             raise BadRequest("username and course_id are required.")
         course_or_org = request.GET.get("course_or_org", "course")
+        set_custom_attribute("forum.scope", course_or_org)
+        set_custom_attribute("forum.execute", str(execute_task).lower())
         if course_or_org not in ["course", "org"]:
             raise BadRequest("course_or_org must be either 'course' or 'org'.")
 
         user = get_object_or_404(User, username=username)
+        set_custom_attribute("forum.entity_id", str(user.id))
         course_ids = [course_id]
         if course_or_org == "org":
             org_id = CourseKey.from_string(course_id).org
@@ -2147,6 +2166,9 @@ class BulkRestoreUserPosts(DeveloperErrorViewMixin, APIView):
         )
         comment_count = Comment.get_user_deleted_comment_count(user.id, course_ids)
         thread_count = Thread.get_user_deleted_threads_count(user.id, course_ids)
+        set_custom_attribute("forum.course_count", str(len(course_ids)))
+        set_custom_attribute("forum.thread_count", str(thread_count))
+        set_custom_attribute("forum.comment_count", str(comment_count))
         log.info(
             "<<Bulk Restore>> %s in %s - Count thread %s, comment %s",
             username,
@@ -2163,9 +2185,11 @@ class BulkRestoreUserPosts(DeveloperErrorViewMixin, APIView):
                 "course_or_org": course_or_org,
                 "course_key": course_id,
             }
-            restore_course_post_for_user.apply_async(
+            task = restore_course_post_for_user.apply_async(
                 args=(user.id, username, course_ids, event_data),
             )
+            set_custom_attribute("forum.task_id", str(task.id))
+        _set_trace_outcome(status.HTTP_202_ACCEPTED)
         return Response(
             {"comment_count": comment_count, "thread_count": thread_count},
             status=status.HTTP_202_ACCEPTED,
