@@ -756,8 +756,10 @@ class SAMLProviderConfig(ProviderConfig):
     disable_email_editing = models.BooleanField(
         default=False,
         help_text=_(
-            "If enabled, the email field on the SSO registration form will be read-only and "
-            "users will not be able to change their email address in their account settings."
+            "If enabled, and the identity provider supplies an email address, the email field "
+            "on the SSO registration form will be read-only and users will not be able to change "
+            "their email address in their account settings. If the identity provider does not "
+            "supply an email address, the field remains editable during registration."
         ),
     )
     other_settings = models.TextField(
