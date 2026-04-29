@@ -319,7 +319,8 @@ disable =
 	use-dict-literal,
 	superfluous-parens,
 	unused-import,
-	undefined-variable
+	undefined-variable,
+	bare-except
 
 [REPORTS]
 output-format = text
@@ -416,4 +417,4 @@ int-import-graph =
 [EXCEPTIONS]
 overgeneral-exceptions = builtins.Exception
 
-# a9bc7fd2cccc2addc50ece643147f26eee4625a6
+# 8a7b4effabbb68cf20516db61cc6c606b3b31b8e
