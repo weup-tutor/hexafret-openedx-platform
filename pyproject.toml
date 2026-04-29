@@ -217,7 +217,7 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "W", "I", "F", "PT", "DJ", "UP", "B"]
+select = ["E", "W", "I", "F", "PT", "DJ", "UP", "B", "RUF100"]
 ignore = [
     "E402",  # module level import not at top of file
     "E731",  # do not assign a lambda expression
