@@ -1556,7 +1556,7 @@ def _check_sequence_exam_access(request, location):
             # unpack will validate both expiration and the requesting user matches the
             # token user
             exam_access_unpacked = unpack_jwt(exam_access_token, request.user.id)
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             log.exception(f"Failed to validate exam access token. user_id={request.user.id} location={location}")
             return False
 

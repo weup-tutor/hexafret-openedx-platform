@@ -691,7 +691,7 @@ def student_dashboard(request):  # lint-amnesty, pylint: disable=too-many-statem
                     checkout_page_url = ecommerce_service.get_checkout_page_url(*skus)
                     program_data['completeProgramURL'] = checkout_page_url + '&bundle=' + program_data.get('uuid')
                     programs_data[program_uuid] = program_data
-                except:  # pylint: disable=bare-except
+                except:  # noqa: E722
                     pass
 
     # Construct a dictionary of course mode information

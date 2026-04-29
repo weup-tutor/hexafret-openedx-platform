@@ -724,7 +724,7 @@ def login_analytics(strategy, auth_entry, current_partial=None, *args, **kwargs)
     try:
         request = kwargs['request']
         anonymous_id = request.COOKIES.get('ajs_anonymous_id', "")
-    except:  # pylint: disable=bare-except
+    except:  # noqa: E722
         pass
 
     if auth_entry == AUTH_ENTRY_LOGIN:

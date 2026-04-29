@@ -98,7 +98,7 @@ class StringOrDate(Date):  # lint-amnesty, pylint: disable=missing-class-docstri
         """
         try:
             result = super().to_json(value)
-        except:  # lint-amnesty, pylint: disable=bare-except
+        except:  # noqa: E722
             return value
         if result is None:
             return value
@@ -204,7 +204,7 @@ class TextbookList(List):  # lint-amnesty, pylint: disable=missing-class-docstri
         for title, book_url in values:
             try:
                 textbooks.append(Textbook(title, book_url))
-            except:  # lint-amnesty, pylint: disable=bare-except
+            except:  # noqa: E722
                 # If we can't get to S3 (e.g. on a train with no internet), don't break
                 # the rest of the courseware.
                 log.exception(f"Couldn't load textbook ({title}, {book_url})")

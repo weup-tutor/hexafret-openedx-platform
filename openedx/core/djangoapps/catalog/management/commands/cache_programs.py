@@ -162,7 +162,7 @@ class Command(BaseCommand):
             response = client.get(api_url, params=querystring)
             response.raise_for_status()
             uuids = response.json()
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             logger.exception(f'Failed to retrieve program UUIDs for site: {site.domain}.')
             failure = True
 
@@ -186,7 +186,7 @@ class Command(BaseCommand):
                 # pathways get added in process_pathways
                 program['pathway_ids'] = []
                 programs[cache_key] = program
-            except:  # pylint: disable=bare-except
+            except:  # noqa: E722
                 logger.exception(f'Failed to retrieve details for program {uuid}.')
                 failure = True
                 continue
@@ -208,7 +208,7 @@ class Command(BaseCommand):
                 new_pathways = response.json()
                 pathways.extend(new_pathways['results'])
                 next_page = next_page + 1 if new_pathways['next'] else None
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             logger.exception(
                 msg=f'Failed to retrieve pathways for site: {site.domain}.',
             )
@@ -244,7 +244,7 @@ class Command(BaseCommand):
 
                 del pathway['programs']
                 pathway['program_uuids'] = uuids
-            except:  # pylint: disable=bare-except
+            except:  # noqa: E722
                 logger.exception(f'Failed to process pathways for {site.domain}')
                 failure = True
         return processed_pathways, programs, failure

@@ -362,7 +362,7 @@ def _track_user_registration(user, profile, params, third_party_provider, regist
         anonymous_id = ""
         try:
             anonymous_id = request.COOKIES.get('ajs_anonymous_id', "")
-        except:       # pylint: disable=bare-except
+        except:       # noqa: E722
             pass
         traits = {
             'email': user.email,

@@ -159,7 +159,7 @@ def calculate(request):
     equation = request.GET['equation']
     try:
         result = calc.evaluator({}, {}, equation)
-    except:  # lint-amnesty, pylint: disable=bare-except
+    except:  # noqa: E722
         event = {'error': list(map(str, sys.exc_info())),
                  'equation': equation}
         track_views.server_track(request, 'error:calc', event, page='calc')

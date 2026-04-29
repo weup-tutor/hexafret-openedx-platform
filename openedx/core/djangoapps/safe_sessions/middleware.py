@@ -371,7 +371,7 @@ class SafeSessionMiddleware(SessionMiddleware, MiddlewareMixin):
                 'safe_sessions.session_cookie_count',
                 request.headers.get('Cookie', '').count(settings.SESSION_COOKIE_NAME + '=')
             )
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             pass
 
         cookie_data_string = request.COOKIES.get(settings.SESSION_COOKIE_NAME)

@@ -584,7 +584,7 @@ class TestLargeCourseDeletions(MixedWithOptionsTestCase):
         load_factor = 6
         try:
             self._do_test_large_course_deletion(store, load_factor)
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             # Catch any exception here to see when we fail
             print(f"Failed with load_factor of {load_factor}")
 

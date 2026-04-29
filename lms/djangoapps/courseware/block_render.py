@@ -339,7 +339,7 @@ def get_block(user, request, usage_key, field_data_cache, position=None, log_if_
             log.debug("Error in get_block: ItemNotFoundError")
         return None
 
-    except:  # pylint: disable=W0702
+    except:  # noqa: E722
         # Something has gone terribly wrong, but still not letting it turn into a 500.
         log.exception("Error in get_block")
         return None

@@ -357,7 +357,7 @@ def _track_user_login(user, request):
     anonymous_id = ""
     try:
         anonymous_id = request.COOKIES.get('ajs_anonymous_id', "")
-    except:  # pylint: disable=bare-except
+    except:  # noqa: E722
         pass
     segment.identify(
         user.id,

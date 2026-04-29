@@ -437,7 +437,7 @@ def create_export_tarball(course_block, course_key, context, status=None):
 
             if parent_loc is not None:
                 parent = modulestore().get_item(parent_loc)
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             # if we have a nested exception, then we'll show the more generic error message
             pass
 
