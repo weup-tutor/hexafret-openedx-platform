@@ -70,6 +70,32 @@ class SAMLDisableEmailEditingTest(TestCase):
         'openedx.core.djangoapps.user_authn.views.registration_form.third_party_auth.is_enabled',
         return_value=True,
     )
+    def test_email_editable_when_disable_email_editing_true_but_no_email(self, mock_is_enabled):
+        """Email field is not readonly when disable_email_editing=True but the pipeline provides no email."""
+        saml_config = SAMLProviderConfigFactory(disable_email_editing=True)
+
+        with simulate_running_pipeline(
+            "common.djangoapps.third_party_auth.pipeline",
+            "tpa-saml",
+            response={"idp_name": saml_config.slug},
+            fullname="Test User",
+            username="testuser",
+        ):
+            form_desc = RegistrationFormFactory().get_registration_form(self._create_request())
+
+        email_field = self._get_email_field(form_desc)
+        self.assertIsNotNone(email_field)
+        self.assertNotIn(
+            'readonly',
+            email_field.get('restrictions', {}),
+            "Email field must be editable when the pipeline provides no email address",
+        )
+
+    @override_settings(REGISTRATION_EXTRA_FIELDS={}, REGISTRATION_FIELD_ORDER=[])
+    @mock.patch(
+        'openedx.core.djangoapps.user_authn.views.registration_form.third_party_auth.is_enabled',
+        return_value=True,
+    )
     def test_email_editable_when_disable_email_editing_false(self, mock_is_enabled):
         """Email field has no readonly restriction when disable_email_editing=False."""
         saml_config = SAMLProviderConfigFactory(disable_email_editing=False)

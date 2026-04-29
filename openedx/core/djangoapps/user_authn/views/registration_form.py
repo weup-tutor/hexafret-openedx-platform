@@ -1252,7 +1252,8 @@ class RegistrationFormFactory:
 
                     if (
                         isinstance(current_provider, SAMLProviderConfig) and
-                        current_provider.disable_email_editing
+                        current_provider.disable_email_editing and
+                        field_overrides.get("email")
                     ):
                         form_desc.override_field_properties(
                             "email",
