@@ -20,7 +20,7 @@ from common.djangoapps.student.models import (
     username_exists_or_retired
 )
 
-from common.djangoapps.third_party_auth.models import OAuth2ProviderConfig, SAMLProviderData
+from common.djangoapps.third_party_auth.models import OAuth2ProviderConfig, SAMLProviderConfig, SAMLProviderData
 from openedx.core.djangolib.markup import Text
 
 from . import provider
@@ -221,6 +221,26 @@ def create_or_update_bulk_saml_provider_data(entity_id, public_keys, sso_url, ex
             new_records_created = True
 
     return new_records_created
+
+
+def get_saml_provider_for_user(user):
+    """
+    Return the SAMLProviderConfig for a user based on their UserSocialAuth record, or None.
+
+    SAML UIDs are stored as '{slug}:{remote_id}', so the provider slug can be extracted
+    from the first segment of the UID.
+    """
+    from social_django.models import UserSocialAuth
+    social_auth = UserSocialAuth.objects.filter(user=user, provider='tpa-saml').order_by('id').first()
+    if not social_auth:
+        return None
+    slug, sep, _ = social_auth.uid.partition(':')
+    if not sep:
+        return None
+    try:
+        return SAMLProviderConfig.objects.current_set().get(slug=slug)
+    except SAMLProviderConfig.DoesNotExist:
+        return None
 
 
 def is_saml_provider(backend, kwargs):
