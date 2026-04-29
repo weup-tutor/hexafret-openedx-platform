@@ -320,7 +320,8 @@ disable =
 	superfluous-parens,
 	unused-import,
 	undefined-variable,
-	bare-except
+	bare-except,
+	line-too-long
 
 [REPORTS]
 output-format = text
@@ -417,4 +418,4 @@ int-import-graph =
 [EXCEPTIONS]
 overgeneral-exceptions = builtins.Exception
 
-# 8a7b4effabbb68cf20516db61cc6c606b3b31b8e
+# 4fd13ce7d1b6a5a869866e0c90dad63487c03379
