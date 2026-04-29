@@ -163,8 +163,8 @@ def calculate(request):
         event = {'error': list(map(str, sys.exc_info())),
                  'equation': equation}
         track_views.server_track(request, 'error:calc', event, page='calc')
-        return HttpResponse(json.dumps({'result': 'Invalid syntax'}))  # lint-amnesty, pylint: disable=http-response-with-json-dumps
-    return HttpResponse(json.dumps({'result': str(result)}))  # lint-amnesty, pylint: disable=http-response-with-json-dumps
+        return HttpResponse(json.dumps({'result': 'Invalid syntax'}))  # pylint: disable=http-response-with-json-dumps
+    return HttpResponse(json.dumps({'result': str(result)}))  # pylint: disable=http-response-with-json-dumps
 
 
 def add_p3p_header(view_func):

@@ -121,7 +121,7 @@ class ErrorBlock(
         }
 
     @classmethod
-    def from_json(cls, json_data, system, location, error_msg='Error not available'):  # lint-amnesty, pylint: disable=missing-function-docstring
+    def from_json(cls, json_data, system, location, error_msg='Error not available'):  # pylint: disable=missing-function-docstring
         try:
             json_string = json.dumps(json_data, skipkeys=False, indent=4, cls=EdxJSONEncoder)
         except:  # noqa: E722

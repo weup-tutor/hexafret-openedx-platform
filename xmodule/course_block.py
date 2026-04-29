@@ -1128,7 +1128,7 @@ class CourseBlock(
             if not getattr(self, "tabs", []):
                 CourseTabList.initialize_default(self)
         except InvalidTabsException as err:
-            raise type(err)(f'{str(err)} For course: {str(self.id)}')  # lint-amnesty, pylint: disable=line-too-long  # noqa: B904
+            raise type(err)(f'{str(err)} For course: {str(self.id)}')  # noqa: B904
 
     def set_grading_policy(self, course_policy):
         """
@@ -1637,7 +1637,7 @@ class CourseSummary:
             return course_metadata_utils.has_course_ended(self.end)
         except TypeError as e:
             log.warning(
-                "Course '{course_id}' has an improperly formatted end date '{end_date}'. Error: '{err}'.".format(  # noqa: UP032  # pylint: disable=line-too-long
+                "Course '{course_id}' has an improperly formatted end date '{end_date}'. Error: '{err}'.".format(  # noqa: UP032
                     course_id=str(self.id), end_date=self.end, err=e
                 )
             )

@@ -806,13 +806,13 @@ def handle_xblock_callback(request, course_id, usage_id, handler, suffix=None):
     try:
         course_key = CourseKey.from_string(course_id)
     except InvalidKeyError:
-        raise Http404(f'{course_id} is not a valid course key')  # lint-amnesty, pylint: disable=raise-missing-from  # noqa: B904
+        raise Http404(f'{course_id} is not a valid course key')  # lint-amnesty, pylint: disable=raise-missing-from  # noqa: B904, E501
 
     with modulestore().bulk_operations(course_key):
         try:
             course = modulestore().get_course(course_key)
         except ItemNotFoundError:
-            raise Http404(f'{course_id} does not exist in the modulestore')  # lint-amnesty, pylint: disable=raise-missing-from  # noqa: B904
+            raise Http404(f'{course_id} does not exist in the modulestore')  # lint-amnesty, pylint: disable=raise-missing-from  # noqa: B904, E501
 
         return _invoke_xblock_handler(request, course_id, usage_id, handler, suffix, course=course)
 

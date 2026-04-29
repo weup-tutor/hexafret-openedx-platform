@@ -148,7 +148,7 @@ class Command(BaseCommand):
         if failure:
             sys.exit(1)
 
-    def get_site_program_uuids(self, client, site, api_base_url):  # lint-amnesty, pylint: disable=missing-function-docstring
+    def get_site_program_uuids(self, client, site, api_base_url):  # pylint: disable=missing-function-docstring
         failure = False
         uuids = []
         try:
@@ -172,7 +172,7 @@ class Command(BaseCommand):
         ))
         return uuids, failure
 
-    def fetch_program_details(self, client, uuids, api_base_url):  # lint-amnesty, pylint: disable=missing-function-docstring
+    def fetch_program_details(self, client, uuids, api_base_url):  # pylint: disable=missing-function-docstring
         programs = {}
         failure = False
         for uuid in uuids:
