@@ -1571,6 +1571,7 @@ class BulkDeleteUserPosts(DeveloperErrorViewMixin, APIView):
         """
         Implements the delete user posts endpoint.
         """
+        
         username = request.GET.get("username", None)
         execute_task = request.GET.get("execute", "false").lower() == "true"
         if (not username) or (not course_id):
