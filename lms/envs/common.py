@@ -3712,6 +3712,17 @@ DASHBOARD_COURSE_LIMIT = None
 
 ENTITLEMENTS_EXPIRATION_ROUTING_KEY = Derived(lambda settings: settings.DEFAULT_PRIORITY_QUEUE)
 
+########################## OpenEdX Filters #################################
+
+OPEN_EDX_FILTERS_CONFIG = {
+    "org.openedx.learning.dashboard.render.started.v1": {
+        "fail_silently": True,
+        "pipeline": [
+            "enterprise.filters.dashboard.DashboardContextEnricher",
+        ],
+    },
+}
+
 # TODO: We believe these were part of the DEPR'd sysadmin dashboard, and can likely be removed.
 SSL_AUTH_EMAIL_DOMAIN = "MIT.EDU"
 SSL_AUTH_DN_FORMAT_STRING = (
