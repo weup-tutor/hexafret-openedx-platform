@@ -4,7 +4,7 @@ Tests for the Studio content search API.
 from __future__ import annotations
 
 import copy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, Mock, call, patch
 
 import ddt
@@ -61,7 +61,7 @@ class TestSearchApi(ModuleStoreTestCase):
         # Clear the Meilisearch client to avoid side effects from other tests
         api.clear_meilisearch_client()
 
-        modified_date = datetime(2024, 5, 6, 7, 8, 9, tzinfo=timezone.utc)  # noqa: UP017
+        modified_date = datetime(2024, 5, 6, 7, 8, 9, tzinfo=UTC)
         # Create course
         with freeze_time(modified_date):
             self.course = self.store.create_course(
@@ -134,7 +134,7 @@ class TestSearchApi(ModuleStoreTestCase):
         lib_access, _ = SearchAccess.objects.get_or_create(context_key=self.library.key)
 
         # Populate it with 2 problems, freezing the date so we can verify created date serializes correctly.
-        self.created_date = datetime(2023, 4, 5, 6, 7, 8, tzinfo=timezone.utc)  # noqa: UP017
+        self.created_date = datetime(2023, 4, 5, 6, 7, 8, tzinfo=UTC)
         with freeze_time(self.created_date):
             self.problem1 = library_api.create_library_block(self.library.key, "problem", "p1")
             self.problem2 = library_api.create_library_block(self.library.key, "problem", "p2")
@@ -188,11 +188,11 @@ class TestSearchApi(ModuleStoreTestCase):
         tagging_api.add_tag_to_taxonomy(self.taxonomyB, "four")
 
         # Create a collection:
-        self.learning_package = content_api.get_learning_package_by_key(self.library.key)
+        self.learning_package = content_api.get_learning_package_by_ref(str(self.library.key))
         with freeze_time(self.created_date):
             self.collection = content_api.create_collection(
                 learning_package_id=self.learning_package.id,
-                key="MYCOL",
+                collection_code="MYCOL",
                 title="my_collection",
                 created_by=None,
                 description="my collection description"
@@ -202,7 +202,7 @@ class TestSearchApi(ModuleStoreTestCase):
             )
         self.collection_dict = {
             "id": "lib-collectionorg1libmycol-5b647617",
-            "block_id": self.collection.key,
+            "block_id": self.collection.collection_code,
             "usage_key": str(self.collection_key),
             "type": "collection",
             "display_name": "my_collection",
@@ -449,19 +449,32 @@ class TestSearchApi(ModuleStoreTestCase):
 
     @override_settings(MEILISEARCH_ENABLED=True)
     def test_init_meilisearch_index(self, mock_meilisearch) -> None:
-        # Test index already exists
+        # Test index already exists, is populated, and correctly configured
+        mock_index = Mock()
+        mock_index.primary_key = "id"
+        mock_index.get_stats.return_value = Mock(number_of_documents=100)
+        mock_index.get_settings.return_value = {
+            "distinctAttribute": "usage_key",
+            "filterableAttributes": list(api.INDEX_FILTERABLE_ATTRIBUTES),
+            "searchableAttributes": list(api.INDEX_SEARCHABLE_ATTRIBUTES),
+            "sortableAttributes": list(api.INDEX_SORTABLE_ATTRIBUTES),
+            "rankingRules": list(api.INDEX_RANKING_RULES),
+        }
+        mock_meilisearch.return_value.get_index.return_value = mock_index
+
         api.init_index()
         mock_meilisearch.return_value.swap_indexes.assert_not_called()
         mock_meilisearch.return_value.create_index.assert_not_called()
         mock_meilisearch.return_value.delete_index.assert_not_called()
 
-        # Test index already exists and has no documents
-        mock_meilisearch.return_value.get_stats.return_value = 0
+        # Test index already exists and is empty but correctly configured
+        mock_index.get_stats.return_value = Mock(number_of_documents=0)
         api.init_index()
         mock_meilisearch.return_value.swap_indexes.assert_not_called()
         mock_meilisearch.return_value.create_index.assert_not_called()
         mock_meilisearch.return_value.delete_index.assert_not_called()
 
+        # Test index does not exist — should create it
         mock_meilisearch.return_value.get_index.side_effect = [
             MeilisearchApiError("Testing reindex", Mock(text='{"code":"index_not_found"}')),
             MeilisearchApiError("Testing reindex", Mock(text='{"code":"index_not_found"}')),
@@ -523,7 +536,7 @@ class TestSearchApi(ModuleStoreTestCase):
 
         def mocked_from_component(lib_key, component):
             # Simulate an error when processing problem 1
-            if component.key == 'xblock.v1:problem:p1':
+            if component.entity_ref == 'xblock.v1:problem:p1':
                 raise Exception('Error')
 
             return orig_from_component(lib_key, component)
@@ -683,8 +696,10 @@ class TestSearchApi(ModuleStoreTestCase):
         Test indexing an Library Block and the Collections it's in.
         """
         # Create collections (these internally call `upsert_library_collection_index_doc`)
-        created_date = datetime(2023, 5, 6, 7, 8, 9, tzinfo=timezone.utc)  # noqa: UP017
-        with freeze_time(created_date):
+        created_date = datetime(2023, 5, 6, 7, 8, 9, tzinfo=UTC)
+        # Note: because TestCase keeps the transaction open, we need self.captureOnCommitCallbacks(execute=True) to
+        # ensure events get emitted here as if this part were its own transaction as it normally would be.
+        with freeze_time(created_date), self.captureOnCommitCallbacks(execute=True):
             collection1 = library_api.create_library_collection(
                 self.library.key,
                 collection_key="COL1",
@@ -704,12 +719,12 @@ class TestSearchApi(ModuleStoreTestCase):
         # Add Problem1 to both Collections (these internally call `upsert_item_collections_index_docs` and
         # `upsert_library_collection_index_doc`)
         # (adding in reverse order to test sorting of collection tag)
-        updated_date = datetime(2023, 6, 7, 8, 9, 10, tzinfo=timezone.utc)  # noqa: UP017
-        with freeze_time(updated_date):
-            for collection in (collection2, collection1):
+        updated_date = datetime(2023, 6, 7, 8, 9, 10, tzinfo=UTC)
+        for collection in (collection2, collection1):
+            with freeze_time(updated_date), self.captureOnCommitCallbacks(execute=True):
                 library_api.update_library_collection_items(
                     self.library.key,
-                    collection_key=collection.key,
+                    collection_key=collection.collection_code,
                     opaque_keys=[
                         self.problem1.usage_key,
                     ],
@@ -719,8 +734,8 @@ class TestSearchApi(ModuleStoreTestCase):
         lib_access, _ = SearchAccess.objects.get_or_create(context_key=self.library.key)
         doc_collection1_created = {
             "id": "lib-collectionorg1libcol1-283a79c9",
-            "block_id": collection1.key,
-            "usage_key": f"lib-collection:org1:lib:{collection1.key}",
+            "block_id": collection1.collection_code,
+            "usage_key": f"lib-collection:org1:lib:{collection1.collection_code}",
             "type": "collection",
             "display_name": "Collection 1",
             "description": "First Collection",
@@ -737,8 +752,8 @@ class TestSearchApi(ModuleStoreTestCase):
         }
         doc_collection2_created = {
             "id": "lib-collectionorg1libcol2-46823d4d",
-            "block_id": collection2.key,
-            "usage_key": f"lib-collection:org1:lib:{collection2.key}",
+            "block_id": collection2.collection_code,
+            "usage_key": f"lib-collection:org1:lib:{collection2.collection_code}",
             "type": "collection",
             "display_name": "Collection 2",
             "description": "Second Collection",
@@ -755,8 +770,8 @@ class TestSearchApi(ModuleStoreTestCase):
         }
         doc_collection2_updated = {
             "id": "lib-collectionorg1libcol2-46823d4d",
-            "block_id": collection2.key,
-            "usage_key": f"lib-collection:org1:lib:{collection2.key}",
+            "block_id": collection2.collection_code,
+            "usage_key": f"lib-collection:org1:lib:{collection2.collection_code}",
             "type": "collection",
             "display_name": "Collection 2",
             "description": "Second Collection",
@@ -773,8 +788,8 @@ class TestSearchApi(ModuleStoreTestCase):
         }
         doc_collection1_updated = {
             "id": "lib-collectionorg1libcol1-283a79c9",
-            "block_id": collection1.key,
-            "usage_key": f"lib-collection:org1:lib:{collection1.key}",
+            "block_id": collection1.collection_code,
+            "usage_key": f"lib-collection:org1:lib:{collection1.collection_code}",
             "type": "collection",
             "display_name": "Collection 1",
             "description": "First Collection",
@@ -887,11 +902,13 @@ class TestSearchApi(ModuleStoreTestCase):
         Test soft-deleting, restoring, and hard-deleting a collection.
         """
         # Add a component to the collection
-        updated_date = datetime(2023, 6, 7, 8, 9, 10, tzinfo=timezone.utc)  # noqa: UP017
-        with freeze_time(updated_date):
+        updated_date = datetime(2023, 6, 7, 8, 9, 10, tzinfo=UTC)
+        # Note: because TestCase keeps the transaction open, we need self.captureOnCommitCallbacks(execute=True) to
+        # ensure events get emitted here as if this part were its own transaction as it normally would be.
+        with freeze_time(updated_date), self.captureOnCommitCallbacks(execute=True):
             library_api.update_library_collection_items(
                 self.library.key,
-                collection_key=self.collection.key,
+                collection_key=self.collection.collection_code,
                 opaque_keys=[
                     self.problem1.usage_key,
                     self.unit.container_key
@@ -905,14 +922,14 @@ class TestSearchApi(ModuleStoreTestCase):
             "id": self.doc_problem1["id"],
             "collections": {
                 "display_name": [self.collection.title],
-                "key": [self.collection.key],
+                "key": [self.collection.collection_code],
             },
         }
         doc_unit_with_collection = {
             "id": self.unit_dict["id"],
             "collections": {
                 "display_name": [self.collection.title],
-                "key": [self.collection.key],
+                "key": [self.collection.collection_code],
             },
         }
 
@@ -929,10 +946,11 @@ class TestSearchApi(ModuleStoreTestCase):
         mock_meilisearch.return_value.index.reset_mock()
 
         # Soft-delete the collection
-        content_api.delete_collection(
-            self.collection.learning_package_id,
-            self.collection.key,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            content_api.delete_collection(
+                self.collection.learning_package_id,
+                self.collection.collection_code,
+            )
 
         doc_problem_without_collection = {
             "id": self.doc_problem1["id"],
@@ -962,11 +980,11 @@ class TestSearchApi(ModuleStoreTestCase):
         mock_meilisearch.return_value.get_index.return_value.get_document.return_value = None
 
         # Restore the collection
-        restored_date = datetime(2023, 8, 9, 10, 11, 12, tzinfo=timezone.utc)  # noqa: UP017
-        with freeze_time(restored_date):
+        restored_date = datetime(2023, 8, 9, 10, 11, 12, tzinfo=UTC)
+        with freeze_time(restored_date), self.captureOnCommitCallbacks(execute=True):
             content_api.restore_collection(
                 self.collection.learning_package_id,
-                self.collection.key,
+                self.collection.collection_code,
             )
 
         doc_collection = copy.deepcopy(self.collection_dict)
@@ -986,11 +1004,12 @@ class TestSearchApi(ModuleStoreTestCase):
         mock_meilisearch.return_value.index.reset_mock()
 
         # Hard-delete the collection
-        content_api.delete_collection(
-            self.collection.learning_package_id,
-            self.collection.key,
-            hard_delete=True,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            content_api.delete_collection(
+                self.collection.learning_package_id,
+                self.collection.collection_code,
+                hard_delete=True,
+            )
 
         # Should delete the collection document
         mock_meilisearch.return_value.index.return_value.delete_document.assert_called_once_with(
@@ -1013,7 +1032,11 @@ class TestSearchApi(ModuleStoreTestCase):
     @override_settings(MEILISEARCH_ENABLED=True)
     def test_delete_index_container(self, container_type, mock_meilisearch) -> None:
         """
-        Test delete a container index.
+        Test that the search index is updated correctly when a container is deleted.
+
+        That container's entry should be deleted, and its parent and children should also be updated.
+
+        Then test reverting/restoring the container.
         """
         container = getattr(self, container_type)
         container_dict = getattr(self, f"{container_type}_dict")
@@ -1029,20 +1052,27 @@ class TestSearchApi(ModuleStoreTestCase):
                 },
             }
         if container_type == "unit":
+            # The parent subsection's "child_usage_keys" and "child_display_names" should be cleared:
             update_doc_calls.append(call([clear_contents(self.subsection_dict)]))
         elif container_type == "subsection":
+            # The parent section's "child_usage_keys" and "child_display_names" should be cleared:
             update_doc_calls.append(call([clear_contents(self.section_dict)]))
+            # The subsection gets removed from the child unit's "subsections this is used in":
             update_doc_calls.append(call([{
                 'id': self.unit_dict['id'],
                 'subsections': {'display_name': [], 'key': []},
             }]))
         elif container_type == "section":
+            # The subsection gets removed from the child unit's "subsections this is used in":
             update_doc_calls.append(call([{
                 'id': self.subsection_dict['id'],
                 'sections': {'display_name': [], 'key': []},
             }]))
 
-        library_api.delete_container(container.container_key)
+        # Note: because TestCase keeps the transaction open, we need self.captureOnCommitCallbacks(execute=True) to
+        # ensure events get emitted here as if this part were its own transaction as it normally would be.
+        with self.captureOnCommitCallbacks(execute=True):
+            library_api.delete_container(container.container_key)
 
         mock_meilisearch.return_value.index.return_value.delete_document.assert_called_once_with(
             container_dict["id"],
@@ -1055,7 +1085,8 @@ class TestSearchApi(ModuleStoreTestCase):
             )
 
         # Restore
-        library_api.restore_container(container.container_key)
+        with self.captureOnCommitCallbacks(execute=True):
+            library_api.restore_container(container.container_key)
         if container_type == "unit":
             update_doc_calls.append(call([self.subsection_dict]))
         elif container_type == "subsection":
@@ -1139,7 +1170,10 @@ class TestSearchApi(ModuleStoreTestCase):
 
     @override_settings(MEILISEARCH_ENABLED=True)
     def test_block_in_units(self, mock_meilisearch) -> None:
-        with freeze_time(self.created_date):
+        """Test that search index is updated correctly when we add a problem block to a unit"""
+        # Note: because TestCase keeps the transaction open, we need self.captureOnCommitCallbacks(execute=True) to
+        # ensure events get emitted here as if this part were its own transaction as it normally would be.
+        with freeze_time(self.created_date), self.captureOnCommitCallbacks(execute=True):
             library_api.update_container_children(
                 LibraryContainerLocator.from_string(self.unit_key),
                 [self.problem1.usage_key],
@@ -1162,18 +1196,36 @@ class TestSearchApi(ModuleStoreTestCase):
             }
         }
 
-        assert mock_meilisearch.return_value.index.return_value.update_documents.call_count == 2
+        assert mock_meilisearch.return_value.index.return_value.update_documents.call_count == 4
         mock_meilisearch.return_value.index.return_value.update_documents.assert_has_calls(
             [
+                # The problem block's index document gets updated so that its "[parent] units" field lists the new unit
                 call([doc_block_with_units]),
+                # Update the parent unit so that the problem block is in "child_usage_keys" and "child_display_names"
                 call([new_unit_dict]),
+                # The ancestor containers are updated too, because they're included as dependencies in the event.
+                # We don't really need this.
+                call([self.subsection_dict]),
+                call([self.section_dict]),
             ],
             any_order=True,
         )
 
     @override_settings(MEILISEARCH_ENABLED=True)
     def test_units_in_subsection(self, mock_meilisearch) -> None:
-        with freeze_time(self.created_date):
+        """Test adding a unit to a subsection"""
+
+        # First, remove all children from the subsection:
+        with self.captureOnCommitCallbacks(execute=False):  # suppress events
+            library_api.update_container_children(self.subsection.container_key, [], None)
+
+        # We suppresssed events just now so we don't expect Meilisearch to have updated
+        assert mock_meilisearch.return_value.index.return_value.update_documents.call_count == 0
+
+        # Now add the unit to the subsection - this is what we want to test.
+        # Note: because TestCase keeps the transaction open, we need self.captureOnCommitCallbacks(execute=True) to
+        # ensure events get emitted here as if this part were its own transaction as it normally would be.
+        with freeze_time(self.created_date), self.captureOnCommitCallbacks(execute=True):
             library_api.update_container_children(
                 LibraryContainerLocator.from_string(self.subsection_key),
                 [LibraryContainerLocator.from_string(self.unit_key)],
@@ -1195,21 +1247,36 @@ class TestSearchApi(ModuleStoreTestCase):
                 'child_display_names': [self.unit.display_name]
             }
         }
-        assert mock_meilisearch.return_value.index.return_value.update_documents.call_count == 2
+        assert mock_meilisearch.return_value.index.return_value.update_documents.call_count == 3
         mock_meilisearch.return_value.index.return_value.update_documents.assert_has_calls(
             [
+                # The unit isn't directly modified but its "parent subsections: ..." field must be updated:
                 call([doc_block_with_subsections]),
+                # Update the parent subsection so that the new unit is in "child_usage_keys" and "child_display_names"
                 call([new_subsection_dict]),
+                # The ancestor section is updated too because it's included in the event. We don't really need this.
+                call([self.section_dict]),
             ],
             any_order=True,
         )
 
     @override_settings(MEILISEARCH_ENABLED=True)
-    def test_section_in_usbsections(self, mock_meilisearch) -> None:
-        with freeze_time(self.created_date):
+    def test_section_in_subsections(self, mock_meilisearch) -> None:
+        """Test that search index is updated correctly when we add a subsection to a section"""
+
+        # Setup: first, remove all children from the section:
+        with self.captureOnCommitCallbacks(execute=False):  # suppress events
+            library_api.update_container_children(self.section.container_key, [], None)
+        # We suppresssed events just now so we don't expect Meilisearch to have updated
+        assert mock_meilisearch.return_value.index.return_value.update_documents.call_count == 0
+
+        # Now add the subsection to the section - this is what we want to test.
+        # Note: because TestCase keeps the transaction open, we need self.captureOnCommitCallbacks(execute=True) to
+        # ensure events get emitted here as if this part were its own transaction as it normally would be.
+        with freeze_time(self.created_date), self.captureOnCommitCallbacks(execute=True):
             library_api.update_container_children(
-                LibraryContainerLocator.from_string(self.section_key),
-                [LibraryContainerLocator.from_string(self.subsection_key)],
+                self.section.container_key,
+                [self.subsection.container_key],
                 None,
             )
 
@@ -1231,7 +1298,9 @@ class TestSearchApi(ModuleStoreTestCase):
         assert mock_meilisearch.return_value.index.return_value.update_documents.call_count == 2
         mock_meilisearch.return_value.index.return_value.update_documents.assert_has_calls(
             [
+                # The subsection isn't directly modified but its "parent sections: ..." field must be updated:
                 call([doc_block_with_sections]),
+                # Update the parent section so that the new subsection is in "child_usage_keys" & "child_display_names"
                 call([new_section_dict]),
             ],
             any_order=True,
