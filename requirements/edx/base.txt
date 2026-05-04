@@ -1320,7 +1320,7 @@ xblock-utils==4.0.0
     # via
     #   edx-sga
     #   xblock-poll
-xblocks-core==1.0.0
+git+https://github.com/openedx/xblocks-core.git@kdmccormick/xblocks-core#egg=xblocks-core
     # via -r requirements/edx/bundled.in
 xmlsec==1.3.14
     # via
