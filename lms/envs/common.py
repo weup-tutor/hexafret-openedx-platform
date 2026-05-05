@@ -3291,11 +3291,11 @@ RECAPTCHA_PROJECT_ID = None
 OPEN_EDX_FILTERS_CONFIG = {
     "org.openedx.learning.account.settings.read_only_fields.requested.v1": {
         "fail_silently": False,
-        "pipeline": ["enterprise.filters.accounts.AccountSettingsReadOnlyFieldsStep"],
+        "pipeline": ["enterprise.filters.accounts.AccountSettingsEnterpriseReadOnlyFieldsStep"],
     },
-    "org.openedx.learning.dashboard.render.started.v1": {
+    "org.openedx.learning.grade.context.requested.v1": {
         "fail_silently": False,
-        "pipeline": ["enterprise.filters.dashboard.DashboardContextEnricher"],
+        "pipeline": ["enterprise.filters.grades.GradeEventContextEnricher"],
     },
 }
 
