@@ -26,8 +26,11 @@ from django_countries import countries
 from django_ratelimit.decorators import ratelimit
 from edx_django_utils.monitoring import set_custom_attribute
 from edx_django_utils.user import generate_password  # pylint: disable=wrong-import-order
-from openedx_events.learning.data import UserData, UserPersonalData
-from openedx_events.learning.signals import STUDENT_REGISTRATION_COMPLETED
+from openedx_events.learning.data import RegistrationDemographicsData, UserData, UserPersonalData
+from openedx_events.learning.signals import (
+    REGISTRATION_DEMOGRAPHICS_CAPTURED,
+    STUDENT_REGISTRATION_COMPLETED,
+)
 from openedx_filters.learning.filters import StudentRegistrationRequested
 from requests import HTTPError
 from rest_framework.response import Response
@@ -272,6 +275,26 @@ def create_account_with_params(request, params):  # pylint: disable=too-many-sta
             ),
             id=user.id,
             is_active=user.is_active,
+        ),
+    )
+
+    # .. event_implemented_name: REGISTRATION_DEMOGRAPHICS_CAPTURED
+    # .. event_type: org.openedx.learning.student.registration.demographics.captured.v1
+    pronouns = (params.get("pronouns") or "").strip()
+    department = (params.get("department") or "").strip()
+    REGISTRATION_DEMOGRAPHICS_CAPTURED.send_event(
+        demographics=RegistrationDemographicsData(
+            user=UserData(
+                id=user.id,
+                is_active=user.is_active,
+                pii=UserPersonalData(
+                    username=user.username,
+                    email=user.email,
+                    name=user.profile.name,
+                ),
+            ),
+            pronouns=pronouns,
+            department=department,
         ),
     )
 
