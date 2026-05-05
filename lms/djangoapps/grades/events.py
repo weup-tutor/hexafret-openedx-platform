@@ -166,11 +166,11 @@ def course_grade_passed_first_time(user_id, course_id):
     """
     event_name = COURSE_GRADE_PASSED_FIRST_TIME_EVENT_TYPE
     context = contexts.course_context_from_course_id(course_id)
-    enriched_context = GradeEventContextRequested.run_filter(
+    filtered_context, _, _ = GradeEventContextRequested.run_filter(
         context=context, user_id=user_id, course_id=course_id
     )
-    if enriched_context is not None:
-        context = enriched_context
+    if filtered_context is not None:
+        context = filtered_context
     # TODO (AN-6134): remove this context manager
     with tracker.get_tracker().context(event_name, context):
         tracker.emit(
