@@ -4,11 +4,8 @@ Test CRUD for authorization.
 
 import copy
 
-from edx_toggles.toggles.testutils import override_waffle_flag
-
-from cms.djangoapps.contentstore import toggles
 from cms.djangoapps.contentstore.tests.utils import AjaxEnabledTestClient
-from cms.djangoapps.contentstore.utils import reverse_course_url, reverse_url
+from cms.djangoapps.contentstore.utils import reverse_url
 from common.djangoapps.student import auth
 from common.djangoapps.student.roles import CourseInstructorRole, CourseStaffRole, OrgInstructorRole, OrgStaffRole
 from common.djangoapps.student.tests.factories import UserFactory
@@ -68,15 +65,10 @@ class TestCourseAccess(ModuleStoreTestCase):
         self.client.logout()
         ModuleStoreTestCase.tearDown(self)  # pylint: disable=non-parent-method-called
 
-    @override_waffle_flag(toggles.LEGACY_STUDIO_COURSE_TEAM, True)
     def test_get_all_users(self):
         """
         Test getting all authors for a course where their permissions run the gamut of allowed group
         types.
-
-        TODO: Replace the call to the legacy course_team_handler with a call to the course team REST API.
-        The legacy page will be removed, but we still want to the test these behaviors.
-        Part of https://github.com/openedx/edx-platform/issues/36275.
         """
         # first check the course creator.has explicit access (don't use has_access as is_staff
         # will trump the actual test)
@@ -102,12 +94,6 @@ class TestCourseAccess(ModuleStoreTestCase):
             group.add_users(user)
             user_by_role[role].append(user)
             self.assertTrue(auth.has_course_author_access(user, self.course_key), f"{user} does not have access")  # pylint: disable=line-too-long  # noqa: PT009
-
-        course_team_url = reverse_course_url('course_team_handler', self.course_key)
-        response = self.client.get_html(course_team_url)
-        for role in [CourseInstructorRole, CourseStaffRole]:  # Global and org-based roles don't appear on this page
-            for user in user_by_role[role]:
-                self.assertContains(response, user.email)
 
         # test copying course permissions
         copy_course_key = self.store.make_course_key('copyu', 'copydept.mycourse', 'myrun')

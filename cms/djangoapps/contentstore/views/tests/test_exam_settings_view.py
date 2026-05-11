@@ -24,7 +24,6 @@ from common.djangoapps.util.testing import UrlResetMixin
         "ENABLE_PROCTORED_EXAMS": True,
     },
 )
-@override_waffle_flag(toggles.LEGACY_STUDIO_CERTIFICATES, True)
 @override_waffle_flag(toggles.LEGACY_STUDIO_CONFIGURATIONS, True)
 @override_waffle_flag(toggles.LEGACY_STUDIO_ADVANCED_SETTINGS, True)
 @override_settings(COURSE_AUTHORING_MICROFRONTEND_URL='https://mfe.example')
@@ -50,7 +49,6 @@ class TestExamSettingsView(CourseTestCase, UrlResetMixin):
 
     @override_waffle_flag(toggles.LEGACY_STUDIO_EXAM_SETTINGS, True)
     @ddt.data(
-        "certificates_list_handler",
         "group_configurations_list_handler",
         "advanced_settings_handler"
     )
@@ -65,7 +63,6 @@ class TestExamSettingsView(CourseTestCase, UrlResetMixin):
         self.assertNotContains(resp, 'Proctored Exam Settings')
 
     @ddt.data(
-        "certificates_list_handler",
         "group_configurations_list_handler",
         "advanced_settings_handler"
     )
@@ -88,6 +85,12 @@ class TestExamSettingsView(CourseTestCase, UrlResetMixin):
     def test_settings_handler_redirects_to_mfe(self):
         """settings_handler (schedule & details) redirects to the authoring MFE."""
         url = reverse_course_url('settings_handler', self.course.id)
+        resp = self.client.get(url, HTTP_ACCEPT='text/html')
+        self.assertEqual(resp.status_code, 302)  # noqa: PT009
+
+    def test_certificates_list_handler_redirects_to_mfe(self):
+        """certificates_list_handler redirects to the authoring MFE."""
+        url = reverse_course_url('certificates_list_handler', self.course.id)
         resp = self.client.get(url, HTTP_ACCEPT='text/html')
         self.assertEqual(resp.status_code, 302)  # noqa: PT009
 

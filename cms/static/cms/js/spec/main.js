@@ -265,11 +265,6 @@
         'js/spec/views/modals/move_xblock_modal_spec',
         'js/spec/views/modals/validation_error_modal_spec',
         'js/spec/views/settings/main_spec',
-        'js/certificates/spec/models/certificate_spec',
-        'js/certificates/spec/views/certificate_details_spec',
-        'js/certificates/spec/views/certificate_editor_spec',
-        'js/certificates/spec/views/certificates_list_spec',
-        'js/certificates/spec/views/certificate_preview_spec'
     ];
 
     i = 0;

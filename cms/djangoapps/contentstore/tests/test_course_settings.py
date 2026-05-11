@@ -181,6 +181,11 @@ class CourseAdvanceSettingViewTest(CourseTestCase, MilestonesTestCaseMixin):
         response = self.client.get_html(get_url(self.course.id, 'export_handler'))
         self.assertEqual(response.status_code, 302)  # noqa: PT009
 
+    def test_course_team_handler_redirects_to_mfe(self):
+        """course_team_handler redirects to the authoring MFE."""
+        response = self.client.get_html(get_url(self.course.id, 'course_team_handler'))
+        self.assertEqual(response.status_code, 302)  # noqa: PT009
+
 
 @ddt.ddt
 class CourseDetailsViewTest(CourseTestCase, MilestonesTestCaseMixin):
