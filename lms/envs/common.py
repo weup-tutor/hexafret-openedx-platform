@@ -3289,7 +3289,7 @@ RECAPTCHA_PROJECT_ID = None
 OPEN_EDX_FILTERS_CONFIG = {
     "org.openedx.learning.account.settings.read_only_fields.requested.v1": {
         "fail_silently": True,
-        "pipeline": ["enterprise.filters.accounts.AccountSettingsReadOnlyFieldsStep"],
+        "pipeline": ["enterprise.filters.accounts.AccountSettingsEnterpriseReadOnlyFieldsStep"],
     },
 }
 
