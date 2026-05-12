@@ -2,11 +2,14 @@
 Unit tests for the vertical block.
 """
 
+from contextlib import ExitStack
+from unittest.mock import patch
 from urllib.parse import quote
 
 from django.urls import reverse
 from edx_toggles.toggles.testutils import override_waffle_flag
 from rest_framework import status
+from xblock.utils.studio_editable import NestedXBlockSpec
 from xblock.validation import ValidationMessage
 
 from cms.djangoapps.contentstore.tests.utils import CourseTestCase
@@ -199,6 +202,93 @@ class ContainerHandlerViewTest(BaseXBlockContainer):
         url = self.get_reverse_url(usage_key_string)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)  # noqa: PT009
+
+    def _patch_vertical_as_nested_container(self, specs):
+        """
+        Return a single context manager that makes the vertical appear to be a
+        StudioContainerWithNestedXBlocksMixin instance for the duration of the test,
+        returning the given NestedXBlockSpec list from get_nested_blocks_spec().
+
+        Replaces StudioContainerWithNestedXBlocksMixin in the utils module with
+        type(self.vertical) so that isinstance(xblock, <that class>) is True for
+        any VerticalBlock instance, then patches get_nested_blocks_spec to return
+        the caller-supplied specs.
+        """
+        stack = ExitStack()
+        stack.enter_context(patch(
+            'cms.djangoapps.contentstore.utils.StudioContainerWithNestedXBlocksMixin',
+            type(self.vertical),
+        ))
+        stack.enter_context(patch.object(
+            type(self.vertical), 'get_nested_blocks_spec', return_value=specs, create=True,
+        ))
+        return stack
+
+    def test_component_templates_filtered_for_nested_xblocks_mixin(self):
+        """
+        Check that component_templates only contains templates whose category is
+        listed in get_nested_blocks_spec() when the container implements
+        StudioContainerWithNestedXBlocksMixin.
+        """
+        url = self.get_reverse_url(self.vertical.location)
+        specs = [NestedXBlockSpec(None, category='html'), NestedXBlockSpec(None, category='video')]
+
+        with self._patch_vertical_as_nested_container(specs):
+            response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # noqa: PT009
+        component_templates = response.json().get('component_templates', [])
+        self.assertGreater(len(component_templates), 0)  # noqa: PT009
+        for group in component_templates:
+            for template in group.get('templates', []):
+                self.assertIn(template['category'], {'html', 'video'})  # noqa: PT009
+
+    def test_component_templates_surfaces_spec_fields(self):
+        """
+        Check that single_instance, disabled, and disabled_reason from NestedXBlockSpec
+        are surfaced onto the matching template dict so the MFE can disable buttons
+        and show tooltips.
+        """
+        url = self.get_reverse_url(self.vertical.location)
+        specs = [
+            NestedXBlockSpec(None, category='html', single_instance=True),
+            NestedXBlockSpec(None, category='video', disabled=True, disabled_reason='Not available'),
+        ]
+
+        with self._patch_vertical_as_nested_container(specs):
+            response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # noqa: PT009
+        component_templates = response.json().get('component_templates', [])
+        all_templates = [
+            template
+            for group in component_templates
+            for template in group.get('templates', [])
+        ]
+
+        html_templates = [template for template in all_templates if template['category'] == 'html']
+        self.assertGreater(len(html_templates), 0)  # noqa: PT009
+        for template in html_templates:
+            self.assertTrue(template.get('single_instance'))  # noqa: PT009
+
+        video_templates = [template for template in all_templates if template['category'] == 'video']
+        self.assertGreater(len(video_templates), 0)  # noqa: PT009
+        for template in video_templates:
+            self.assertTrue(template.get('disabled'))  # noqa: PT009
+            self.assertEqual(template.get('disabled_reason'), 'Not available')  # noqa: PT009
+
+    def test_component_templates_unfiltered_for_non_mixin_xblock(self):
+        """
+        Check that component_templates includes all default course-wide templates
+        without filtering when the container does not implement
+        StudioContainerWithNestedXBlocksMixin.
+        """
+        url = self.get_reverse_url(self.vertical.location)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # noqa: PT009
+        component_templates = response.json().get('component_templates', [])
+        group_types = {group['type'] for group in component_templates}
+        self.assertGreater(len(group_types), 0)  # noqa: PT009
 
 
 class ContainerVerticalViewTest(BaseXBlockContainer):

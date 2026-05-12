@@ -34,6 +34,7 @@ from openedx_events.learning.signals import COURSE_NOTIFICATION_REQUESTED
 from pytz import UTC
 from rest_framework.fields import BooleanField
 from xblock.fields import Scope
+from xblock.utils.studio_editable import StudioContainerWithNestedXBlocksMixin
 
 from cms.djangoapps.contentstore.toggles import (
     enable_course_optimizer,
@@ -1974,6 +1975,46 @@ def _get_course_index_context(request, course_key, course_block):
     return course_index_context
 
 
+def _filter_component_templates_for_xblock(component_templates, xblock):
+    """
+    Filter and annotate component templates based on the XBlock's allowed nested blocks.
+
+    If the XBlock implements StudioContainerWithNestedXBlocksMixin, only templates whose
+    category appears in ``get_nested_blocks_spec()`` are kept. Each surviving template dict
+    is annotated with any ``single_instance``, ``disabled``, or ``disabled_reason`` values
+    declared by the matching spec so the MFE can disable buttons and show tooltips.
+
+    If the XBlock does not implement the mixin, the original list is returned unchanged.
+    """
+    if not isinstance(xblock, StudioContainerWithNestedXBlocksMixin):
+        return component_templates
+
+    specs_by_category = {spec.category: spec for spec in xblock.get_nested_blocks_spec()}
+    filtered_groups = []
+
+    for group in component_templates:
+        filtered_templates = []
+
+        for template in group["templates"]:
+            spec = specs_by_category.get(template["category"])
+            if spec is None:
+                continue
+
+            annotated = {**template}
+            if spec.single_instance:
+                annotated["single_instance"] = True
+            if spec.disabled:
+                annotated["disabled"] = True
+            if spec.disabled_reason:
+                annotated["disabled_reason"] = spec.disabled_reason
+            filtered_templates.append(annotated)
+
+        if filtered_templates:
+            filtered_groups.append({**group, "templates": filtered_templates})
+
+    return filtered_groups
+
+
 def get_container_handler_context(request, usage_key, course, xblock):  # pylint: disable=too-many-statements
     """
     Utils is used to get context for container xblock requests.
@@ -1995,6 +2036,9 @@ def get_container_handler_context(request, usage_key, course, xblock):  # pylint
 
     course_sequence_ids = get_sequence_usage_keys(course)
     component_templates = get_component_templates(course)
+
+    component_templates = _filter_component_templates_for_xblock(component_templates, xblock)
+
     ancestor_xblocks = []
     parent = get_parent_xblock(xblock)
     action = request.GET.get('action', 'view')
