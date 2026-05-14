@@ -3292,7 +3292,7 @@ OPEN_EDX_FILTERS_CONFIG = {
         "pipeline": ["enterprise.filters.accounts.AccountSettingsReadOnlyFieldsStep"],
     },
     "org.openedx.learning.dashboard.render.started.v1": {
-        "fail_silently": False,
+        "fail_silently": True,
         "pipeline": ["enterprise.filters.dashboard.DashboardContextEnricher"],
     },
 }

@@ -790,6 +790,8 @@ def student_dashboard(request):  # pylint: disable=too-many-statements
     context = {
         'urls': urls,
         'programs_data': programs_data,
+        'enterprise_message': '',
+        'enterprise_learner_portal_enabled_message': '',
         'enrollment_message': enrollment_message,
         'redirect_message': Text(redirect_message),
         'account_activation_messages': account_activation_messages,
