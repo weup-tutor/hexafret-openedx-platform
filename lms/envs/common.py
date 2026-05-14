@@ -3288,8 +3288,12 @@ RECAPTCHA_PROJECT_ID = None
 #    'pipeline' (list of dotted-path strings to PipelineStep subclasses).
 OPEN_EDX_FILTERS_CONFIG = {
     "org.openedx.learning.account.settings.read_only_fields.requested.v1": {
-        "fail_silently": True,
-        "pipeline": ["enterprise.filters.accounts.AccountSettingsReadOnlyFieldsStep"],
+        "fail_silently": False,
+        "pipeline": ["enterprise.filters.accounts.AccountSettingsEnterpriseReadOnlyFieldsStep"],
+    },
+    "org.openedx.learning.grade.context.requested.v1": {
+        "fail_silently": False,
+        "pipeline": ["enterprise.filters.grades.GradeEventContextEnricher"],
     },
     "org.openedx.learning.dashboard.render.started.v1": {
         "fail_silently": False,

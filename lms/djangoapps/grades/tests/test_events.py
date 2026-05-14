@@ -3,6 +3,7 @@ Test that various events are fired for models in the grades app.
 """
 
 from unittest import mock
+from unittest.mock import patch
 
 from ccx_keys.locator import CCXLocator
 from django.utils.timezone import now
@@ -229,3 +230,48 @@ class CCXCoursePassingStatusEventsTest(
             },
             event_receiver.call_args.kwargs,
         )
+
+
+class GradeEventContextFilterTest(SharedModuleStoreTestCase):
+    """
+    Tests that course_grade_passed_first_time invokes the GradeEventContextRequested
+    filter instead of the old enterprise_support import.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+    def setUp(self):
+        super().setUp()
+        self.user = UserFactory.create()
+        self.course = CourseFactory.create()
+
+    @patch('lms.djangoapps.grades.events.GradeEventContextRequested.run_filter')
+    def test_filter_called_with_context(self, mock_run_filter):
+        """
+        course_grade_passed_first_time should call GradeEventContextRequested.run_filter
+        and merge the returned context.
+        """
+        enriched = {"org": "test_org", "enterprise_uuid": "abc-123"}
+        mock_run_filter.return_value = enriched
+
+        from lms.djangoapps.grades.events import course_grade_passed_first_time
+        with patch('lms.djangoapps.grades.events.tracker'):
+            course_grade_passed_first_time(self.user.id, self.course.id)
+
+        mock_run_filter.assert_called_once()
+        call_kwargs = mock_run_filter.call_args.kwargs
+        assert call_kwargs['user_id'] == self.user.id
+        assert str(call_kwargs['course_id']) == str(self.course.id)
+
+    @patch('lms.djangoapps.grades.events.GradeEventContextRequested.run_filter')
+    def test_filter_none_return_leaves_context_intact(self, mock_run_filter):
+        """
+        If run_filter returns None (fail_silently path), context is not overwritten.
+        """
+        mock_run_filter.return_value = None
+        from lms.djangoapps.grades.events import course_grade_passed_first_time
+        with patch('lms.djangoapps.grades.events.tracker'):
+            # Should not raise even when filter returns None
+            course_grade_passed_first_time(self.user.id, self.course.id)
