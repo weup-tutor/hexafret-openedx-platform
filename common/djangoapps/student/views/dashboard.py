@@ -790,6 +790,15 @@ def student_dashboard(request):  # pylint: disable=too-many-statements
     context = {
         'urls': urls,
         'programs_data': programs_data,
+        # These enterprise-related keys are populated by DashboardContextEnricher (via DashboardRenderStarted filter)
+        # when the enterprise package is installed. Safe defaults are provided here so that:
+        # 1. The template renders safely on non-enterprise deployments.
+        # 2. Any stale compiled Mako cache that still references consent_required_courses (from before
+        #    PR #38094 removed that line) will not crash with "argument of type 'Undefined' is not iterable".
+        'enterprise_message': '',
+        'consent_required_courses': set(),
+        'enterprise_learner_portal_enabled_message': None,
+        'banner_account_activation_message': None,
         'enrollment_message': enrollment_message,
         'redirect_message': Text(redirect_message),
         'account_activation_messages': account_activation_messages,
