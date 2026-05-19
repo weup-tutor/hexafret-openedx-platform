@@ -14,11 +14,11 @@ attrs==26.1.0
     #   zeep
 backoff==2.2.1
     # via -r scripts/user_retirement/requirements/base.txt
-boto3==1.43.6
+boto3==1.43.10
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   moto
-botocore==1.43.6
+botocore==1.43.10
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   boto3
@@ -37,7 +37,7 @@ charset-normalizer==3.4.7
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   requests
-click==8.3.3
+click==8.4.0
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   edx-django-utils
@@ -75,7 +75,7 @@ google-api-core==2.30.3
     #   google-api-python-client
 google-api-python-client==2.196.0
     # via -r scripts/user_retirement/requirements/base.txt
-google-auth==2.52.0
+google-auth==2.53.0
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   google-api-core
@@ -94,7 +94,7 @@ httplib2==0.31.2
     #   -r scripts/user_retirement/requirements/base.txt
     #   google-api-python-client
     #   google-auth-httplib2
-idna==3.14
+idna==3.15
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   requests
@@ -189,7 +189,7 @@ pyyaml==6.0.3
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   responses
-requests==2.34.0
+requests==2.34.2
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   edx-rest-api-client
@@ -232,7 +232,7 @@ sqlparse==0.5.5
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   django
-stevedore==5.7.0
+stevedore==5.8.0
     # via
     #   -r scripts/user_retirement/requirements/base.txt
     #   edx-django-utils
